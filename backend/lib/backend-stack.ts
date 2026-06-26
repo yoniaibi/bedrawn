@@ -5,7 +5,6 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as ses from 'aws-cdk-lib/aws-ses';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { HttpApi, CorsHttpMethod, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -16,23 +15,19 @@ export class BackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // SES domain identity — after deploy, add the DKIM DNS records output to bedrawn.app
-    const emailIdentity = new ses.EmailIdentity(this, 'BedrawnEmailIdentity', {
+    // SES domain identity — CDK creates the identity; after first deploy, add the DKIM DNS
+    // records from SES console to bedrawn.app, then uncomment UserPoolEmail.withSES below.
+    new ses.EmailIdentity(this, 'BedrawnEmailIdentity', {
       identity: ses.Identity.domain('bedrawn.app'),
     });
 
-    // Cognito User Pool using SES for emails
+    // Cognito User Pool — using Cognito's built-in email until bedrawn.app is SES-verified.
+    // Once DNS records are added and domain is verified, swap to UserPoolEmail.withSES.
     const userPool = new cognito.UserPool(this, 'BedrawnUserPool', {
       userPoolName: 'bedrawn-users',
       selfSignUpEnabled: true,
       signInAliases: { email: true },
       autoVerify: { email: true },
-      email: cognito.UserPoolEmail.withSES({
-        fromEmail: 'noreply@bedrawn.app',
-        fromName: 'BeDrawn',
-        sesRegion: this.region,
-        sesVerifiedDomain: 'bedrawn.app',
-      }),
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
