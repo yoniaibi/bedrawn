@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# CDK
+backend/cdk.out/
+backend/*.js
+backend/*.d.ts
+!backend/jest.config.js
+backend/lib/**/*.js
+backend/lib/**/*.d.ts
+backend/bin/**/*.js
+backend/bin/**/*.d.ts
+backend/test/**/*.js
+backend/test/**/*.d.ts
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# Env files
+.env
+.env.local
+.env*.local
+
+# OS
+.DS_Store
