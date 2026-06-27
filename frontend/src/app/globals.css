@@ -218,11 +218,63 @@ button {
 .desktop-only {
   display: none;
 }
+.desktop-flex {
+  display: none;
+}
 
 @media (min-width: 768px) {
   .mobile-only { display: none !important; }
   .desktop-only { display: block; }
   .desktop-flex { display: flex !important; }
+}
+
+/* Landing draws grid — 2 cols mobile → 3 cols tablet → 6 cols desktop */
+.landing-draw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .landing-draw-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+  .landing-draw-grid { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* Landing how-it-works grid — 1 col mobile → 2 cols tablet → 4 cols desktop */
+.landing-steps-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .landing-steps-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .landing-steps-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Landing features grid — 1 col mobile → 2 cols tablet → 3 cols desktop */
+.landing-features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media (min-width: 640px) {
+  .landing-features-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .landing-features-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Landing 2-col split — stacks on mobile */
+.landing-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+@media (min-width: 768px) {
+  .landing-split { grid-template-columns: 1fr 1fr; gap: 48px; }
 }
 
 /* ─── Gradient helpers ─── */
