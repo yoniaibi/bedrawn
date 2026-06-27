@@ -5,6 +5,7 @@ export function generateStaticParams() {
   return draws.map(d => ({ id: d.id }));
 }
 
-export default function DrawDetailPage({ params }: { params: { id: string } }) {
-  return <DrawDetailClient id={params.id} />;
+export default async function DrawDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <DrawDetailClient id={id} />;
 }
