@@ -17,14 +17,16 @@ const badges = [
 ];
 
 const menuItems = [
-  { label: 'My Wallet',       href: '/account/wallet' },
-  { label: 'My Orders',       href: '/account/orders' },
-  { label: 'Saved Draws',     href: '/account/saved' },
-  { label: 'Notifications',   href: '/account/notifications' },
-  { label: 'Settings',        href: '/account/settings' },
-  { label: 'Become a Seller', href: '/seller' },
-  { label: 'Privacy Policy',  href: '/legal/privacy' },
-  { label: 'Terms of Service',href: '/legal/terms' },
+  { label: 'My Wallet',        href: '/account/wallet' },
+  { label: 'My Orders',        href: '/account/orders' },
+  { label: 'Saved Draws',      href: '/account/saved' },
+  { label: 'Notifications',    href: '/account/notifications' },
+  { label: 'Settings',         href: '/account/settings' },
+  { label: 'Seller Dashboard', href: '/seller/dashboard' },
+  { label: 'List an Item',     href: '/seller/list' },
+  { label: 'Become a Seller',  href: '/seller' },
+  { label: 'Privacy Policy',   href: '/legal/privacy' },
+  { label: 'Terms of Service', href: '/legal/terms' },
 ];
 
 export default function AccountPage() {

@@ -22,7 +22,7 @@ export default function OrdersPage() {
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
-          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>My Orders</p>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>My Orders</p>
         </div>
 
         {/* Filter tabs */}
@@ -43,8 +43,8 @@ export default function OrdersPage() {
 
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 32px' }}>
-            <p style={{ fontSize: 48, margin: '0 0 16px' }}>📦</p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--white)', margin: '0 0 8px' }}>No orders</p>
+            <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: 'var(--muted)' }}>◻</div>
+            <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>No orders</p>
             <Link href="/home" style={{ textDecoration: 'none' }}>
               <button style={{ padding: '12px 28px', borderRadius: 999, background: 'var(--purple)', border: 'none', color: 'var(--white)', fontSize: 14, fontWeight: 700 }}>
                 Browse draws
@@ -59,7 +59,7 @@ export default function OrdersPage() {
                 <Link key={o.id} href={`/draw/${o.drawId}`} style={{ textDecoration: 'none' }}>
                   <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--white)', flex: 1, paddingRight: 12 }}>{o.drawTitle}</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text)', flex: 1, paddingRight: 12 }}>{o.drawTitle}</p>
                       <span style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, whiteSpace: 'nowrap' }}>
                         {o.status}
                       </span>

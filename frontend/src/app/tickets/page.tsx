@@ -25,7 +25,7 @@ export default function TicketsPage() {
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
-          <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--white)' }}>My Tickets</p>
+          <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>My Tickets</p>
         </div>
 
         {/* Summary strip */}
@@ -55,7 +55,7 @@ export default function TicketsPage() {
           borderRadius: 12, padding: '12px 16px',
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
-          <span style={{ fontSize: 20 }}>⚡</span>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--purple)', flexShrink: 0, display: 'inline-block' }} />
           <p style={{ margin: 0, fontSize: 13, color: 'var(--text)' }}>
             Win up to <strong style={{ color: 'var(--gold)' }}>£{totalValue.toLocaleString()}</strong> for as little as <strong style={{ color: 'var(--purple)' }}>10p</strong>
           </p>
@@ -64,8 +64,8 @@ export default function TicketsPage() {
         {/* Ticket cards */}
         {myTickets.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 32px' }}>
-            <p style={{ fontSize: 48, margin: '0 0 16px' }}>🎫</p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--white)', margin: '0 0 8px' }}>No tickets yet</p>
+            <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--card)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: 'var(--muted)' }}>◈</div>
+            <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>No tickets yet</p>
             <p style={{ color: 'var(--grey)', fontSize: 14, margin: '0 0 24px' }}>
               Enter your first draw for as little as 10p. Tonight&apos;s closes at 9pm.
             </p>
@@ -100,13 +100,13 @@ export default function TicketsPage() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {t.draw.title}
                         </p>
                         {t.draw.isVerified && <span style={{ color: 'var(--purple)', fontSize: 12 }}>✓</span>}
                       </div>
                       <p style={{ margin: '2px 0 8px', fontSize: 11, color: 'var(--grey)' }}>
-                        {t.draw.sellerEmoji} {t.draw.seller}
+                        {t.draw.seller}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{

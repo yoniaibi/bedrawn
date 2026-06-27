@@ -170,7 +170,7 @@ export default function SellerDashboardPage() {
                     <button style={{
                       width: '100%', padding: '14px', borderRadius: 999,
                       background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-                      border: 'none', color: 'var(--text)', fontWeight: 700, fontSize: 15,
+                      border: 'none', color: 'var(--white)', fontWeight: 700, fontSize: 15,
                       cursor: 'pointer',
                     }}>+ List new item</button>
                   </Link>
