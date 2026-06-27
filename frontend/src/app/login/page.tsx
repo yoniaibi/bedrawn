@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'aws-amplify/auth';
 import { useAuth } from '@/lib/auth';
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const justVerified = searchParams.get('verified') === 'true';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,9 +22,26 @@ export default function LoginPage() {
     setError('');
     if (!email || !password) { setError('Please fill in all fields'); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    login();
-    router.push('/home');
+    try {
+      const { isSignedIn, nextStep } = await signIn({ username: email, password });
+
+      if (nextStep.signInStep === 'CONFIRM_SIGN_UP') {
+        // Account exists but email not verified
+        sessionStorage.setItem('drawn_pending_email', email);
+        sessionStorage.setItem('drawn_pending_pw', password);
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
+      if (isSignedIn) {
+        login();
+        router.push('/home');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Invalid email or password';
+      setError(msg);
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,32 +50,33 @@ export default function LoginPage() {
         <Link href="/" style={{ textDecoration: 'none' }}>
           <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', textAlign: 'center', margin: '0 0 8px' }}>DRAWN</p>
         </Link>
-        <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 15, margin: '0 0 32px' }}>Welcome back</p>
+        <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 15, margin: '0 0 24px' }}>Welcome back</p>
+
+        {justVerified && (
+          <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid var(--green)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 18 }}>✓</span>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--green)', fontWeight: 600 }}>Email verified — log in to continue</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Email address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
           </div>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <label style={{ fontSize: 12, color: 'var(--grey)' }}>Password</label>
               <Link href="/forgot-password" style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none' }}>Forgot password?</Link>
             </div>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
 
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>}
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 8, padding: '10px 14px' }}>
+              <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -76,5 +98,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }

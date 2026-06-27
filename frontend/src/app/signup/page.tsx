@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { signUp } from 'aws-amplify/auth';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -27,8 +28,23 @@ export default function SignupPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    router.push('/interests');
+    try {
+      await signUp({
+        username: email,
+        password,
+        options: {
+          userAttributes: { email, name },
+        },
+      });
+      // Store password briefly so verify page can auto-sign-in after confirmation
+      sessionStorage.setItem('drawn_pending_email', email);
+      sessionStorage.setItem('drawn_pending_pw', password);
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setErrors({ submit: message });
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,8 +80,7 @@ export default function SignupPage() {
                 width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 1,
                 background: agreed ? 'var(--purple)' : 'transparent',
                 border: `2px solid ${agreed ? 'var(--purple)' : 'var(--border)'}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
               }}
             >
               {agreed && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>✓</span>}
@@ -78,6 +93,12 @@ export default function SignupPage() {
             </p>
           </div>
           {errors.agreed && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{errors.agreed}</p>}
+
+          {errors.submit && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 8, padding: '10px 14px' }}>
+              <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{errors.submit}</p>
+            </div>
+          )}
 
           <button
             type="submit"

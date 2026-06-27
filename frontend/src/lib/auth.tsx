@@ -1,39 +1,42 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getCurrentUser, signOut } from 'aws-amplify/auth';
 
 interface AuthContextType {
   isAuthed: boolean;
+  authLoading: boolean;
   login: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   isAuthed: false,
+  authLoading: true,
   login: () => {},
-  logout: () => {},
+  logout: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthed, setIsAuthed] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('drawn_authed');
-    if (stored === 'true') setIsAuthed(true);
+    getCurrentUser()
+      .then(() => setIsAuthed(true))
+      .catch(() => setIsAuthed(false))
+      .finally(() => setAuthLoading(false));
   }, []);
 
-  const login = () => {
-    localStorage.setItem('drawn_authed', 'true');
-    setIsAuthed(true);
-  };
+  const login = () => setIsAuthed(true);
 
-  const logout = () => {
-    localStorage.removeItem('drawn_authed');
+  const logout = async () => {
+    try { await signOut(); } catch {}
     setIsAuthed(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthed, login, logout }}>
+    <AuthContext.Provider value={{ isAuthed, authLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
