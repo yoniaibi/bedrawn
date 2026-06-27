@@ -25,7 +25,7 @@ export default function GrandDrawPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <p className="serif" style={{ fontSize: 24, color: 'var(--gold)', margin: 0 }}>DRAWN</p>
@@ -51,7 +51,7 @@ export default function GrandDrawPage() {
               </span>
             </div>
             <p style={{ fontSize: 48, margin: '0 0 8px' }}>{grandDraw.emoji}</p>
-            <p className="serif" style={{ fontSize: 28, color: 'var(--white)', margin: '0 0 4px' }}>{grandDraw.prize}</p>
+            <p className="serif" style={{ fontSize: 28, color: 'var(--text)', margin: '0 0 4px' }}>{grandDraw.prize}</p>
             <p style={{ fontSize: 13, color: 'var(--grey)', margin: '0 0 16px' }}>This month&apos;s Grand Draw prize</p>
             <span style={{
               background: 'rgba(245,158,11,0.2)', border: '1px solid var(--gold)',
@@ -123,7 +123,7 @@ export default function GrandDrawPage() {
                 <p className="serif" style={{ fontSize: 32, color: 'var(--white)', margin: 0, fontWeight: 700 }}>{currentUser.streak}</p>
               </div>
               <div>
-                <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>Day streak</p>
+                <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Day streak</p>
                 <p style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--grey)' }}>Longest: 12 days</p>
                 <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>All-time earned: 23 tickets</p>
               </div>
@@ -193,7 +193,7 @@ export default function GrandDrawPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <p style={{ fontSize: 32, margin: 0 }}>👜</p>
               <div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>Louis Vuitton Neverfull</p>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Louis Vuitton Neverfull</p>
                 <p style={{ margin: 0, fontSize: 12, color: 'var(--gold)' }}>Worth £1,200</p>
                 <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--grey)' }}>Won by @luxe_fan_99</p>
               </div>

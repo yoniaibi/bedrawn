@@ -19,7 +19,7 @@ export default function OrdersPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
           <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>My Orders</p>
@@ -67,7 +67,7 @@ export default function OrdersPage() {
                     <div style={{ display: 'flex', gap: 16 }}>
                       <span style={{ fontSize: 12, color: 'var(--grey)' }}>{o.date}</span>
                       <span style={{ fontSize: 12, color: 'var(--grey)' }}>{o.tickets} tickets</span>
-                      <span style={{ fontSize: 12, color: 'var(--white)', fontWeight: 600 }}>£{(o.total / 100).toFixed(2)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 600 }}>£{(o.total / 100).toFixed(2)}</span>
                     </div>
                   </div>
                 </Link>

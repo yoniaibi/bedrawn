@@ -64,7 +64,7 @@ export default function LivePage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto', paddingBottom: 16 }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 16 }}>
         {/* Header */}
         <div style={{
           padding: '16px', borderBottom: '1px solid var(--border)',
@@ -114,7 +114,7 @@ export default function LivePage() {
             <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>
               Draw starts in
             </p>
-            <CountdownTimer className="text-3xl font-bold" style={{ color: 'var(--white)' }} />
+            <CountdownTimer className="text-3xl font-bold" style={{ color: 'var(--text)' }} />
             <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--pink)' }}>Don&apos;t miss the reveal</p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function LivePage() {
                       <img src={d.imageUrl} alt={d.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</p>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</p>
                       <p style={{ margin: '2px 0', fontSize: 11, color: 'var(--grey)' }}>{price} → £{d.retailValue.toLocaleString()}</p>
                       <ProgressBar percent={pct} height={3} />
                     </div>

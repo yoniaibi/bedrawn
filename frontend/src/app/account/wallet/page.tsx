@@ -13,13 +13,13 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PK!);
 const topUps = [500, 1000, 2000, 5000];
 
 const stripeAppearance = {
-  theme: 'night' as const,
+  theme: 'stripe' as const,
   variables: {
-    colorPrimary: '#8B5CF6',
-    colorBackground: '#1A1545',
-    colorText: '#ffffff',
-    colorDanger: '#EF4444',
-    borderRadius: '12px',
+    colorPrimary: '#7C3AED',
+    colorBackground: '#FFFFFF',
+    colorText: '#111111',
+    colorDanger: '#DC2626',
+    borderRadius: '10px',
     fontFamily: 'system-ui, sans-serif',
   },
 };
@@ -67,7 +67,7 @@ function CheckoutForm({ amountPence, onSuccess, onCancel }: {
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 20 }}>
         <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>
-          Adding <strong style={{ color: 'var(--white)' }}>£{(amountPence / 100).toFixed(2)}</strong> to your wallet
+          Adding <strong style={{ color: 'var(--text)' }}>£{(amountPence / 100).toFixed(2)}</strong> to your wallet
         </p>
         <PaymentElement />
       </div>
@@ -145,17 +145,17 @@ export default function WalletPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 560, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
-          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>My Wallet</p>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>My Wallet</p>
         </div>
 
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Balance placeholder — live balance will come from API once tickets are purchased */}
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <p style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Available balance</p>
-            <p className="serif" style={{ margin: 0, fontSize: 52, color: 'var(--white)', fontWeight: 700 }}>—</p>
+            <p className="serif" style={{ margin: 0, fontSize: 52, color: 'var(--text)', fontWeight: 700 }}>—</p>
             <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>Balance updates after payment confirms</p>
           </div>
 
@@ -190,7 +190,7 @@ export default function WalletPage() {
             </Elements>
           ) : (
             <div>
-              <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>Top up</p>
+              <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Top up</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {topUps.map(amount => (
                   <button
@@ -205,7 +205,7 @@ export default function WalletPage() {
                       transition: 'border-color 0.15s',
                     }}
                   >
-                    <p className="serif" style={{ margin: 0, fontSize: 28, color: 'var(--white)', fontWeight: 700 }}>
+                    <p className="serif" style={{ margin: 0, fontSize: 28, color: 'var(--text)', fontWeight: 700 }}>
                       £{amount / 100}
                     </p>
                     <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>

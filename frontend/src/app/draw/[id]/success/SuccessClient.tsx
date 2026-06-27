@@ -31,7 +31,7 @@ function SuccessContent({ id }: { id: string }) {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
           {particles.map(p => (
             <div key={p.id} style={{
@@ -42,13 +42,15 @@ function SuccessContent({ id }: { id: string }) {
           ))}
         </div>
         <div style={{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <p style={{ fontSize: 72, margin: 0 }}>🎉</p>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--purple-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 36 }}>✓</span>
+          </div>
           <div>
-            <p className="serif" style={{ fontSize: 36, color: 'var(--white)', margin: '0 0 8px' }}>You&apos;re in!</p>
+            <p className="serif" style={{ fontSize: 36, color: 'var(--text)', margin: '0 0 8px' }}>You&apos;re in!</p>
             <p style={{ fontSize: 16, color: 'var(--grey)', margin: 0 }}>Your tickets are confirmed</p>
           </div>
           <div style={{ width: '100%', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px', textAlign: 'left' }}>
-            <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--white)' }}>{draw.title}</p>
+            <p style={{ margin: '0 0 16px', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{draw.title}</p>
             {[
               { label: 'Tickets', value: `${qty} ticket${qty !== 1 ? 's' : ''}` },
               { label: 'Total paid', value: totalDisplay },
@@ -56,7 +58,7 @@ function SuccessContent({ id }: { id: string }) {
             ].map(row => (
               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                 <span style={{ fontSize: 13, color: 'var(--grey)' }}>{row.label}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: row.highlight ? 'var(--gold)' : 'var(--white)' }}>{row.value}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: row.highlight ? 'var(--gold)' : 'var(--text)' }}>{row.value}</span>
               </div>
             ))}
           </div>

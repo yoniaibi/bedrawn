@@ -32,7 +32,7 @@ function StatusBadge({ enabled, label }: { enabled: boolean; label: string }) {
         {enabled ? '✓' : '○'}
       </span>
       <div>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--white)' }}>{label}</p>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{label}</p>
         <p style={{ margin: 0, fontSize: 11, color: enabled ? 'var(--green)' : 'var(--gold)' }}>
           {enabled ? 'Active' : 'Pending verification'}
         </p>
@@ -102,10 +102,10 @@ export default function SellerDashboardPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
-          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
             Seller Dashboard{username ? ` · @${username}` : ''}
           </p>
         </div>
@@ -123,7 +123,7 @@ export default function SellerDashboardPage() {
             <>
               {/* Verification status */}
               <div>
-                <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: 'var(--white)' }}>Verification status</p>
+                <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Verification status</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <StatusBadge enabled={status?.chargesEnabled ?? false} label="Accept payments" />
                   <StatusBadge enabled={status?.payoutsEnabled ?? false} label="Receive payouts" />
@@ -132,8 +132,8 @@ export default function SellerDashboardPage() {
 
               {/* Not yet verified — resume onboarding */}
               {!isVerified && (
-                <div style={{ background: 'linear-gradient(135deg, #2D1B4E, #1a0a2e)', border: '1px solid var(--purple)', borderRadius: 16, padding: 20 }}>
-                  <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--white)' }}>Complete your verification</p>
+                <div style={{ background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: 20 }}>
+                  <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Complete your verification</p>
                   <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
                     Your Stripe account needs a few more details before you can receive payouts. This usually takes 2–3 minutes.
                   </p>
@@ -170,13 +170,13 @@ export default function SellerDashboardPage() {
                     <button style={{
                       width: '100%', padding: '14px', borderRadius: 999,
                       background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-                      border: 'none', color: 'var(--white)', fontWeight: 700, fontSize: 15,
+                      border: 'none', color: 'var(--text)', fontWeight: 700, fontSize: 15,
                       cursor: 'pointer',
                     }}>+ List new item</button>
                   </Link>
 
                   <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
-                    <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: 'var(--white)' }}>Your draws</p>
+                    <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Your draws</p>
                     <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>No draws yet — list your first item to get started.</p>
                   </div>
                 </>

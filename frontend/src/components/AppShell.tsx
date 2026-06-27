@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { BottomNav, Sidebar } from './Nav';
+import { TopNav, BottomNav } from './Nav';
 import Logo from './Logo';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -16,10 +16,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (authLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
         <div style={{ textAlign: 'center' }}>
-          <Logo width={160} />
-          <div style={{ width: 28, height: 28, border: '2.5px solid var(--border)', borderTopColor: 'var(--purple)', borderRadius: '50%', margin: '20px auto 0', animation: 'spin-slow 0.8s linear infinite' }} />
+          <Logo width={140} bg="var(--white)" />
+          <div style={{
+            width: 24, height: 24,
+            border: '2.5px solid var(--border)',
+            borderTopColor: 'var(--purple)',
+            borderRadius: '50%',
+            margin: '20px auto 0',
+            animation: 'spin-slow 0.8s linear infinite',
+          }} />
         </div>
       </div>
     );
@@ -28,19 +35,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (!isAuthed) return null;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <div style={{ display: 'none' }} className="sidebar-container">
-        <Sidebar />
-      </div>
-      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <TopNav />
+      {/* content — padTop for fixed header, padBottom for mobile bottom nav */}
+      <main style={{ paddingTop: 60, paddingBottom: 80 }}>
         {children}
-      </div>
+      </main>
       <BottomNav />
-      <style>{`
-        @media (min-width: 768px) {
-          .sidebar-container { display: flex !important; }
-        }
-      `}</style>
     </div>
   );
 }

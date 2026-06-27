@@ -44,7 +44,7 @@ export default function SearchPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Search bar */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={{ flex: 1, position: 'relative' }}>
@@ -129,7 +129,7 @@ export default function SearchPage() {
                     }}
                   >
                     <p style={{ fontSize: 24, margin: '0 0 4px' }}>{cat.emoji}</p>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--white)', fontWeight: 600 }}>{cat.label}</p>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--text)', fontWeight: 600 }}>{cat.label}</p>
                   </button>
                 ))}
               </div>

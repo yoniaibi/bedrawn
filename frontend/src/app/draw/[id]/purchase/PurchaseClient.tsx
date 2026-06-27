@@ -72,10 +72,10 @@ export default function PurchaseClient({ id }: { id: string }) {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto', paddingBottom: 20 }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', paddingBottom: 20 }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href={`/draw/${id}`} style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
-          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>Enter draw</p>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Enter draw</p>
         </div>
 
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -84,20 +84,20 @@ export default function PurchaseClient({ id }: { id: string }) {
               <img src={draw.imageUrl} alt={draw.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--white)' }}>{draw.title}</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{draw.title}</p>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--grey)' }}>{priceDisplay} per ticket · £{draw.retailValue.toLocaleString()} retail</p>
             </div>
           </div>
 
           <div>
-            <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>How many tickets?</p>
+            <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>How many tickets?</p>
             <div style={{ display: 'flex', gap: 10 }}>
               {qtyPills.map(q => (
                 <button key={q} onClick={() => setQty(q)} style={{
                   flex: 1, padding: '14px 0', borderRadius: 12, cursor: 'pointer',
                   background: qty === q ? 'rgba(139,92,246,0.2)' : 'var(--card)',
                   border: `2px solid ${qty === q ? 'var(--purple)' : 'var(--border)'}`,
-                  color: qty === q ? 'var(--purple)' : 'var(--white)',
+                  color: qty === q ? 'var(--purple)' : 'var(--text)',
                   fontWeight: qty === q ? 700 : 400, fontSize: 16,
                 }}>{q}</button>
               ))}
@@ -112,7 +112,7 @@ export default function PurchaseClient({ id }: { id: string }) {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 14, color: 'var(--grey)' }}>{qty} ticket{qty !== 1 ? 's' : ''} × {priceDisplay}</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--white)' }}>{totalDisplay}</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{totalDisplay}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: 'var(--grey)' }}>Your balance</span>

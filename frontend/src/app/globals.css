@@ -1,33 +1,34 @@
 @import "tailwindcss";
 
 :root {
-  /* Backgrounds */
-  --bg: #0E0B1F;
-  --card: #1A1545;
-  --card2: #231C56;
-  --border: #2D2460;
+  /* Backgrounds — light theme */
+  --bg: #FFFFFF;
+  --card: #F7F8FA;
+  --card2: #EEEEF4;
+  --border: #E4E4EC;
 
   /* Brand */
-  --violet: #2D1B69;
-  --royal: #6D28D9;
-  --purple: #8B5CF6;
-  --purple-dark: #6D28D9;
-  --pink: #F472B6;
-  --rose: #C43070;
-  --ink: #1A1040;
+  --purple: #7C3AED;
+  --purple-light: #EDE9FE;
+  --purple-dark: #5B21B6;
+  --pink: #EC4899;
+  --rose: #DB2777;
+  --gold: #D97706;
+  --gold-light: #FEF3C7;
 
-  /* Gold — winners only */
-  --gold: #F9C846;
+  /* Text hierarchy */
+  --text: #111111;
+  --grey: #6B7280;
+  --muted: #9CA3AF;
 
-  /* Text */
+  /* Keep --white for button text, overlays, etc. */
   --white: #FFFFFF;
-  --grey: #B8B0D8;
-  --muted: #6B5D8F;
-  --text-muted: #3D3266;
 
   /* Semantic */
-  --green: #1D9E75;
-  --red: #E24B4A;
+  --green: #059669;
+  --green-light: #ECFDF5;
+  --red: #DC2626;
+  --red-light: #FEF2F2;
 }
 
 @theme inline {
@@ -54,25 +55,26 @@
 
 html, body {
   background: var(--bg);
-  color: var(--white);
+  color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 input, textarea {
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--white);
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  color: var(--text);
   border-radius: 10px;
   padding: 12px 14px;
   width: 100%;
   font-size: 15px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 input:focus, textarea:focus {
   border-color: var(--purple);
+  box-shadow: 0 0 0 3px var(--purple-light);
 }
 
 input::placeholder, textarea::placeholder {
@@ -97,6 +99,8 @@ button {
   background: var(--border);
   border-radius: 2px;
 }
+
+/* ─── Animations ─── */
 
 @keyframes pulse-opacity {
   0%, 100% { opacity: 1; }
@@ -128,6 +132,13 @@ button {
   to { transform: rotate(360deg); }
 }
 
+@keyframes ticker-slide {
+  0% { transform: translateY(100%); opacity: 0; }
+  10% { transform: translateY(0); opacity: 1; }
+  85% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
 .animate-pulse-dot {
   animation: pulse-opacity 1.6s ease-in-out infinite;
 }
@@ -141,17 +152,21 @@ button {
 }
 
 .animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
+  animation: spin-slow 0.8s linear infinite;
 }
 
 .animate-fade-in-up {
   animation: fade-in-up 0.4s ease-out;
 }
 
+/* ─── Typography ─── */
+
 .serif {
   font-family: Georgia, 'Times New Roman', serif;
   font-style: italic;
 }
+
+/* ─── Utilities ─── */
 
 .scrollbar-hide {
   -ms-overflow-style: none;
@@ -162,112 +177,186 @@ button {
   display: none;
 }
 
-.gradient-purple-pink {
+/* ─── Responsive layout helpers ─── */
+
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.page-container-narrow {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .page-container { padding: 0 16px; }
+  .page-container-narrow { padding: 0 16px; }
+}
+
+/* Draw grid — 2 cols mobile → 3 tablet → 4 desktop */
+.draw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .draw-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .draw-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Mobile-only / desktop-only visibility */
+.mobile-only {
+  display: block;
+}
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+  .desktop-only { display: block; }
+  .desktop-flex { display: flex !important; }
+}
+
+/* ─── Gradient helpers ─── */
+
+.gradient-purple {
   background: linear-gradient(135deg, var(--purple), var(--pink));
 }
 
 .gradient-gold {
-  background: linear-gradient(135deg, var(--gold), #D97706);
+  background: linear-gradient(135deg, var(--gold), #B45309);
 }
 
-.text-gradient-purple-pink {
+.text-gradient-purple {
   background: linear-gradient(135deg, var(--purple), var(--pink));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Draw card hover */
+/* ─── Interactive component states ─── */
+
+/* Draw card */
 .draw-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .draw-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.22), 0 4px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.15), 0 2px 8px rgba(0,0,0,0.06);
   border-color: var(--purple) !important;
 }
 .draw-card:hover img {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 .draw-card img {
   transition: transform 0.35s ease;
 }
 .draw-card-scarce:hover {
-  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.22), 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px rgba(220, 38, 38, 0.15), 0 2px 8px rgba(0,0,0,0.06);
   border-color: var(--red) !important;
 }
 
-/* Hero image hover */
-.hero-draw {
-  transition: box-shadow 0.25s ease;
+/* Scarce glow */
+@keyframes glow-red {
+  0%, 100% { box-shadow: 0 0 6px rgba(220,38,38,0.2); }
+  50% { box-shadow: 0 0 16px rgba(220,38,38,0.45); }
 }
-.hero-draw:hover {
-  box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+.draw-card-scarce {
+  animation: glow-red 2s ease-in-out infinite;
 }
 
-/* Button hover effects */
+/* Primary button */
 .btn-primary {
   transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  opacity: 0.92;
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
 }
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
 }
 
-/* Category pill / filter chip hover */
-.pill-btn {
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
-}
-.pill-btn:hover {
-  border-color: var(--purple);
-  color: var(--white);
-  transform: translateY(-1px);
-}
-
-/* Sidebar / nav link hover */
+/* Nav link */
 .nav-link {
-  transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
   border-radius: 8px;
 }
 .nav-link:hover {
-  background: rgba(139, 92, 246, 0.1);
+  background: var(--purple-light);
+  color: var(--purple);
+}
+.nav-link.active {
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* Top nav link */
+.top-nav-link {
+  position: relative;
+  color: var(--grey);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.top-nav-link:hover {
+  color: var(--text);
+}
+.top-nav-link.active {
+  color: var(--purple);
+  font-weight: 700;
+}
+.top-nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--purple);
+  border-radius: 1px;
+}
+
+/* Pill button */
+.pill-btn {
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.pill-btn:hover {
+  border-color: var(--purple);
+  background: var(--purple-light);
   color: var(--purple);
 }
 
-/* Ticket card hover */
+/* Ticket card */
 .ticket-card {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .ticket-card:hover {
   border-color: var(--purple);
-  box-shadow: 0 8px 28px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.12);
   transform: translateY(-2px);
 }
 
-/* List item row hover */
+/* List row */
 .list-row {
   transition: background 0.15s ease;
   border-radius: 10px;
 }
 .list-row:hover {
-  background: rgba(139, 92, 246, 0.06);
+  background: var(--purple-light);
 }
 
-/* Tonight's draw row hover */
-.tonight-row {
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
-}
-.tonight-row:hover {
-  border-color: var(--purple);
-  background: rgba(139, 92, 246, 0.05);
-  transform: translateX(2px);
-}
-
-/* Save button heart hover */
+/* Save button */
 .save-btn {
   transition: transform 0.15s ease, color 0.15s ease;
 }
@@ -276,18 +365,29 @@ button {
   color: var(--pink) !important;
 }
 
-/* Landing page draw card hover */
+/* Landing draw card hover */
+.landing-draw-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
 .landing-draw-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 32px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 8px 28px rgba(124, 58, 237, 0.18);
   border-color: var(--purple);
 }
 
-/* Glow pulse on scarce cards */
-@keyframes glow-red {
-  0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.3); }
-  50% { box-shadow: 0 0 20px rgba(239,68,68,0.6); }
+/* Hero draw hover */
+.hero-draw {
+  transition: box-shadow 0.25s ease;
 }
-.draw-card-scarce {
-  animation: glow-red 2s ease-in-out infinite;
+.hero-draw:hover {
+  box-shadow: 0 16px 48px rgba(124, 58, 237, 0.2);
+}
+
+/* Tonight row hover */
+.tonight-row {
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.tonight-row:hover {
+  border-color: var(--purple);
+  background: var(--purple-light);
 }

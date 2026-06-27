@@ -30,7 +30,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
           <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>Settings</p>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
                   borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
                 }}>
                   <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>{item.label}</p>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{item.label}</p>
                     <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>{item.desc}</p>
                   </div>
                   <Toggle value={notifs[item.key]} onChange={v => setNotifs(n => ({ ...n, [item.key]: v }))} />
@@ -102,7 +102,7 @@ export default function SettingsPage() {
               >Delete account</button>
             ) : (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 12, padding: 16 }}>
-                <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--white)', fontWeight: 600 }}>Are you sure?</p>
+                <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>Are you sure?</p>
                 <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>This permanently deletes your account and all data. This cannot be undone.</p>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={() => setShowDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--white)', cursor: 'pointer' }}>Cancel</button>

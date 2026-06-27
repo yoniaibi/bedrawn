@@ -24,7 +24,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
       <AppShell>
         <div style={{ textAlign: 'center', padding: '60px 32px' }}>
           <p style={{ fontSize: 32, margin: '0 0 8px' }}>🔍</p>
-          <p style={{ color: 'var(--white)', fontSize: 16 }}>Draw not found</p>
+          <p style={{ color: 'var(--text)', fontSize: 16 }}>Draw not found</p>
           <Link href="/home" style={{ color: 'var(--purple)' }}>← Back to home</Link>
         </div>
       </AppShell>
@@ -37,7 +37,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto', paddingBottom: 100 }}>
+      <div style={{ maxWidth: 720, margin: '0 auto', paddingBottom: 100 }}>
         {/* Header */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/home" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
@@ -67,7 +67,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
 
         {/* Info */}
         <div style={{ padding: '20px 16px' }}>
-          <p className="serif" style={{ fontSize: 24, color: 'var(--white)', margin: '0 0 8px', lineHeight: 1.2 }}>{draw.title}</p>
+          <p className="serif" style={{ fontSize: 24, color: 'var(--text)', margin: '0 0 8px', lineHeight: 1.2 }}>{draw.title}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <span style={{ fontSize: 20 }}>{draw.sellerEmoji}</span>
             <span style={{ fontSize: 14, color: 'var(--grey)' }}>{draw.seller}</span>
@@ -83,11 +83,11 @@ export default function DrawDetailClient({ id }: { id: string }) {
             <span style={{ fontSize: 12, color: remaining < 500 ? 'var(--red)' : 'var(--grey)' }}>{remaining.toLocaleString()} remaining</span>
           </div>
           <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-            <span style={{ fontSize: 12, color: 'var(--grey)' }}>👁 247 watching</span>
-            <span style={{ fontSize: 12, color: 'var(--grey)' }}>📮 12 postal entries</span>
+            <span style={{ fontSize: 12, color: 'var(--grey)' }}>247 watching</span>
+            <span style={{ fontSize: 12, color: 'var(--grey)' }}>12 postal entries</span>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>About this item</p>
+            <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>About this item</p>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: expanded ? 'none' : 3, WebkitBoxOrient: 'vertical', overflow: expanded ? 'visible' : 'hidden' }}>
               {draw.description}
             </p>

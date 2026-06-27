@@ -22,7 +22,7 @@ export default function TicketsPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
           <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--white)' }}>My Tickets</p>
@@ -56,7 +56,7 @@ export default function TicketsPage() {
           display: 'flex', alignItems: 'center', gap: 10,
         }}>
           <span style={{ fontSize: 20 }}>⚡</span>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--white)' }}>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text)' }}>
             Win up to <strong style={{ color: 'var(--gold)' }}>£{totalValue.toLocaleString()}</strong> for as little as <strong style={{ color: 'var(--purple)' }}>10p</strong>
           </p>
         </div>
@@ -139,7 +139,7 @@ export default function TicketsPage() {
                     borderTop: '1px solid var(--border)', padding: '10px 14px',
                     display: 'flex', alignItems: 'center', gap: 12,
                   }}>
-                    <span style={{ fontSize: 12, color: 'var(--white)', fontWeight: 600 }}>{t.quantity} tickets</span>
+                    <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 600 }}>{t.quantity} tickets</span>
                     <span style={{ fontSize: 12, color: 'var(--grey)' }}>{t.price} each</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: oddsColor }}>{t.odds.toFixed(2)}% odds</span>
                     <Link href={`/draw/${t.draw.id}/purchase`} style={{ marginLeft: 'auto', textDecoration: 'none' }}>

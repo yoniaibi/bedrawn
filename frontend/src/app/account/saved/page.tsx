@@ -11,7 +11,7 @@ export default function SavedPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
           <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>Saved Draws ({saved.length})</p>

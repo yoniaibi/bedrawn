@@ -4,7 +4,7 @@ interface LogoProps {
   bg?: string;
 }
 
-export default function Logo({ width = 160, bg = '#0E0B1F' }: LogoProps) {
+export default function Logo({ width = 160, bg = '#FFFFFF' }: LogoProps) {
   const height = Math.round(width * (140 / 400));
   return (
     <svg

@@ -22,7 +22,7 @@ const comingSoon = [
 export default function CategoriesPage() {
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
           <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--white)' }}>Categories</p>
         </div>
@@ -64,7 +64,7 @@ export default function CategoriesPage() {
 
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
             <p style={{ fontSize: 24, margin: '0 0 8px' }}>💡</p>
-            <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--white)' }}>Don&apos;t see what you want?</p>
+            <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Don&apos;t see what you want?</p>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>We add new categories based on demand. Let us know what you&apos;d like to see next.</p>
           </div>
         </div>

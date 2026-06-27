@@ -41,17 +41,16 @@ export default function BecomeSellerPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 500, margin: '0 auto' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
-          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>Become a Seller</p>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Become a Seller</p>
         </div>
 
         <div style={{ padding: 16 }}>
           {/* Hero card */}
-          <div style={{ background: 'linear-gradient(135deg, #2D1B4E, #1a0a2e)', border: '1px solid var(--purple)', borderRadius: 16, padding: '20px', marginBottom: 24 }}>
-            <p style={{ fontSize: 22, margin: '0 0 12px' }}>🏪</p>
-            <p style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: 'var(--white)' }}>Sell on Bedrawn</p>
+          <div style={{ background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px', marginBottom: 24 }}>
+            <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--purple)' }}>Sell on Bedrawn</p>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
               List your luxury goods for raffle. Reach thousands of buyers. Keep 88% of all ticket revenue. Draws close every night at 9pm.
             </p>
@@ -72,7 +71,7 @@ export default function BecomeSellerPage() {
 
           {/* How it works */}
           <div style={{ marginBottom: 24 }}>
-            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: 'var(--white)' }}>How it works</p>
+            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>How it works</p>
             {[
               { step: '1', title: 'Identity verification', desc: 'Stripe securely verifies your ID and bank account. Takes 2–3 minutes.' },
               { step: '2', title: 'List your item', desc: 'Add photos, set your ticket price, and pick a draw date.' },
@@ -87,7 +86,7 @@ export default function BecomeSellerPage() {
                   fontSize: 12, fontWeight: 700, color: 'var(--white)',
                 }}>{step}</div>
                 <div>
-                  <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: 'var(--white)' }}>{title}</p>
+                  <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{title}</p>
                   <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>{desc}</p>
                 </div>
               </div>
