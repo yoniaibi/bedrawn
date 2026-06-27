@@ -1,0 +1,103 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+export default function SignupPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!name.trim()) e.name = 'Full name is required';
+    if (!email.includes('@')) e.email = 'Enter a valid email address';
+    if (password.length < 8) e.password = 'Password must be at least 8 characters';
+    if (!agreed) e.agreed = 'You must accept the Terms of Service';
+    return e;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 800));
+    router.push('/interests');
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+      <div style={{ width: '100%', maxWidth: 400 }}>
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', textAlign: 'center', margin: '0 0 8px' }}>DRAWN</p>
+        </Link>
+        <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 15, margin: '0 0 32px' }}>Create your account</p>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Full name</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+            {errors.name && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.name}</p>}
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Email address</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
+            {errors.email && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.email}</p>}
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" />
+            {errors.password && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.password}</p>}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <button
+              type="button"
+              onClick={() => setAgreed(a => !a)}
+              style={{
+                width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 1,
+                background: agreed ? 'var(--purple)' : 'transparent',
+                border: `2px solid ${agreed ? 'var(--purple)' : 'var(--border)'}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              {agreed && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>✓</span>}
+            </button>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)', lineHeight: 1.4 }}>
+              I agree to DRAWN&apos;s{' '}
+              <Link href="/legal/terms" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Terms of Service</Link>
+              {' '}and{' '}
+              <Link href="/legal/privacy" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Privacy Policy</Link>
+            </p>
+          </div>
+          {errors.agreed && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{errors.agreed}</p>}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%', padding: 16, borderRadius: 999,
+              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+              border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
+              marginTop: 8, cursor: loading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {loading ? 'Creating account…' : 'Create account'}
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 14, marginTop: 24 }}>
+          Already have an account?{' '}
+          <Link href="/login" style={{ color: 'var(--purple)', fontWeight: 600, textDecoration: 'none' }}>Log in</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
