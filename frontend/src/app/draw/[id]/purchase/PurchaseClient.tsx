@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import '@/lib/amplify';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
 import ActivityTicker from '@/components/ActivityTicker';
-import { draws, currentUser } from '@/lib/mockData';
+import { draws } from '@/lib/mockData';
 
 const qtyPills = [1, 5, 10, 25];
 const activity = [
@@ -14,11 +16,30 @@ const activity = [
   '@hypekid just bought 20 tickets',
 ];
 
+async function getAuthToken(): Promise<string> {
+  const session = await fetchAuthSession();
+  const token = session.tokens?.accessToken?.toString();
+  if (!token) throw new Error('Not authenticated');
+  return token;
+}
+
 export default function PurchaseClient({ id }: { id: string }) {
   const draw = draws.find(d => d.id === id);
   const router = useRouter();
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [balancePence, setBalancePence] = useState<number | null>(null);
+
+  useEffect(() => {
+    getAuthToken()
+      .then(token => fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallet/balance`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }))
+      .then(r => r.json())
+      .then(data => setBalancePence(data.balancePence ?? 0))
+      .catch(() => setBalancePence(0));
+  }, []);
 
   if (!draw) return null;
 
@@ -26,13 +47,27 @@ export default function PurchaseClient({ id }: { id: string }) {
   const total = qty * price;
   const totalDisplay = total >= 100 ? `£${(total / 100).toFixed(2)}` : `${total}p`;
   const priceDisplay = price >= 100 ? `£${(price / 100).toFixed(2)}` : `${price}p`;
-  const balance = currentUser.balancePence;
-  const sufficient = balance >= total;
+  const sufficient = balancePence !== null && balancePence >= total;
 
   const handleConfirm = async () => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    router.push(`/draw/${id}/success?qty=${qty}&total=${total}`);
+    setError(null);
+    try {
+      const token = await getAuthToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/enter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ticketCount: qty }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Error ${res.status}`);
+      }
+      router.push(`/draw/${id}/success?qty=${qty}&total=${total}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Purchase failed');
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,27 +116,33 @@ export default function PurchaseClient({ id }: { id: string }) {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: 'var(--grey)' }}>Your balance</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: sufficient ? 'var(--green)' : 'var(--red)' }}>
-                £{(balance / 100).toFixed(2)} {sufficient ? '✓' : '— insufficient'}
+              <span style={{ fontSize: 14, fontWeight: 600, color: balancePence === null ? 'var(--grey)' : sufficient ? 'var(--green)' : 'var(--red)' }}>
+                {balancePence === null ? 'Loading…' : `£${(balancePence / 100).toFixed(2)} ${sufficient ? '✓' : '— insufficient'}`}
               </span>
             </div>
-            {!sufficient && (
+            {balancePence !== null && !sufficient && (
               <Link href="/account/wallet" style={{ display: 'block', marginTop: 10, textAlign: 'center', color: 'var(--purple)', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
                 Top up wallet →
               </Link>
             )}
           </div>
 
+          {error && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 10, padding: '12px 16px' }}>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--red)' }}>{error}</p>
+            </div>
+          )}
+
           <ActivityTicker messages={activity} />
 
           <button
             onClick={handleConfirm}
-            disabled={!sufficient || loading}
+            disabled={!sufficient || loading || balancePence === null}
             style={{
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
-              background: !sufficient || loading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: !sufficient || loading || balancePence === null ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
-              cursor: !sufficient || loading ? 'not-allowed' : 'pointer',
+              cursor: !sufficient || loading || balancePence === null ? 'not-allowed' : 'pointer',
             }}
           >
             {loading ? 'Securing your tickets…' : `Confirm purchase · ${totalDisplay}`}

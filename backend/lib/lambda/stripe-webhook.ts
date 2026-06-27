@@ -1,23 +1,35 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { getStripe } from './stripe-client';
+
+const ssm = new SSMClient({ region: 'eu-west-1' });
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const stripe = await getStripe();
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const platformSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const sig = event.headers['stripe-signature'] ?? '';
+  const rawBody = event.body ?? '';
 
-  // Verify webhook signature
+  // Try platform secret first, then Connect secret (they have different signing keys)
   let stripeEvent;
   try {
-    if (!webhookSecret) throw new Error('Webhook secret not configured');
-    stripeEvent = stripe.webhooks.constructEvent(
-      event.body ?? '',
-      event.headers['stripe-signature'] ?? '',
-      webhookSecret,
-    );
+    if (!platformSecret) throw new Error('Webhook secret not configured');
+    try {
+      stripeEvent = stripe.webhooks.constructEvent(rawBody, sig, platformSecret);
+    } catch {
+      // May be a Connect event — fetch Connect secret from SSM and retry
+      const connectSecretResult = await ssm.send(new GetParameterCommand({
+        Name: '/bedrawn/stripe/connect-webhook-secret',
+        WithDecryption: true,
+      }));
+      const connectSecret = connectSecretResult.Parameter?.Value;
+      if (!connectSecret) throw new Error('Connect webhook secret not configured');
+      stripeEvent = stripe.webhooks.constructEvent(rawBody, sig, connectSecret);
+    }
   } catch {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid webhook signature' }) };
   }

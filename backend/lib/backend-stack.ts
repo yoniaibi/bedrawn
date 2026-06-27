@@ -7,6 +7,8 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as ses from 'aws-cdk-lib/aws-ses';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { HttpApi, CorsHttpMethod, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -101,6 +103,19 @@ export class BackendStack extends cdk.Stack {
       ...commonProps,
       entry: path.join(__dirname, 'lambda/waitlist.ts'),
     });
+    const walletBalanceFn = new nodejs.NodejsFunction(this, 'WalletBalance', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/wallet-balance.ts'),
+    });
+    const enterDrawFn = new nodejs.NodejsFunction(this, 'EnterDraw', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/enter-draw.ts'),
+    });
+    const resolveDrawsFn = new nodejs.NodejsFunction(this, 'ResolveDraws', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/resolve-draws.ts'),
+      timeout: cdk.Duration.seconds(60),
+    });
 
     // Stripe Lambdas — read Stripe secret key from SSM at runtime
     const createSellerAccountFn = new nodejs.NodejsFunction(this, 'CreateSellerAccount', {
@@ -127,7 +142,9 @@ export class BackendStack extends cdk.Stack {
     // Grant SSM read access to Stripe Lambdas
     const stripeSecretPolicy = new iam.PolicyStatement({
       actions: ['ssm:GetParameter'],
-      resources: [`arn:aws:ssm:eu-west-1:${this.account}:parameter/bedrawn/stripe/*`],
+      resources: [
+        `arn:aws:ssm:eu-west-1:${this.account}:parameter/bedrawn/stripe/*`,
+      ],
     });
     [createSellerAccountFn, walletTopupFn, confirmPayoutFn, stripeWebhookFn].forEach(fn => {
       fn.addToRolePolicy(stripeSecretPolicy);
@@ -140,6 +157,16 @@ export class BackendStack extends cdk.Stack {
     table.grantWriteData(deleteItemFn);
     bucket.grantPut(getUploadUrlFn);
     table.grantReadWriteData(waitlistFn);
+    table.grantReadData(walletBalanceFn);
+    table.grantReadWriteData(enterDrawFn);
+    table.grantReadWriteData(resolveDrawsFn);
+
+    // EventBridge rule — resolve draws at 9pm UK time (21:00 UTC = 9pm GMT; 10pm BST in summer)
+    const ninepmRule = new events.Rule(this, 'ResolveDrawsSchedule', {
+      schedule: events.Schedule.cron({ hour: '21', minute: '0' }),
+      description: 'Trigger draw resolution at 9pm UTC nightly',
+    });
+    ninepmRule.addTarget(new targets.LambdaFunction(resolveDrawsFn));
 
     // Cognito JWT authorizer for all protected routes
     const authorizer = new HttpUserPoolAuthorizer('CognitoAuthorizer', userPool, {
@@ -168,6 +195,8 @@ export class BackendStack extends cdk.Stack {
     api.addRoutes({ path: '/seller/account', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('CreateSellerAccountInt', createSellerAccountFn), authorizer });
     api.addRoutes({ path: '/wallet/topup', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('WalletTopupInt', walletTopupFn), authorizer });
     api.addRoutes({ path: '/draws/{id}/payout', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('ConfirmPayoutInt', confirmPayoutFn), authorizer });
+    api.addRoutes({ path: '/wallet/balance', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('WalletBalanceInt', walletBalanceFn), authorizer });
+    api.addRoutes({ path: '/draws/{id}/enter', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('EnterDrawInt', enterDrawFn), authorizer });
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });
