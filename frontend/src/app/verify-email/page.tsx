@@ -1,7 +1,6 @@
 'use client';
 
 import '@/lib/amplify';
-import Logo from '@/components/Logo';
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -114,15 +113,16 @@ function VerifyEmailContent() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
-          <Logo width={140} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
 
-        <p style={{ fontSize: 36, margin: '0 0 16px' }}>📬</p>
-        <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--white)', margin: '0 0 8px' }}>Check your email</p>
+        <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 26, color: 'var(--purple)' }}>✉</div>
+        <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>Check your email</p>
         <p style={{ fontSize: 14, color: 'var(--grey)', margin: '0 0 8px', lineHeight: 1.5 }}>
           We sent a 6-digit verification code to
         </p>
-        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--white)', margin: '0 0 32px' }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', margin: '0 0 32px' }}>
           {email}
         </p>
 
@@ -143,7 +143,7 @@ function VerifyEmailContent() {
                   width: 48, height: 56, textAlign: 'center', fontSize: 24, fontWeight: 700,
                   borderRadius: 10, padding: 0,
                   border: `2px solid ${digit ? 'var(--purple)' : 'var(--border)'}`,
-                  background: 'var(--card)', color: 'var(--white)',
+                  background: 'var(--card)', color: 'var(--text)',
                 }}
               />
             ))}

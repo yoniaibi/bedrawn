@@ -1,7 +1,6 @@
 'use client';
 
 import '@/lib/amplify';
-import Logo from '@/components/Logo';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -53,7 +52,8 @@ export default function SignupPage() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-          <Logo width={140} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
         <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 15, margin: '0 0 32px' }}>Create your account</p>
 

@@ -1,20 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
 const interests = [
-  { id: 'fashion', label: 'Fashion', emoji: '👗' },
-  { id: 'watches', label: 'Watches', emoji: '⌚' },
-  { id: 'luxury', label: 'Luxury', emoji: '💎' },
-  { id: 'streetwear', label: 'Streetwear', emoji: '🧢' },
-  { id: 'vintage', label: 'Vintage', emoji: '🕰' },
-  { id: 'bags', label: 'Bags', emoji: '👜' },
-  { id: 'trainers', label: 'Trainers', emoji: '👟' },
-  { id: 'jewellery', label: 'Jewellery', emoji: '💍' },
-  { id: 'accessories', label: 'Accessories', emoji: '🎀' },
-  { id: 'tech', label: 'Tech', emoji: '📱' },
+  { id: 'fashion',     label: 'Fashion' },
+  { id: 'watches',     label: 'Watches' },
+  { id: 'luxury',      label: 'Luxury' },
+  { id: 'streetwear',  label: 'Streetwear' },
+  { id: 'vintage',     label: 'Vintage' },
+  { id: 'bags',        label: 'Bags' },
+  { id: 'trainers',    label: 'Trainers' },
+  { id: 'jewellery',   label: 'Jewellery' },
+  { id: 'accessories', label: 'Accessories' },
+  { id: 'tech',        label: 'Tech' },
 ];
 
 export default function InterestsPage() {
@@ -33,8 +34,12 @@ export default function InterestsPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
-        <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', textAlign: 'center', margin: '0 0 8px' }}>DRAWN</p>
-        <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--white)', textAlign: 'center', margin: '0 0 8px' }}>What are you into?</p>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
+        </Link>
+
+        <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', textAlign: 'center', margin: '0 0 8px' }}>What are you into?</p>
         <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 14, margin: '0 0 32px' }}>
           Choose your interests to personalise your feed
         </p>
@@ -47,17 +52,15 @@ export default function InterestsPage() {
                 key={item.id}
                 onClick={() => toggle(item.id)}
                 style={{
-                  padding: '10px 18px', borderRadius: 999, cursor: 'pointer',
-                  background: active ? 'rgba(139,92,246,0.2)' : 'var(--card)',
+                  padding: '10px 20px', borderRadius: 999, cursor: 'pointer',
+                  background: active ? 'var(--purple-light)' : 'var(--card)',
                   border: `2px solid ${active ? 'var(--purple)' : 'var(--border)'}`,
-                  color: active ? 'var(--purple)' : 'var(--white)',
-                  fontSize: 14, fontWeight: active ? 700 : 400,
-                  display: 'flex', alignItems: 'center', gap: 6,
+                  color: active ? 'var(--purple)' : 'var(--grey)',
+                  fontSize: 14, fontWeight: active ? 700 : 500,
                   transition: 'all 0.15s',
                 }}
               >
-                <span>{item.emoji}</span>
-                <span>{item.label}</span>
+                {item.label}
               </button>
             );
           })}
@@ -69,14 +72,14 @@ export default function InterestsPage() {
             width: '100%', padding: 16, borderRadius: 999,
             background: 'linear-gradient(135deg, var(--purple), var(--pink))',
             border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
-            marginBottom: 12,
+            marginBottom: 12, cursor: 'pointer',
           }}
         >
           {selected.length > 0 ? `Continue with ${selected.length} interest${selected.length !== 1 ? 's' : ''}` : 'Continue'}
         </button>
         <button
           onClick={handleContinue}
-          style={{ width: '100%', padding: 12, borderRadius: 999, background: 'transparent', border: 'none', color: 'var(--grey)', fontSize: 14 }}
+          style={{ width: '100%', padding: 12, borderRadius: 999, background: 'transparent', border: 'none', color: 'var(--grey)', fontSize: 14, cursor: 'pointer' }}
         >
           Skip for now
         </button>
