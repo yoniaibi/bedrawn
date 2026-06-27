@@ -31,7 +31,7 @@ export function TopNav() {
           {/* Logo */}
           <Link href="/home" style={{ textDecoration: 'none', flexShrink: 0, marginRight: 40 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
+            <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 44, width: 'auto' }} />
           </Link>
 
           {/* Desktop nav links */}

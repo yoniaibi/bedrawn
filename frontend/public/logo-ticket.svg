@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 68">
+  <defs>
+    <mask id="tm">
+      <!-- Base ticket rectangle -->
+      <rect x="0" y="0" width="200" height="68" rx="3" fill="white"/>
+      <!-- Top edge scallops -->
+      <circle cx="10"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="20"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="30"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="40"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="50"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="60"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="70"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="80"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="90"  cy="0"  r="4.5" fill="black"/>
+      <circle cx="100" cy="0"  r="4.5" fill="black"/>
+      <circle cx="110" cy="0"  r="4.5" fill="black"/>
+      <circle cx="120" cy="0"  r="4.5" fill="black"/>
+      <circle cx="130" cy="0"  r="4.5" fill="black"/>
+      <circle cx="140" cy="0"  r="4.5" fill="black"/>
+      <circle cx="150" cy="0"  r="4.5" fill="black"/>
+      <circle cx="160" cy="0"  r="4.5" fill="black"/>
+      <circle cx="170" cy="0"  r="4.5" fill="black"/>
+      <circle cx="180" cy="0"  r="4.5" fill="black"/>
+      <circle cx="190" cy="0"  r="4.5" fill="black"/>
+      <!-- Bottom edge scallops -->
+      <circle cx="10"  cy="68" r="4.5" fill="black"/>
+      <circle cx="20"  cy="68" r="4.5" fill="black"/>
+      <circle cx="30"  cy="68" r="4.5" fill="black"/>
+      <circle cx="40"  cy="68" r="4.5" fill="black"/>
+      <circle cx="50"  cy="68" r="4.5" fill="black"/>
+      <circle cx="60"  cy="68" r="4.5" fill="black"/>
+      <circle cx="70"  cy="68" r="4.5" fill="black"/>
+      <circle cx="80"  cy="68" r="4.5" fill="black"/>
+      <circle cx="90"  cy="68" r="4.5" fill="black"/>
+      <circle cx="100" cy="68" r="4.5" fill="black"/>
+      <circle cx="110" cy="68" r="4.5" fill="black"/>
+      <circle cx="120" cy="68" r="4.5" fill="black"/>
+      <circle cx="130" cy="68" r="4.5" fill="black"/>
+      <circle cx="140" cy="68" r="4.5" fill="black"/>
+      <circle cx="150" cy="68" r="4.5" fill="black"/>
+      <circle cx="160" cy="68" r="4.5" fill="black"/>
+      <circle cx="170" cy="68" r="4.5" fill="black"/>
+      <circle cx="180" cy="68" r="4.5" fill="black"/>
+      <circle cx="190" cy="68" r="4.5" fill="black"/>
+      <!-- Left edge scallops -->
+      <circle cx="0"   cy="10" r="4.5" fill="black"/>
+      <circle cx="0"   cy="20" r="4.5" fill="black"/>
+      <circle cx="0"   cy="30" r="4.5" fill="black"/>
+      <circle cx="0"   cy="40" r="4.5" fill="black"/>
+      <circle cx="0"   cy="50" r="4.5" fill="black"/>
+      <circle cx="0"   cy="60" r="4.5" fill="black"/>
+      <!-- Right edge scallops -->
+      <circle cx="200" cy="10" r="4.5" fill="black"/>
+      <circle cx="200" cy="20" r="4.5" fill="black"/>
+      <circle cx="200" cy="30" r="4.5" fill="black"/>
+      <circle cx="200" cy="40" r="4.5" fill="black"/>
+      <circle cx="200" cy="50" r="4.5" fill="black"/>
+      <circle cx="200" cy="60" r="4.5" fill="black"/>
+      <!-- Punch hole (right side) -->
+      <circle cx="177" cy="34" r="9"   fill="black"/>
+    </mask>
+    <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#D82A7C"/>
+      <stop offset="100%" stop-color="#B81E68"/>
+    </linearGradient>
+  </defs>
+  <!-- Ticket body with gradient -->
+  <g mask="url(#tm)">
+    <rect x="0" y="0" width="200" height="68" fill="url(#pg)"/>
+    <!-- Subtle highlight strip at top -->
+    <rect x="0" y="0" width="200" height="14" fill="rgba(255,255,255,0.12)"/>
+    <!-- BeDrawn text -->
+    <text
+      x="90"
+      y="44"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-style="italic"
+      font-weight="700"
+      font-size="26"
+      fill="#180B35"
+      text-anchor="middle"
+      letter-spacing="-0.3"
+    >BeDrawn</text>
+  </g>
+</svg>

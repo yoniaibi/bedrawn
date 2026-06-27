@@ -132,14 +132,14 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
 }
 
 const HERO_IMAGES = [
-  // Fashion model in luxury outfit
-  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&h=900&fit=crop&q=85&auto=format',
-  // Designer handbag close-up
-  'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1600&h=900&fit=crop&q=85&auto=format',
-  // Model in high fashion editorial
-  'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&h=900&fit=crop&q=85&auto=format',
-  // Luxury watch on wrist
-  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1600&h=900&fit=crop&q=85&auto=format',
+  // Editorial fashion — woman in elegant black outfit
+  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1600&h=900&fit=crop&q=85&auto=format',
+  // Street style — model in designer look
+  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1600&h=900&fit=crop&q=85&auto=format',
+  // Luxury fashion — woman with designer accessories
+  'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&h=900&fit=crop&q=85&auto=format',
+  // High fashion editorial — elegant woman
+  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1600&h=900&fit=crop&q=85&auto=format',
 ];
 
 export default function LandingPage() {
@@ -171,7 +171,7 @@ export default function LandingPage() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 80, width: 'auto' }} />
+        <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 80, width: 'auto' }} />
       </div>
     );
   }
@@ -190,7 +190,7 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
           <div className="desktop-flex" style={{ gap: 28, alignItems: 'center' }}>
             <a href="#how" style={{ color: 'var(--text)', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>How it works</a>
             <a href="#tonight" style={{ color: 'var(--text)', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>Tonight</a>
@@ -662,7 +662,7 @@ export default function LandingPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: 24 }}>
             <div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 40, width: 'auto', opacity: 0.85 }} />
+              <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 40, width: 'auto', opacity: 0.85 }} />
               <p style={{ margin: '12px 0 4px', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Their loss. Your win.</p>
               <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>hello@bedrawn.app</p>
             </div>
