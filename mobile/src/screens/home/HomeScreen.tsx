@@ -23,12 +23,12 @@ import { S } from '../../theme/spacing';
 type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
 const CATEGORIES = [
-  { emoji: '👗', label: 'Fashion' },
-  { emoji: '⌚', label: 'Watches' },
-  { emoji: '👟', label: 'Trainers' },
-  { emoji: '👜', label: 'Bags' },
-  { emoji: '💎', label: 'Luxury' },
-  { emoji: '🧢', label: 'Streetwear' },
+  { label: 'Fashion' },
+  { label: 'Watches' },
+  { label: 'Trainers' },
+  { label: 'Bags' },
+  { label: 'Luxury' },
+  { label: 'Streetwear' },
 ];
 
 const FILTERS = ['Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
@@ -70,13 +70,13 @@ export function HomeScreen() {
           <Text style={styles.logo}>DRAWN</Text>
           <View style={styles.navRight}>
             <Animated.View style={[styles.streakBadge, { transform: [{ scale: streakScale }] }]}>
-              <Text style={styles.streakText}>🔥 {currentUser.streak}</Text>
+              <Text style={styles.streakText}>{currentUser.streak} day streak</Text>
             </Animated.View>
             <TouchableOpacity
               style={styles.walletPill}
               onPress={() => navigation.navigate('Search')}
             >
-              <Text style={styles.searchIcon}>🔍</Text>
+              <Text style={styles.searchIcon}>Search</Text>
             </TouchableOpacity>
             <View style={styles.walletPill}>
               <Text style={styles.walletText}>£{balancePounds}</Text>
@@ -90,7 +90,7 @@ export function HomeScreen() {
 
         {/* Won Banner */}
         <TouchableOpacity style={styles.wonBanner} activeOpacity={0.85}>
-          <Text style={styles.wonText}>🏆 You won! Air Jordan 1 Retro High OG</Text>
+          <Text style={styles.wonText}>You won! Air Jordan 1 Retro High OG</Text>
           <Text style={styles.wonSub}>Tap to view your order →</Text>
         </TouchableOpacity>
 
@@ -103,12 +103,12 @@ export function HomeScreen() {
                 <Text style={styles.closingText}>CLOSING TONIGHT · 9PM</Text>
               </View>
               <View style={styles.watchingRow}>
-                <Text style={styles.watchingText}>👁 247 watching</Text>
+                <Text style={styles.watchingText}>247 watching</Text>
               </View>
             </View>
             <View style={styles.heroContent}>
               <Text style={styles.heroTitle}>{heroDrawItem.title}</Text>
-              <Text style={styles.heroSeller}>{heroDrawItem.sellerEmoji} {heroDrawItem.seller}</Text>
+              <Text style={styles.heroSeller}>{heroDrawItem.seller}</Text>
               <View style={styles.heroRow}>
                 <View style={styles.pricePill}>
                   <Text style={styles.priceText}>
@@ -132,7 +132,7 @@ export function HomeScreen() {
         {/* Recent winner */}
         <View style={styles.winnerBanner}>
           <Text style={styles.winnerText}>
-            🏆 <Text style={styles.winnerHandle}>@sarah_j</Text> just won Air Jordan 1 · paid 50p · worth{' '}
+            <Text style={styles.winnerHandle}>@sarah_j</Text> just won Air Jordan 1 · paid 50p · worth{' '}
             <Text style={styles.winnerValue}>£185</Text>
           </Text>
         </View>
@@ -157,7 +157,6 @@ export function HomeScreen() {
         >
           {CATEGORIES.map(cat => (
             <TouchableOpacity key={cat.label} style={styles.catPill}>
-              <Text style={styles.catEmoji}>{cat.emoji}</Text>
               <Text style={styles.catLabel}>{cat.label}</Text>
             </TouchableOpacity>
           ))}
@@ -252,7 +251,7 @@ export function HomeScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            🔒 All items verified · 100% authentic · Draws at 9pm nightly
+            All items verified · 100% authentic · Draws at 9pm nightly
           </Text>
           <Text style={styles.footerSub}>Winners announced live on DRAWN</Text>
         </View>
@@ -271,17 +270,17 @@ const styles = StyleSheet.create({
     paddingTop: S.md,
     paddingBottom: S.md,
   },
-  logo: { fontFamily: 'serif', fontSize: 26, fontStyle: 'italic', color: C.GOLD, fontWeight: '700' },
+  logo: { fontFamily: 'serif', fontSize: 26, fontStyle: 'italic', color: C.PURPLE, fontWeight: '700' },
   navRight: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
   streakBadge: {
-    backgroundColor: 'rgba(245,158,11,0.15)',
+    backgroundColor: C.PURPLE_LIGHT,
     borderWidth: 1,
-    borderColor: C.GOLD,
+    borderColor: C.PURPLE,
     borderRadius: 999,
     paddingHorizontal: S.sm,
     paddingVertical: 3,
   },
-  streakText: { color: C.GOLD, fontSize: 12, fontWeight: '700' },
+  streakText: { color: C.PURPLE, fontSize: 12, fontWeight: '700' },
   walletPill: {
     backgroundColor: C.CARD,
     borderRadius: 999,
@@ -290,19 +289,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  searchIcon: { fontSize: 14 },
-  walletText: { color: C.WHITE, fontSize: 12, fontWeight: '700' },
+  searchIcon: { fontSize: 12, color: C.GREY, fontWeight: '600' },
+  walletText: { color: C.TEXT, fontSize: 12, fontWeight: '700' },
   section: { paddingHorizontal: S.xl, marginBottom: S.lg },
   wonBanner: {
     marginHorizontal: S.xl,
     marginBottom: S.md,
-    backgroundColor: 'rgba(245,158,11,0.12)',
+    backgroundColor: C.GOLD_LIGHT,
     borderWidth: 1,
-    borderColor: C.GOLD,
+    borderColor: C.BORDER,
     borderRadius: 12,
     padding: S.md,
   },
-  wonText: { color: C.GOLD, fontWeight: '700', fontSize: 14 },
+  wonText: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   wonSub: { color: C.GREY, fontSize: 12, marginTop: 2 },
   heroCard: {
     backgroundColor: C.CARD,
@@ -328,7 +327,7 @@ const styles = StyleSheet.create({
   watchingRow: { alignSelf: 'flex-end' },
   watchingText: { color: C.WHITE, fontSize: 12, fontWeight: '600', opacity: 0.9 },
   heroContent: { padding: S.lg },
-  heroTitle: { fontSize: 18, fontWeight: '800', color: C.WHITE, marginBottom: 4, fontFamily: 'serif' },
+  heroTitle: { fontSize: 18, fontWeight: '800', color: C.TEXT, marginBottom: 4, fontFamily: 'serif' },
   heroSeller: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
   heroRow: { flexDirection: 'row', marginBottom: S.sm },
   pricePill: {
@@ -371,7 +370,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
   },
   tonightLeft: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
-  tonightText: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  tonightText: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   tonightLink: { color: C.PURPLE, fontSize: 13, fontWeight: '600' },
   catRow: { gap: S.sm, paddingRight: S.xl },
   catPill: {
@@ -385,7 +384,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  catEmoji: { fontSize: 14 },
   catLabel: { color: C.GREY, fontSize: 13, fontWeight: '500' },
   filterRow: { paddingHorizontal: S.xl, gap: S.sm, marginBottom: S.lg },
   filterChip: {
@@ -396,7 +394,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     backgroundColor: C.CARD,
   },
-  filterChipActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.15)' },
+  filterChipActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   filterText: { color: C.GREY, fontSize: 13 },
   filterTextActive: { color: C.PURPLE, fontWeight: '600' },
   rowHeader: {
@@ -405,7 +403,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: S.md,
   },
-  rowTitle: { fontSize: 16, fontWeight: '700', color: C.WHITE },
+  rowTitle: { fontSize: 16, fontWeight: '700', color: C.TEXT },
   seeAll: { color: C.PURPLE, fontSize: 13 },
   horizontalCards: { gap: S.md, paddingRight: S.xl },
   horizontalCardWrapper: { width: 220 },

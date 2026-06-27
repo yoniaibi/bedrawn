@@ -73,7 +73,6 @@ export function ForgotPasswordScreen({ navigation }: Props) {
             </>
           ) : (
             <View style={styles.successContainer}>
-              <Text style={styles.successEmoji}>📬</Text>
               <Text style={styles.title}>Check your email</Text>
               <Text style={styles.subtitle}>
                 We sent a reset link to{' '}
@@ -101,7 +100,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: S.xl },
   backBtn: { marginBottom: S.xxl },
   backText: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 26, fontWeight: '800', color: C.WHITE, marginBottom: S.sm },
+  title: { fontSize: 26, fontWeight: '800', color: C.TEXT, marginBottom: S.sm },
   subtitle: { fontSize: 14, color: C.GREY, lineHeight: 20, marginBottom: S.xxl },
   emailHighlight: { color: C.PURPLE, fontWeight: '700' },
   label: { color: C.GREY, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: S.xs },
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     borderRadius: 10,
     padding: S.lg,
-    color: C.WHITE,
+    color: C.TEXT,
     fontSize: 15,
     marginBottom: S.xl,
   },
@@ -124,7 +123,6 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.4 },
   btnText: { color: C.WHITE, fontWeight: '700', fontSize: 16 },
   successContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  successEmoji: { fontSize: 56, marginBottom: S.xl },
   resendBtn: { marginTop: S.lg, paddingVertical: S.sm },
   resendText: { color: C.MUTED, fontSize: 14 },
 });

@@ -24,7 +24,7 @@ import { S } from '../../theme/spacing';
 
 type Nav = NativeStackNavigationProp<LiveStackParamList>;
 
-const EMOJI_REACTIONS = ['🔥', '❤️', '😍', '🏆', '💜', '🎉'];
+const REACTIONS = ['HOT', 'WIN', 'YES!', 'LOVE', 'HYPE', 'WOW'];
 
 type FloatingEmoji = {
   id: number;
@@ -117,7 +117,7 @@ export function LiveScreen() {
             <Text style={styles.headerTitle}>The 9pm Draw</Text>
           </View>
           <View style={styles.watching}>
-            <Text style={styles.watchingText}>247 👁</Text>
+            <Text style={styles.watchingText}>247 watching</Text>
           </View>
         </View>
 
@@ -151,20 +151,20 @@ export function LiveScreen() {
             </View>
           </View>
 
-          {/* Emoji reactions */}
+          {/* Reactions */}
           <View style={styles.reactionRow}>
-            {EMOJI_REACTIONS.map(emoji => (
+            {REACTIONS.map(reaction => (
               <TouchableOpacity
-                key={emoji}
+                key={reaction}
                 style={styles.reactionBtn}
-                onPress={() => addFloatingEmoji(emoji)}
+                onPress={() => addFloatingEmoji(reaction)}
               >
-                <Text style={styles.reactionEmoji}>{emoji}</Text>
+                <Text style={styles.reactionEmoji}>{reaction}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* Floating emojis */}
+          {/* Floating reactions */}
           {floatingEmojis.map(fe => (
             <Animated.Text
               key={fe.id}
@@ -186,7 +186,9 @@ export function LiveScreen() {
             <Text style={styles.sectionTitle}>Live chat</Text>
             {messages.map(msg => (
               <View key={msg.id} style={styles.chatBubble}>
-                <Text style={styles.chatEmoji}>{msg.emoji}</Text>
+                <View style={styles.chatAvatar}>
+                  <Text style={styles.chatAvatarText}>{msg.handle.slice(1, 3).toUpperCase()}</Text>
+                </View>
                 <View style={styles.chatTextCol}>
                   <Text style={styles.chatHandle}>{msg.handle}</Text>
                   <Text style={styles.chatMessage}>{msg.message}</Text>
@@ -263,7 +265,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
   liveLabel: { color: C.PINK, fontWeight: '800', fontSize: 13, letterSpacing: 1 },
-  headerTitle: { color: C.WHITE, fontWeight: '700', fontSize: 15 },
+  headerTitle: { color: C.TEXT, fontWeight: '700', fontSize: 15 },
   watching: {
     backgroundColor: C.CARD,
     borderRadius: 999,
@@ -320,10 +322,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: C.BORDER,
   },
-  wheelCenterText: { color: C.GOLD, fontSize: 11, fontWeight: '800', fontFamily: 'serif' },
+  wheelCenterText: { color: C.PURPLE, fontSize: 11, fontWeight: '800', fontFamily: 'serif' },
   countdownOverlay: { alignItems: 'center', marginTop: S.lg },
   countdownLabel: { color: C.GREY, fontSize: 13, marginBottom: S.xs },
-  countdownTime: { fontSize: 28, color: C.WHITE, fontFamily: 'serif', fontWeight: '800' },
+  countdownTime: { fontSize: 28, color: C.TEXT, fontFamily: 'serif', fontWeight: '800' },
   reactionRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -341,14 +343,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  reactionEmoji: { fontSize: 20 },
+  reactionEmoji: { fontSize: 11, fontWeight: '700', color: C.PURPLE },
   floatingEmoji: {
     position: 'absolute',
-    fontSize: 28,
+    fontSize: 12,
+    fontWeight: '800',
+    color: C.PURPLE,
     bottom: 200,
   },
   chatContainer: { paddingHorizontal: S.xl, marginBottom: S.lg },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.WHITE, marginBottom: S.md },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.TEXT, marginBottom: S.md },
   chatBubble: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -358,10 +362,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: S.sm,
   },
-  chatEmoji: { fontSize: 18, marginTop: 2 },
+  chatAvatar: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.PURPLE_LIGHT, alignItems: 'center', justifyContent: 'center', marginTop: 2, flexShrink: 0 },
+  chatAvatarText: { fontSize: 9, fontWeight: '700', color: C.PURPLE },
   chatTextCol: { flex: 1 },
   chatHandle: { color: C.PURPLE, fontWeight: '700', fontSize: 12, marginBottom: 2 },
-  chatMessage: { color: C.WHITE, fontSize: 13 },
+  chatMessage: { color: C.TEXT, fontSize: 13 },
   chatTime: { color: C.MUTED, fontSize: 10, marginTop: 4 },
   tonightSection: { paddingHorizontal: S.xl, marginBottom: S.xxl },
   drawItem: {
@@ -378,10 +383,10 @@ const styles = StyleSheet.create({
   drawNum: { color: C.MUTED, fontSize: 14, fontWeight: '700', width: 20, textAlign: 'center' },
   drawThumb: { width: 44, height: 44, borderRadius: 8 },
   drawInfo: { flex: 1, gap: 3 },
-  drawTitle: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  drawTitle: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   drawPrice: { color: C.GREY, fontSize: 11 },
   yourTickets: {
-    backgroundColor: 'rgba(139,92,246,0.2)',
+    backgroundColor: C.PURPLE_LIGHT,
     borderWidth: 1,
     borderColor: C.PURPLE,
     borderRadius: 6,
@@ -404,7 +409,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: S.lg,
     paddingVertical: S.sm,
-    color: C.WHITE,
+    color: C.TEXT,
     fontSize: 14,
     borderWidth: 1,
     borderColor: C.BORDER,

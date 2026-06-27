@@ -72,7 +72,7 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           {/* Seller row */}
           <View style={styles.sellerRow}>
             <View style={styles.sellerAvatar}>
-              <Text style={styles.sellerEmoji}>{draw.sellerEmoji}</Text>
+              <Text style={styles.sellerInitial}>{draw.seller.charAt(0).toUpperCase()}</Text>
             </View>
             <View>
               <Text style={styles.sellerName}>{draw.seller}</Text>
@@ -105,13 +105,13 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               <Text style={styles.ticketStatText}>
                 {draw.soldTickets.toLocaleString()} / {draw.totalTickets.toLocaleString()} tickets sold
               </Text>
-              <Text style={styles.watchingText}>👁 {watching} watching</Text>
+              <Text style={styles.watchingText}>{watching} watching</Text>
             </View>
           </View>
 
           {/* Postal entry note */}
           <View style={styles.postalNote}>
-            <Text style={styles.postalIcon}>✉️</Text>
+            <Text style={styles.postalIcon}>✉</Text>
             <Text style={styles.postalText}>
               Free postal entry available. See our T&Cs for details.
             </Text>
@@ -135,14 +135,12 @@ export function DrawDetailScreen({ route, navigation }: Props) {
 
           {/* Social proof */}
           <View style={styles.socialProof}>
-            <Text style={styles.socialIcon}>🔥</Text>
             <Text style={styles.socialText}>
               <Text style={styles.socialHandle}>@emily</Text> just bought 5 tickets · 2 mins ago
             </Text>
           </View>
 
           <View style={styles.socialProof}>
-            <Text style={styles.socialIcon}>⚡</Text>
             <Text style={styles.socialText}>
               {draw.soldTickets} people have already entered this draw
             </Text>
@@ -234,7 +232,7 @@ const styles = StyleSheet.create({
   },
   conditionText: { color: C.GREY, fontSize: 12, fontWeight: '600' },
   verifiedBadge: {
-    backgroundColor: 'rgba(139,92,246,0.15)',
+    backgroundColor: C.PURPLE_LIGHT,
     borderRadius: 999,
     paddingHorizontal: S.md,
     paddingVertical: 4,
@@ -255,7 +253,7 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     fontSize: 28,
     fontWeight: '700',
-    color: C.WHITE,
+    color: C.TEXT,
     marginBottom: S.lg,
     lineHeight: 36,
   },
@@ -274,12 +272,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: C.CARD2,
+    backgroundColor: C.PURPLE_LIGHT,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: C.PURPLE,
   },
-  sellerEmoji: { fontSize: 20 },
-  sellerName: { color: C.WHITE, fontWeight: '700', fontSize: 14 },
+  sellerInitial: { fontSize: 16, fontWeight: '700', color: C.PURPLE },
+  sellerName: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   sellerLabel: { color: C.GREY, fontSize: 11, marginTop: 2 },
   priceRow: { flexDirection: 'row', gap: S.md, marginBottom: S.xl },
   ticketPricePill: {
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   retailValue: { color: C.GOLD, fontSize: 24, fontWeight: '800' },
   progressSection: { marginBottom: S.xl },
   progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: S.sm },
-  progressText: { color: C.WHITE, fontWeight: '700', fontSize: 13 },
+  progressText: { color: C.TEXT, fontWeight: '700', fontSize: 13 },
   progressRemaining: { color: C.GREY, fontSize: 13 },
   ticketStats: {
     flexDirection: 'row',
@@ -324,10 +324,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  postalIcon: { fontSize: 18 },
+  postalIcon: { fontSize: 18, color: C.GREY },
   postalText: { color: C.GREY, fontSize: 12, flex: 1, lineHeight: 16 },
   descSection: { marginBottom: S.xl },
-  descTitle: { fontSize: 15, fontWeight: '700', color: C.WHITE, marginBottom: S.sm },
+  descTitle: { fontSize: 15, fontWeight: '700', color: C.TEXT, marginBottom: S.sm },
   descText: { color: C.GREY, fontSize: 14, lineHeight: 22 },
   descToggle: { color: C.PURPLE, fontSize: 13, fontWeight: '600', marginTop: S.sm },
   socialProof: {
@@ -336,7 +336,6 @@ const styles = StyleSheet.create({
     gap: S.sm,
     marginBottom: S.sm,
   },
-  socialIcon: { fontSize: 14 },
   socialText: { color: C.GREY, fontSize: 13 },
   socialHandle: { color: C.PURPLE, fontWeight: '700' },
   detailsCard: {
@@ -347,7 +346,7 @@ const styles = StyleSheet.create({
     padding: S.lg,
     marginTop: S.lg,
   },
-  detailsTitle: { fontSize: 14, fontWeight: '700', color: C.WHITE, marginBottom: S.md },
+  detailsTitle: { fontSize: 14, fontWeight: '700', color: C.TEXT, marginBottom: S.md },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -356,7 +355,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.BORDER,
   },
   detailLabel: { color: C.GREY, fontSize: 13 },
-  detailValue: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  detailValue: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   stickyBottom: {
     position: 'absolute',
     bottom: 0,

@@ -44,7 +44,6 @@ export function BecomeSellerScreen() {
 
           {!submitted ? (
             <>
-              <Text style={styles.emoji}>🏪</Text>
               <Text style={styles.title}>Become a DRAWN seller</Text>
               <Text style={styles.subtitle}>
                 List your luxury items as draws and sell to thousands of buyers — while giving everyone a chance to win at a fraction of retail.
@@ -53,13 +52,13 @@ export function BecomeSellerScreen() {
               {/* Benefits */}
               <View style={styles.benefitsCard}>
                 {[
-                  { emoji: '💰', text: 'Earn more than selling on Depop or eBay' },
-                  { emoji: '🌍', text: 'Access our community of 50,000+ buyers' },
-                  { emoji: '⚡', text: 'Items sell in hours, not weeks' },
-                  { emoji: '🔒', text: 'We handle payments, disputes, and delivery' },
+                  { text: 'Earn more than selling on Depop or eBay' },
+                  { text: 'Access our community of 50,000+ buyers' },
+                  { text: 'Items sell in hours, not weeks' },
+                  { text: 'We handle payments, disputes, and delivery' },
                 ].map(b => (
                   <View key={b.text} style={styles.benefit}>
-                    <Text style={styles.benefitEmoji}>{b.emoji}</Text>
+                    <Text style={styles.benefitBullet}>•</Text>
                     <Text style={styles.benefitText}>{b.text}</Text>
                   </View>
                 ))}
@@ -116,7 +115,6 @@ export function BecomeSellerScreen() {
             </>
           ) : (
             <View style={styles.successState}>
-              <Text style={styles.successEmoji}>🎉</Text>
               <Text style={styles.title}>Application received!</Text>
               <Text style={styles.subtitle}>
                 We'll review your application within 24 hours. You'll need to complete a quick KYC (identity verification) before listing.
@@ -158,8 +156,7 @@ const styles = StyleSheet.create({
   content: { padding: S.xl, paddingBottom: S.xxxl },
   backBtn: { marginBottom: S.xl },
   back: { color: C.GREY, fontSize: 15 },
-  emoji: { fontSize: 48, textAlign: 'center', marginBottom: S.md },
-  title: { fontSize: 26, fontWeight: '800', color: C.WHITE, marginBottom: S.sm, textAlign: 'center' },
+  title: { fontSize: 26, fontWeight: '800', color: C.TEXT, marginBottom: S.sm, textAlign: 'center' },
   subtitle: { fontSize: 14, color: C.GREY, textAlign: 'center', lineHeight: 22, marginBottom: S.xl },
   benefitsCard: {
     backgroundColor: C.CARD,
@@ -171,8 +168,8 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   benefit: { flexDirection: 'row', alignItems: 'center', gap: S.md },
-  benefitEmoji: { fontSize: 20, width: 28 },
-  benefitText: { color: C.WHITE, fontSize: 14, flex: 1 },
+  benefitBullet: { color: C.PURPLE, fontSize: 18, width: 16 },
+  benefitText: { color: C.TEXT, fontSize: 14, flex: 1 },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '700',
@@ -188,7 +185,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     borderRadius: 10,
     padding: S.lg,
-    color: C.WHITE,
+    color: C.TEXT,
     fontSize: 15,
   },
   textArea: { height: 100, textAlignVertical: 'top' },
@@ -202,7 +199,6 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.4 },
   btnText: { color: C.WHITE, fontWeight: '700', fontSize: 16 },
   successState: { alignItems: 'center' },
-  successEmoji: { fontSize: 64, marginBottom: S.lg, marginTop: S.xl },
   kycCard: {
     backgroundColor: C.CARD,
     borderRadius: 14,
@@ -213,7 +209,7 @@ const styles = StyleSheet.create({
     gap: S.md,
     width: '100%',
   },
-  kycTitle: { color: C.WHITE, fontWeight: '700', fontSize: 15, marginBottom: S.sm },
+  kycTitle: { color: C.TEXT, fontWeight: '700', fontSize: 15, marginBottom: S.sm },
   kycStep: { flexDirection: 'row', alignItems: 'center', gap: S.md },
   kycNum: {
     width: 26,

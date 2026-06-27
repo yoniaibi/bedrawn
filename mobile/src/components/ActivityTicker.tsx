@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: C.CARD,
+    backgroundColor: C.PURPLE_LIGHT,
     paddingHorizontal: S.md,
     paddingVertical: S.sm,
     borderRadius: 8,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.GREEN,
   },
   text: {
-    color: C.GREY,
+    color: C.PURPLE,
     fontSize: 12,
     flex: 1,
   },

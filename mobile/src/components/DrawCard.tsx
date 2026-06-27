@@ -57,7 +57,7 @@ export function DrawCard({ draw, onPress, fullWidth }: Props) {
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>{draw.title}</Text>
         <Text style={styles.seller} numberOfLines={1}>
-          {draw.sellerEmoji} {draw.seller}
+          {draw.seller}
         </Text>
 
         {/* Price pill */}
@@ -136,10 +136,12 @@ const styles = StyleSheet.create({
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 14,
   },
   bookmarkIcon: {
     fontSize: 18,
-    color: C.WHITE,
+    color: C.GREY,
   },
   verifiedBadge: {
     position: 'absolute',
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 13,
     fontWeight: '700',
-    color: C.WHITE,
+    color: C.TEXT,
     lineHeight: 18,
   },
   seller: {
@@ -173,16 +175,18 @@ const styles = StyleSheet.create({
   },
   pricePill: {
     alignSelf: 'flex-start',
-    backgroundColor: C.PURPLE_DARK,
+    backgroundColor: C.PURPLE_LIGHT,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
     marginVertical: 2,
+    borderWidth: 1,
+    borderColor: C.PURPLE,
   },
   priceText: {
     fontSize: 11,
     fontWeight: '600',
-    color: C.WHITE,
+    color: C.PURPLE,
   },
   watchCount: {
     fontSize: 10,

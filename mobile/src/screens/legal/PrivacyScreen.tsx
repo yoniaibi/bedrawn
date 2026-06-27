@@ -106,14 +106,14 @@ const styles = StyleSheet.create({
     borderBottomColor: C.BORDER,
   },
   back: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 17, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 17, fontWeight: '700', color: C.TEXT },
   content: { padding: S.xl, paddingBottom: S.xxxl },
   lastUpdated: { color: C.MUTED, fontSize: 12, marginBottom: S.xl },
   section: { marginBottom: S.xxl },
   sectionHeading: {
     fontSize: 15,
     fontWeight: '700',
-    color: C.WHITE,
+    color: C.TEXT,
     marginBottom: S.sm,
   },
   sectionBody: {

@@ -13,7 +13,7 @@ import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
 const STATUS_CONFIG = {
-  won: { label: 'Won 🏆', color: C.GOLD, bg: 'rgba(245,158,11,0.1)' },
+  won: { label: 'Won', color: C.GOLD, bg: 'rgba(245,158,11,0.1)' },
   active: { label: 'Active', color: C.PURPLE, bg: 'rgba(139,92,246,0.1)' },
   delivered: { label: 'Delivered ✓', color: C.GREEN, bg: 'rgba(16,185,129,0.1)' },
 };
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.BORDER,
   },
   back: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 17, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 17, fontWeight: '700', color: C.TEXT },
   tabs: {
     flexDirection: 'row',
     paddingHorizontal: S.xl,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  tabActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.15)' },
+  tabActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   tabText: { color: C.GREY, fontSize: 14 },
   tabTextActive: { color: C.PURPLE, fontWeight: '600' },
   content: { padding: S.xl, gap: S.md },
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   thumbnail: { width: 72, height: 72, borderRadius: 10 },
   orderInfo: { flex: 1, gap: S.xs },
-  orderTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  orderTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   statusBadge: {
     alignSelf: 'flex-start',
     borderRadius: 999,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between' },
   detailLabel: { color: C.GREY, fontSize: 13 },
-  detailValue: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  detailValue: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   detailValueGold: { color: C.GOLD },
   trackingCode: { color: C.PURPLE, fontFamily: 'monospace', fontSize: 12 },
 });

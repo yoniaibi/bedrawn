@@ -17,10 +17,10 @@ const TOP_UP_OPTIONS = [500, 1000, 2000, 5000]; // pence
 type FlashState = { amount: number; visible: boolean };
 
 const TX_ICONS: Record<string, string> = {
-  topup: '💳',
-  spend: '🎫',
-  win: '🏆',
-  refund: '↩️',
+  topup: '+',
+  spend: '-',
+  win: '★',
+  refund: '↩',
 };
 
 export function WalletScreen() {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     paddingVertical: S.lg,
   },
   back: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 18, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 18, fontWeight: '700', color: C.TEXT },
   balanceCard: {
     marginHorizontal: S.xl,
     backgroundColor: C.CARD2,
@@ -123,10 +123,10 @@ const styles = StyleSheet.create({
     borderColor: C.PURPLE,
   },
   balanceLabel: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
-  balanceAmount: { fontSize: 44, fontWeight: '800', color: C.WHITE, fontFamily: 'serif' },
+  balanceAmount: { fontSize: 44, fontWeight: '800', color: C.TEXT, fontFamily: 'serif' },
   flashBadge: {
     marginTop: S.md,
-    backgroundColor: 'rgba(16,185,129,0.15)',
+    backgroundColor: C.GREEN_LIGHT,
     borderWidth: 1,
     borderColor: C.GREEN,
     borderRadius: 999,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   flashText: { color: C.GREEN, fontWeight: '700', fontSize: 13 },
   topUpSection: { paddingHorizontal: S.xl, marginBottom: S.xl },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.WHITE, marginBottom: S.md },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.TEXT, marginBottom: S.md },
   topUpGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
   topUpCard: {
     width: '47%',
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  topUpAmount: { fontSize: 24, fontWeight: '800', color: C.WHITE },
+  topUpAmount: { fontSize: 24, fontWeight: '800', color: C.TEXT },
   topUpSub: { color: C.GREY, fontSize: 12, marginTop: 2 },
   historySection: { paddingHorizontal: S.xl, marginBottom: S.xxl },
   txRow: {
@@ -165,9 +165,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  txIconText: { fontSize: 18 },
+  txIconText: { fontSize: 18, color: C.TEXT, fontWeight: '700' },
   txInfo: { flex: 1 },
-  txDesc: { color: C.WHITE, fontSize: 13 },
+  txDesc: { color: C.TEXT, fontSize: 13 },
   txDate: { color: C.MUTED, fontSize: 11, marginTop: 2 },
   txAmount: { fontSize: 14, fontWeight: '700' },
   txAmountCredit: { color: C.GREEN },

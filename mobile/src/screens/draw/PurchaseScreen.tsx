@@ -68,7 +68,7 @@ export function PurchaseScreen({ route, navigation }: Props) {
           <View style={[styles.drawThumb, { backgroundColor: draw.imageColor }]} />
           <View style={styles.drawInfo}>
             <Text style={styles.drawTitle} numberOfLines={2}>{draw.title}</Text>
-            <Text style={styles.drawSeller}>{draw.sellerEmoji} {draw.seller}</Text>
+            <Text style={styles.drawSeller}>{draw.seller}</Text>
             <Text style={styles.drawPrice}>{draw.ticketPrice}p per ticket · £{draw.retailValue.toLocaleString()} RRP</Text>
           </View>
         </View>
@@ -139,14 +139,13 @@ export function PurchaseScreen({ route, navigation }: Props) {
           </View>
           {!hasSufficientBalance && (
             <Text style={styles.insufficientText}>
-              ⚠️ Insufficient balance · Top up needed: £{((totalPence - balancePence) / 100).toFixed(2)}
+              Insufficient balance · Top up needed: £{((totalPence - balancePence) / 100).toFixed(2)}
             </Text>
           )}
         </View>
 
         {/* Odds preview */}
         <View style={styles.oddsCard}>
-          <Text style={styles.oddsIcon}>🎯</Text>
           <View style={styles.oddsInfo}>
             <Text style={styles.oddsTitle}>Your odds</Text>
             <Text style={styles.oddsValue}>
@@ -196,7 +195,7 @@ const styles = StyleSheet.create({
     marginBottom: S.xl,
   },
   back: { color: C.GREY, fontSize: 15 },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: C.WHITE },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: C.TEXT },
   drawSummary: {
     flexDirection: 'row',
     gap: S.md,
@@ -209,7 +208,7 @@ const styles = StyleSheet.create({
   },
   drawThumb: { width: 72, height: 72, borderRadius: 10 },
   drawInfo: { flex: 1, gap: S.xs },
-  drawTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  drawTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   drawSeller: { color: C.GREY, fontSize: 12 },
   drawPrice: { color: C.PURPLE, fontSize: 12, fontWeight: '600' },
   divider: { height: 1, backgroundColor: C.BORDER, marginBottom: S.xl },
@@ -224,7 +223,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  qtyPillActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.2)' },
+  qtyPillActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   qtyPillText: { color: C.GREY, fontSize: 16, fontWeight: '700' },
   qtyPillTextActive: { color: C.PURPLE },
   manualInputRow: {
@@ -243,14 +242,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  manualBtnText: { color: C.WHITE, fontSize: 22, fontWeight: '300' },
+  manualBtnText: { color: C.TEXT, fontSize: 22, fontWeight: '300' },
   manualInput: {
     flex: 1,
     backgroundColor: C.CARD,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: C.PURPLE,
-    color: C.WHITE,
+    color: C.TEXT,
     fontSize: 24,
     fontWeight: '800',
     paddingVertical: S.sm,
@@ -267,7 +266,7 @@ const styles = StyleSheet.create({
   },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { color: C.GREY, fontSize: 14 },
-  totalValue: { color: C.WHITE, fontSize: 20, fontWeight: '800' },
+  totalValue: { color: C.TEXT, fontSize: 20, fontWeight: '800' },
   balanceLabel: { color: C.GREY, fontSize: 14 },
   balanceValue: { fontSize: 16, fontWeight: '700' },
   balanceOk: { color: C.GREEN },
@@ -284,10 +283,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  oddsIcon: { fontSize: 24 },
   oddsInfo: {},
   oddsTitle: { color: C.GREY, fontSize: 12 },
-  oddsValue: { color: C.WHITE, fontWeight: '700', fontSize: 14 },
+  oddsValue: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   finePrint: { color: C.MUTED, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: S.lg },
   stickyBottom: {
     position: 'absolute',

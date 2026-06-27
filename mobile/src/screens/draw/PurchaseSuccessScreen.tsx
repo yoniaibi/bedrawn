@@ -106,9 +106,6 @@ export function PurchaseSuccessScreen({ route, navigation }: Props) {
       ))}
 
       <View style={styles.content}>
-        {/* Big emoji */}
-        <Text style={styles.bigEmoji}>🎉</Text>
-
         {/* Title */}
         <Text style={styles.title}>You're in!</Text>
 
@@ -117,7 +114,7 @@ export function PurchaseSuccessScreen({ route, navigation }: Props) {
           <View style={[styles.drawThumb, { backgroundColor: draw.imageColor }]} />
           <View style={styles.drawInfo}>
             <Text style={styles.drawTitle} numberOfLines={2}>{draw.title}</Text>
-            <Text style={styles.drawSeller}>{draw.sellerEmoji} {draw.seller}</Text>
+            <Text style={styles.drawSeller}>{draw.seller}</Text>
           </View>
         </View>
 
@@ -182,12 +179,11 @@ const styles = StyleSheet.create({
     paddingVertical: S.xxl,
     zIndex: 1,
   },
-  bigEmoji: { fontSize: 72, marginBottom: S.lg },
   title: {
     fontFamily: 'serif',
     fontSize: 34,
     fontWeight: '800',
-    color: C.WHITE,
+    color: C.TEXT,
     marginBottom: S.xl,
     textAlign: 'center',
   },
@@ -204,7 +200,7 @@ const styles = StyleSheet.create({
   },
   drawThumb: { width: 60, height: 60, borderRadius: 10 },
   drawInfo: { flex: 1 },
-  drawTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, lineHeight: 20, marginBottom: 4 },
+  drawTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20, marginBottom: 4 },
   drawSeller: { color: C.GREY, fontSize: 12 },
   statsRow: {
     flexDirection: 'row',
@@ -231,7 +227,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   countdownLabel: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
-  countdownTime: { fontSize: 36, color: C.WHITE, fontFamily: 'serif', fontWeight: '800' },
+  countdownTime: { fontSize: 36, color: C.TEXT, fontFamily: 'serif', fontWeight: '800' },
   countdownSub: { color: C.MUTED, fontSize: 12, marginTop: S.sm },
   liveBtn: {
     backgroundColor: C.PURPLE,

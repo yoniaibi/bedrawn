@@ -53,7 +53,6 @@ export function TicketsScreen() {
 
         {/* Callout */}
         <View style={styles.callout}>
-          <Text style={styles.calloutEmoji}>⚡</Text>
           <Text style={styles.calloutText}>
             Win up to{' '}
             <Text style={styles.calloutBold}>£{totalValue.toLocaleString()}</Text>
@@ -81,7 +80,7 @@ export function TicketsScreen() {
                   <View style={[styles.thumbnail, { backgroundColor: draw.imageColor }]} />
                   <View style={styles.cardInfo}>
                     <Text style={styles.cardTitle} numberOfLines={2}>{draw.title}</Text>
-                    <Text style={styles.cardSeller}>{draw.sellerEmoji} {draw.seller}</Text>
+                    <Text style={styles.cardSeller}>{draw.seller}</Text>
                     <View style={styles.oddsRow}>
                       <Text style={[
                         styles.oddsText,
@@ -119,7 +118,6 @@ export function TicketsScreen() {
         {/* Empty state placeholder */}
         {ticketHoldings.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>🎫</Text>
             <Text style={styles.emptyTitle}>No tickets yet</Text>
             <Text style={styles.emptySubtitle}>
               Browse draws and enter for as little as 10p.
@@ -137,7 +135,7 @@ export function TicketsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.BG },
   header: { paddingHorizontal: S.xl, paddingTop: S.lg, paddingBottom: S.md },
-  title: { fontSize: 24, fontWeight: '800', color: C.WHITE },
+  title: { fontSize: 24, fontWeight: '800', color: C.TEXT },
   summaryStrip: {
     flexDirection: 'row',
     backgroundColor: C.CARD,
@@ -157,16 +155,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: S.sm,
     marginHorizontal: S.xl,
-    backgroundColor: 'rgba(139,92,246,0.1)',
+    backgroundColor: C.PURPLE_LIGHT,
     borderWidth: 1,
     borderColor: C.PURPLE,
     borderRadius: 10,
     padding: S.md,
     marginBottom: S.xl,
   },
-  calloutEmoji: { fontSize: 18 },
   calloutText: { color: C.GREY, fontSize: 13, flex: 1, lineHeight: 18 },
-  calloutBold: { color: C.WHITE, fontWeight: '700' },
+  calloutBold: { color: C.TEXT, fontWeight: '700' },
   cardsSection: { paddingHorizontal: S.xl, gap: S.md, marginBottom: S.xxl },
   ticketCard: {
     backgroundColor: C.CARD,
@@ -179,7 +176,7 @@ const styles = StyleSheet.create({
   cardTop: { flexDirection: 'row', gap: S.md },
   thumbnail: { width: 72, height: 72, borderRadius: 10 },
   cardInfo: { flex: 1, gap: S.xs },
-  cardTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  cardTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   cardSeller: { color: C.GREY, fontSize: 12 },
   oddsRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, flexWrap: 'wrap' },
   oddsText: { fontSize: 12, fontWeight: '700' },
@@ -188,7 +185,7 @@ const styles = StyleSheet.create({
   oddsGrey: { color: C.GREY },
   nightBadge: { borderRadius: 999, paddingHorizontal: S.sm, paddingVertical: 3 },
   nightBadgePink: { backgroundColor: 'rgba(236,72,153,0.15)', borderWidth: 1, borderColor: C.PINK },
-  nightBadgePurple: { backgroundColor: 'rgba(139,92,246,0.15)', borderWidth: 1, borderColor: C.PURPLE },
+  nightBadgePurple: { backgroundColor: C.PURPLE_LIGHT, borderWidth: 1, borderColor: C.PURPLE },
   nightBadgeText: { fontSize: 10, fontWeight: '600' },
   nightBadgeTextPink: { color: C.PINK },
   nightBadgeTextPurple: { color: C.PURPLE },
@@ -202,8 +199,7 @@ const styles = StyleSheet.create({
   },
   moreBtnText: { color: C.WHITE, fontSize: 12, fontWeight: '700' },
   emptyState: { alignItems: 'center', paddingTop: S.xxxl, paddingHorizontal: S.xl },
-  emptyEmoji: { fontSize: 56, marginBottom: S.lg },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: C.WHITE, marginBottom: S.sm },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: C.TEXT, marginBottom: S.sm },
   emptySubtitle: { fontSize: 14, color: C.GREY, textAlign: 'center', marginBottom: S.xl },
   browseBtn: {
     backgroundColor: C.PURPLE,

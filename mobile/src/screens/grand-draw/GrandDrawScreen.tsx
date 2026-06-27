@@ -76,8 +76,8 @@ function LoginCalendar() {
 }
 
 const ACHIEVEMENTS_BADGES = [
-  { emoji: '⭐', label: '7-day streak', color: C.GOLD },
-  { emoji: '🔥', label: '30-day', color: '#F97316', locked: true },
+  { label: '7-day streak', color: C.GOLD },
+  { label: '30-day', color: '#F97316', locked: true },
 ];
 
 export function GrandDrawScreen() {
@@ -104,7 +104,6 @@ export function GrandDrawScreen() {
             <LiveDot />
             <Text style={styles.grandBadgeText}>GRAND DRAW</Text>
           </View>
-          <Text style={styles.prizeEmoji}>{grandDraw.emoji}</Text>
           <Text style={styles.prizeName}>{grandDraw.prize}</Text>
           <View style={styles.valueRow}>
             <View style={styles.valueBadge}>
@@ -154,14 +153,13 @@ export function GrandDrawScreen() {
           activeOpacity={0.85}
         >
           <Text style={styles.claimBtnText}>
-            {claimed ? '+1 ticket claimed ✓' : '🎟 Claim today\'s ticket'}
+            {claimed ? '+1 ticket claimed ✓' : "Claim today's ticket"}
           </Text>
         </TouchableOpacity>
 
         {/* Streak card */}
         <View style={styles.card}>
           <View style={styles.streakRow}>
-            <Text style={styles.streakEmoji}>🔥</Text>
             <Text style={styles.streakNum}>{currentUser.streak}</Text>
             <Text style={styles.streakSub}>day streak</Text>
           </View>
@@ -182,11 +180,9 @@ export function GrandDrawScreen() {
                 key={badge.label}
                 style={[styles.achievementBadge, badge.locked && styles.achievementLocked]}
               >
-                <Text style={styles.achievementEmoji}>{badge.emoji}</Text>
                 <Text style={[styles.achievementLabel, { color: badge.locked ? C.MUTED : badge.color }]}>
                   {badge.label}
                 </Text>
-                {badge.locked && <Text style={styles.lockedIcon}>🔒</Text>}
               </View>
             ))}
           </View>
@@ -226,7 +222,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: S.xl,
     paddingVertical: S.lg,
   },
-  logo: { fontFamily: 'serif', fontSize: 24, fontStyle: 'italic', color: C.GOLD, fontWeight: '700' },
+  logo: { fontFamily: 'serif', fontSize: 24, fontStyle: 'italic', color: C.PURPLE, fontWeight: '700' },
   monthLabel: { color: C.GREY, fontSize: 16, fontWeight: '600' },
   prizeCard: {
     marginHorizontal: S.xl,
@@ -244,19 +240,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: S.xs,
-    backgroundColor: 'rgba(139,92,246,0.2)',
+    backgroundColor: C.PURPLE_LIGHT,
     borderRadius: 999,
     paddingHorizontal: S.md,
     paddingVertical: 5,
     marginBottom: S.lg,
   },
   grandBadgeText: { color: C.PURPLE, fontSize: 11, fontWeight: '800', letterSpacing: 1 },
-  prizeEmoji: { fontSize: 42, marginBottom: S.sm },
   prizeName: {
     fontFamily: 'serif',
     fontSize: 28,
     fontWeight: '700',
-    color: C.WHITE,
+    color: C.TEXT,
     marginBottom: S.md,
     textAlign: 'center',
   },
@@ -280,10 +275,10 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
   },
   cardLabel: { color: C.GREY, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: S.sm },
-  cardTitle: { color: C.WHITE, fontSize: 15, fontWeight: '700', marginBottom: 4 },
+  cardTitle: { color: C.TEXT, fontSize: 15, fontWeight: '700', marginBottom: 4 },
   countdownRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: S.sm },
   countdownUnit: { alignItems: 'center' },
-  countdownNum: { fontFamily: 'serif', fontSize: 36, fontWeight: '800', color: C.WHITE },
+  countdownNum: { fontFamily: 'serif', fontSize: 36, fontWeight: '800', color: C.TEXT },
   countdownLabel: { color: C.GREY, fontSize: 11, marginTop: 2 },
   countdownSep: { fontSize: 28, color: C.MUTED, marginBottom: 8 },
   entriesNum: { fontFamily: 'serif', fontSize: 48, fontWeight: '800', color: C.GOLD, textAlign: 'center' },
@@ -300,12 +295,11 @@ const styles = StyleSheet.create({
   claimBtnClaimed: { backgroundColor: C.MUTED },
   claimBtnText: { color: C.WHITE, fontWeight: '700', fontSize: 16 },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.md },
-  streakEmoji: { fontSize: 32 },
-  streakNum: { fontSize: 40, fontWeight: '800', color: C.GOLD, fontFamily: 'serif' },
+  streakNum: { fontSize: 40, fontWeight: '800', color: C.TEXT, fontFamily: 'serif' },
   streakSub: { color: C.GREY, fontSize: 13 },
   streakStats: { flexDirection: 'row', gap: S.xl, marginBottom: S.md },
   streakStat: {},
-  streakStatVal: { color: C.WHITE, fontWeight: '700', fontSize: 18 },
+  streakStatVal: { color: C.TEXT, fontWeight: '700', fontSize: 18 },
   streakStatLabel: { color: C.GREY, fontSize: 11 },
   achievementRow: { flexDirection: 'row', gap: S.sm, flexWrap: 'wrap' },
   achievementBadge: {
@@ -320,9 +314,7 @@ const styles = StyleSheet.create({
     borderColor: C.GOLD,
   },
   achievementLocked: { borderColor: C.BORDER, backgroundColor: C.CARD2 },
-  achievementEmoji: { fontSize: 14 },
   achievementLabel: { fontSize: 12, fontWeight: '600' },
-  lockedIcon: { fontSize: 10 },
   calSubtitle: { color: C.GREY, fontSize: 12, marginBottom: S.md },
   calendarGrid: {
     flexDirection: 'row',
@@ -356,7 +348,7 @@ const styles = StyleSheet.create({
   pastDrawThumb: { width: 60, height: 60, borderRadius: 10 },
   pastDrawInfo: { flex: 1 },
   pastDrawMonth: { color: C.MUTED, fontSize: 11, marginBottom: 2 },
-  pastDrawPrize: { color: C.WHITE, fontWeight: '700', fontSize: 14 },
+  pastDrawPrize: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   pastDrawValue: { color: C.GOLD, fontSize: 12, marginTop: 2 },
   pastDrawWinner: { color: C.PURPLE, fontSize: 12, marginTop: 2 },
 });

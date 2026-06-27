@@ -16,16 +16,16 @@ import { S } from '../../theme/spacing';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Interests'>;
 
 const INTERESTS = [
-  { label: 'Fashion', emoji: '👗' },
-  { label: 'Watches', emoji: '⌚' },
-  { label: 'Luxury', emoji: '💎' },
-  { label: 'Streetwear', emoji: '🧢' },
-  { label: 'Vintage', emoji: '🕰' },
-  { label: 'Bags', emoji: '👜' },
-  { label: 'Trainers', emoji: '👟' },
-  { label: 'Jewellery', emoji: '💍' },
-  { label: 'Accessories', emoji: '🎀' },
-  { label: 'Tech', emoji: '📱' },
+  { label: 'Fashion' },
+  { label: 'Watches' },
+  { label: 'Luxury' },
+  { label: 'Streetwear' },
+  { label: 'Vintage' },
+  { label: 'Bags' },
+  { label: 'Trainers' },
+  { label: 'Jewellery' },
+  { label: 'Accessories' },
+  { label: 'Tech' },
 ];
 
 export function InterestsScreen({ navigation }: Props) {
@@ -48,7 +48,6 @@ export function InterestsScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.emoji}>✨</Text>
         <Text style={styles.title}>What are you into?</Text>
         <Text style={styles.subtitle}>
           We'll personalise your feed based on your interests. You can change this later.
@@ -64,7 +63,6 @@ export function InterestsScreen({ navigation }: Props) {
                 onPress={() => toggle(item.label)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.chipEmoji}>{item.emoji}</Text>
                 <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
                   {item.label}
                 </Text>
@@ -96,12 +94,12 @@ export function InterestsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.BG },
   content: { padding: S.xl, paddingBottom: S.xxxl },
-  emoji: { fontSize: 40, textAlign: 'center', marginTop: S.xl, marginBottom: S.md },
   title: {
     fontSize: 26,
     fontWeight: '800',
-    color: C.WHITE,
+    color: C.TEXT,
     textAlign: 'center',
+    marginTop: S.xl,
     marginBottom: S.sm,
   },
   subtitle: {
@@ -131,9 +129,8 @@ const styles = StyleSheet.create({
   },
   chipActive: {
     borderColor: C.PURPLE,
-    backgroundColor: 'rgba(139,92,246,0.15)',
+    backgroundColor: C.PURPLE_LIGHT,
   },
-  chipEmoji: { fontSize: 16 },
   chipLabel: { color: C.GREY, fontSize: 14, fontWeight: '500' },
   chipLabelActive: { color: C.PURPLE, fontWeight: '700' },
   btn: {

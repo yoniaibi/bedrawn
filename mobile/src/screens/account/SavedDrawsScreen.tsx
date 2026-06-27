@@ -47,7 +47,6 @@ export function SavedDrawsScreen() {
         </ScrollView>
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>❤️</Text>
           <Text style={styles.emptyTitle}>No saved draws yet</Text>
           <Text style={styles.emptySubtitle}>
             Tap the ☆ on any draw card to save it here.
@@ -70,11 +69,10 @@ const styles = StyleSheet.create({
     borderBottomColor: C.BORDER,
   },
   back: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 17, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 17, fontWeight: '700', color: C.TEXT },
   content: { padding: S.xl },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: S.xl },
-  emptyEmoji: { fontSize: 56, marginBottom: S.lg },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: C.WHITE, marginBottom: S.sm },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: C.TEXT, marginBottom: S.sm },
   emptySubtitle: { fontSize: 14, color: C.GREY, textAlign: 'center' },
 });

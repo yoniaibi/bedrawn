@@ -40,7 +40,7 @@ const DRAW_STATS = [
 ];
 
 const STATUS_CONFIG = {
-  live: { label: 'Live 🔴', color: C.PINK, bg: 'rgba(236,72,153,0.1)' },
+  live: { label: 'Live', color: C.PINK, bg: 'rgba(236,72,153,0.1)' },
   completed: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(16,185,129,0.1)' },
   pending: { label: 'Pending', color: C.GOLD, bg: 'rgba(245,158,11,0.1)' },
 };
@@ -92,7 +92,7 @@ export function SellerDashboardScreen() {
             <Text style={styles.listBtnText}>+ List new item</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.payoutsBtn}>
-            <Text style={styles.payoutsBtnText}>💸 Payouts</Text>
+            <Text style={styles.payoutsBtnText}>Payouts</Text>
           </TouchableOpacity>
         </View>
 
@@ -123,7 +123,7 @@ export function SellerDashboardScreen() {
 
         {/* Performance tips */}
         <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>📈 Seller tips</Text>
+          <Text style={styles.tipsTitle}>Seller tips</Text>
           {[
             'Add more photos to increase trust and ticket sales',
             'Closing tonight draws get 3× more entries',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   },
   back: { color: C.GREY, fontSize: 15 },
   headerCenter: { alignItems: 'center' },
-  title: { fontSize: 16, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 16, fontWeight: '700', color: C.TEXT },
   handle: { color: C.PURPLE, fontSize: 12 },
   earningsRow: {
     flexDirection: 'row',
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   earningsPending: { borderColor: C.GOLD },
   earningsLabel: { color: C.GREY, fontSize: 12, marginBottom: S.xs },
-  earningsValue: { color: C.WHITE, fontSize: 26, fontWeight: '800', fontFamily: 'serif' },
+  earningsValue: { color: C.TEXT, fontSize: 26, fontWeight: '800', fontFamily: 'serif' },
   earningsPendingValue: { color: C.GOLD },
   earningsCaption: { color: C.MUTED, fontSize: 11, marginTop: 2 },
   actionRow: { flexDirection: 'row', gap: S.md, paddingHorizontal: S.xl, marginBottom: S.xl },
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: C.WHITE,
+    color: C.TEXT,
     paddingHorizontal: S.xl,
     marginBottom: S.md,
   },
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   drawTop: { flexDirection: 'row', alignItems: 'center', gap: S.md },
   drawThumb: { width: 56, height: 56, borderRadius: 10 },
   drawInfo: { flex: 1, gap: S.xs },
-  drawTitle: { color: C.WHITE, fontWeight: '600', fontSize: 13, lineHeight: 18 },
+  drawTitle: { color: C.TEXT, fontWeight: '600', fontSize: 13, lineHeight: 18 },
   statusBadge: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: S.sm, paddingVertical: 3 },
   statusText: { fontSize: 11, fontWeight: '600' },
   drawEarnings: { color: C.GREEN, fontWeight: '800', fontSize: 16 },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     padding: S.lg,
     gap: S.sm,
   },
-  tipsTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, marginBottom: S.xs },
+  tipsTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, marginBottom: S.xs },
   tip: { flexDirection: 'row', gap: S.sm },
   tipBullet: { color: C.PURPLE, fontSize: 14 },
   tipText: { color: C.GREY, fontSize: 13, flex: 1, lineHeight: 18 },

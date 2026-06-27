@@ -13,9 +13,9 @@ import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
 const TYPE_CONFIG = {
-  win: { emoji: '🏆', color: C.GOLD, bg: 'rgba(245,158,11,0.1)', border: C.GOLD },
-  reminder: { emoji: '⏰', color: C.PURPLE, bg: 'rgba(139,92,246,0.1)', border: C.PURPLE },
-  promo: { emoji: '🎟', color: C.GREEN, bg: 'rgba(16,185,129,0.1)', border: C.GREEN },
+  win: { icon: '★', color: C.GOLD, bg: 'rgba(245,158,11,0.1)', border: C.GOLD },
+  reminder: { icon: '!', color: C.PURPLE, bg: 'rgba(139,92,246,0.1)', border: C.PURPLE },
+  promo: { icon: '%', color: C.GREEN, bg: 'rgba(16,185,129,0.1)', border: C.GREEN },
 };
 
 export function NotificationsScreen() {
@@ -41,7 +41,7 @@ export function NotificationsScreen() {
               style={[styles.notifCard, !notif.read && styles.notifCardUnread, { borderLeftColor: config.border }]}
             >
               <View style={[styles.notifIcon, { backgroundColor: config.bg }]}>
-                <Text style={styles.notifIconText}>{config.emoji}</Text>
+                <Text style={[styles.notifIconText, { color: config.color }]}>{config.icon}</Text>
               </View>
               <View style={styles.notifBody}>
                 <Text style={styles.notifTitle}>{notif.title}</Text>
@@ -58,7 +58,7 @@ export function NotificationsScreen() {
           return (
             <TouchableOpacity key={notif.id} style={[styles.notifCard, { borderLeftColor: config.border }]}>
               <View style={[styles.notifIcon, { backgroundColor: config.bg }]}>
-                <Text style={styles.notifIconText}>{config.emoji}</Text>
+                <Text style={[styles.notifIconText, { color: config.color }]}>{config.icon}</Text>
               </View>
               <View style={styles.notifBody}>
                 <Text style={styles.notifTitle}>{notif.title}</Text>
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.BORDER,
   },
   back: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 17, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 17, fontWeight: '700', color: C.TEXT },
   content: { padding: S.xl },
   dateGroup: { color: C.MUTED, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: S.md },
   notifCard: {
@@ -107,9 +107,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notifIconText: { fontSize: 18 },
+  notifIconText: { fontSize: 18, fontWeight: '700' },
   notifBody: { flex: 1 },
-  notifTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, marginBottom: 4 },
+  notifTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, marginBottom: 4 },
   notifText: { color: C.GREY, fontSize: 13, lineHeight: 18 },
   unreadDot: {
     width: 8,

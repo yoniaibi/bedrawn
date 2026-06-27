@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { C } from '../theme/colors';
 
 function getSecondsUntilHour(targetHour: number): number {
   const now = new Date();
@@ -44,7 +43,6 @@ const styles = StyleSheet.create({
     fontFamily: 'serif',
     fontSize: 16,
     fontWeight: '700',
-    color: C.WHITE,
     letterSpacing: 1,
   },
 });

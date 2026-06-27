@@ -20,33 +20,43 @@ type Nav = NativeStackNavigationProp<AccountStackParamList>;
 
 const ACHIEVEMENTS = [
   { emoji: '✦', label: 'Founding Member', unlocked: true, progress: null },
-  { emoji: '🎫', label: 'First Entry', unlocked: true, progress: null },
-  { emoji: '🔥', label: '3-Day Streak', unlocked: true, progress: null },
-  { emoji: '🏆', label: 'First Win', unlocked: true, progress: null },
-  { emoji: '📚', label: '25 Tickets', unlocked: true, progress: '47 of 25 ✓' },
-  { emoji: '🏪', label: 'First Sale', unlocked: false, progress: '0 sales' },
+  { emoji: '✦', label: 'First Entry', unlocked: true, progress: null },
+  { emoji: '✦', label: '3-Day Streak', unlocked: true, progress: null },
+  { emoji: '★', label: 'First Win', unlocked: true, progress: null },
+  { emoji: '✦', label: '25 Tickets', unlocked: true, progress: '47 of 25 ✓' },
+  { emoji: '✦', label: 'First Sale', unlocked: false, progress: '0 sales' },
 ];
 
-const AVATAR_OPTIONS = ['🦋', '🦁', '🐯', '🦊', '🐺', '🦅', '🌸', '🌙', '⚡', '🔮',
-  '💎', '🏆', '🎯', '🌊', '🔥', '❄️', '🌈', '⭐', '💫', '🎭',
-  '🎪', '🎨', '🎬', '🎤', '🎸', '🥊', '🏄', '🚀', '🛸', '👑'];
+const AVATAR_COLORS = [
+  '#7C3AED', '#EC4899', '#D97706', '#059669', '#DC2626', '#2563EB',
+  '#7C3AED', '#0891B2', '#65A30D', '#9333EA', '#F97316', '#0F766E',
+  '#BE185D', '#1D4ED8', '#B45309', '#047857', '#B91C1C', '#4338CA',
+  '#7E22CE', '#C2410C', '#0369A1', '#15803D', '#1E40AF', '#9D174D',
+  '#6D28D9', '#92400E', '#065F46', '#991B1B', '#1E3A8A', '#581C87',
+];
 
 function AvatarModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const [selected, setSelected] = useState(currentUser.emoji);
+  const [selected, setSelected] = useState(AVATAR_COLORS[0]);
+  const initials = currentUser.handle.slice(1, 3).toUpperCase();
 
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalSheet}>
-          <Text style={styles.modalTitle}>Choose your avatar</Text>
+          <Text style={styles.modalTitle}>Choose your colour</Text>
+          <View style={[styles.avatarCircle, { backgroundColor: selected, borderColor: selected, marginBottom: 20, alignSelf: 'center' }]}>
+            <Text style={[styles.avatarText, { color: C.WHITE, fontSize: 28, fontWeight: '700' }]}>{initials}</Text>
+          </View>
           <View style={styles.avatarGrid}>
-            {AVATAR_OPTIONS.map(emoji => (
+            {AVATAR_COLORS.map(color => (
               <TouchableOpacity
-                key={emoji}
-                style={[styles.avatarOption, selected === emoji && styles.avatarOptionSelected]}
-                onPress={() => setSelected(emoji)}
+                key={color}
+                style={[styles.avatarOption, { backgroundColor: color }, selected === color && styles.avatarOptionSelected]}
+                onPress={() => setSelected(color)}
               >
-                <Text style={styles.avatarEmoji}>{emoji}</Text>
+                {selected === color && (
+                  <Text style={{ color: C.WHITE, fontSize: 16, fontWeight: '700' }}>✓</Text>
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -60,14 +70,14 @@ function AvatarModal({ visible, onClose }: { visible: boolean; onClose: () => vo
 }
 
 const MENU_ITEMS = [
-  { label: 'My Wallet', emoji: '💰', screen: 'Wallet' as const },
-  { label: 'My Orders', emoji: '📦', screen: 'Orders' as const },
-  { label: 'Saved Draws', emoji: '❤️', screen: 'SavedDraws' as const },
-  { label: 'Notifications', emoji: '🔔', screen: 'Notifications' as const },
-  { label: 'Become a Seller', emoji: '🏪', screen: 'BecomeSeller' as const },
-  { label: 'Settings', emoji: '⚙️', screen: 'Settings' as const },
-  { label: 'Privacy Policy', emoji: '🔐', screen: 'Privacy' as const },
-  { label: 'Terms of Service', emoji: '📄', screen: 'Terms' as const },
+  { label: 'My Wallet', screen: 'Wallet' as const },
+  { label: 'My Orders', screen: 'Orders' as const },
+  { label: 'Saved Draws', screen: 'SavedDraws' as const },
+  { label: 'Notifications', screen: 'Notifications' as const },
+  { label: 'Become a Seller', screen: 'BecomeSeller' as const },
+  { label: 'Settings', screen: 'Settings' as const },
+  { label: 'Privacy Policy', screen: 'Privacy' as const },
+  { label: 'Terms of Service', screen: 'Terms' as const },
 ];
 
 const recentWins = orders.filter(o => o.status === 'won').slice(0, 2);
@@ -92,7 +102,9 @@ export function AccountScreen() {
             style={styles.avatarCircle}
             onPress={() => setAvatarModalVisible(true)}
           >
-            <Text style={styles.avatarText}>{currentUser.emoji}</Text>
+            <Text style={[styles.avatarText, { color: C.WHITE, fontSize: 28, fontWeight: '700' }]}>
+              {currentUser.handle.slice(1, 3).toUpperCase()}
+            </Text>
           </TouchableOpacity>
           <Text style={styles.handle}>{currentUser.handle}</Text>
 
@@ -102,7 +114,7 @@ export function AccountScreen() {
               <Text style={styles.foundingBadgeText}>✦ Founding Member</Text>
             </View>
             <View style={styles.streakBadge}>
-              <Text style={styles.streakBadgeText}>🔥 {currentUser.streak} day streak</Text>
+              <Text style={styles.streakBadgeText}>{currentUser.streak} day streak</Text>
             </View>
           </View>
 
@@ -111,7 +123,6 @@ export function AccountScreen() {
             style={styles.walletPill}
             onPress={() => navigation.navigate('Wallet')}
           >
-            <Text style={styles.walletEmoji}>💰</Text>
             <Text style={styles.walletAmount}>£{(currentUser.balance / 100).toFixed(2)}</Text>
             <Text style={styles.walletArrow}>→</Text>
           </TouchableOpacity>
@@ -137,7 +148,7 @@ export function AccountScreen() {
           style={styles.sellerNudge}
           onPress={() => navigation.navigate('BecomeSeller')}
         >
-          <Text style={styles.sellerNudgeText}>🏪 Have something luxury to sell? Become a seller →</Text>
+          <Text style={styles.sellerNudgeText}>Have something luxury to sell? Become a seller →</Text>
         </TouchableOpacity>
 
         {/* Achievements */}
@@ -154,7 +165,6 @@ export function AccountScreen() {
               {ach.progress && (
                 <Text style={styles.achievementProgress}>{ach.progress}</Text>
               )}
-              {!ach.unlocked && <Text style={styles.lockedIcon}>🔒</Text>}
             </View>
           ))}
         </View>
@@ -173,7 +183,7 @@ export function AccountScreen() {
                   <Text style={styles.winValue}>Worth £{order.retailValue.toLocaleString()}</Text>
                   <Text style={styles.winDate}>{order.date}</Text>
                 </View>
-                <Text style={styles.winTrophy}>🏆</Text>
+                <Text style={styles.winStar}>★</Text>
               </View>
             ))}
           </>
@@ -196,7 +206,6 @@ export function AccountScreen() {
               style={[styles.menuItem, index === 0 && styles.menuItemFirst]}
               onPress={() => navigation.navigate(item.screen)}
             >
-              <Text style={styles.menuItemEmoji}>{item.emoji}</Text>
               <Text style={styles.menuItemLabel}>{item.label}</Text>
               <Text style={styles.menuItemArrow}>›</Text>
             </TouchableOpacity>
@@ -227,15 +236,15 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: C.CARD2,
+    backgroundColor: C.PURPLE,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: C.PURPLE,
     marginBottom: S.md,
   },
-  avatarText: { fontSize: 40 },
-  handle: { fontSize: 18, fontWeight: '800', color: C.WHITE, marginBottom: S.md },
+  avatarText: { fontSize: 28, fontWeight: '700' },
+  handle: { fontSize: 18, fontWeight: '800', color: C.TEXT, marginBottom: S.md },
   badgeRow: { flexDirection: 'row', gap: S.sm, flexWrap: 'wrap', justifyContent: 'center', marginBottom: S.md },
   foundingBadge: {
     backgroundColor: 'rgba(245,158,11,0.15)',
@@ -247,14 +256,14 @@ const styles = StyleSheet.create({
   },
   foundingBadgeText: { color: C.GOLD, fontSize: 12, fontWeight: '700' },
   streakBadge: {
-    backgroundColor: 'rgba(239,68,68,0.1)',
+    backgroundColor: C.PURPLE_LIGHT,
     borderWidth: 1,
-    borderColor: C.RED,
+    borderColor: C.PURPLE,
     borderRadius: 999,
     paddingHorizontal: S.md,
     paddingVertical: 4,
   },
-  streakBadgeText: { color: '#F97316', fontSize: 12, fontWeight: '700' },
+  streakBadgeText: { color: C.PURPLE, fontSize: 12, fontWeight: '700' },
   walletPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -265,7 +274,6 @@ const styles = StyleSheet.create({
     paddingVertical: S.sm,
     marginTop: S.sm,
   },
-  walletEmoji: { fontSize: 16 },
   walletAmount: { color: C.WHITE, fontSize: 16, fontWeight: '800' },
   walletArrow: { color: 'rgba(255,255,255,0.7)', fontSize: 16 },
   statsRow: {
@@ -279,7 +287,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statValue: { color: C.WHITE, fontWeight: '800', fontSize: 18 },
+  statValue: { color: C.TEXT, fontWeight: '800', fontSize: 18 },
   statLabel: { color: C.GREY, fontSize: 11, marginTop: 2 },
   sellerNudge: {
     marginHorizontal: S.xl,
@@ -292,7 +300,7 @@ const styles = StyleSheet.create({
   },
   sellerNudgeText: { color: C.GREY, fontSize: 13 },
   sectionHeader: { paddingHorizontal: S.xl, marginBottom: S.md },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.WHITE },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.TEXT },
   achievementGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -312,11 +320,10 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   achievementLocked: { borderColor: C.BORDER, opacity: 0.5 },
-  achievementEmoji: { fontSize: 22 },
-  achievementLabel: { color: C.WHITE, fontSize: 10, fontWeight: '600', textAlign: 'center' },
+  achievementEmoji: { fontSize: 18 },
+  achievementLabel: { color: C.TEXT, fontSize: 10, fontWeight: '600', textAlign: 'center' },
   achievementLabelLocked: { color: C.MUTED },
   achievementProgress: { color: C.PURPLE, fontSize: 9, textAlign: 'center' },
-  lockedIcon: { fontSize: 10 },
   winCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -331,10 +338,10 @@ const styles = StyleSheet.create({
   },
   winThumb: { width: 52, height: 52, borderRadius: 8 },
   winInfo: { flex: 1 },
-  winTitle: { color: C.WHITE, fontWeight: '600', fontSize: 13 },
+  winTitle: { color: C.TEXT, fontWeight: '600', fontSize: 13 },
   winValue: { color: C.GOLD, fontSize: 12, marginTop: 2 },
   winDate: { color: C.MUTED, fontSize: 11, marginTop: 2 },
-  winTrophy: { fontSize: 24 },
+  winStar: { fontSize: 22, color: C.GOLD },
   referralCard: {
     marginHorizontal: S.xl,
     marginVertical: S.lg,
@@ -344,7 +351,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  referralTitle: { color: C.WHITE, fontWeight: '700', fontSize: 15, marginBottom: S.sm },
+  referralTitle: { color: C.TEXT, fontWeight: '700', fontSize: 15, marginBottom: S.sm },
   referralSub: { color: C.GREY, fontSize: 13, marginBottom: S.md },
   referralCode: { color: C.PURPLE, fontWeight: '700', fontFamily: 'monospace' },
   copyBtn: {
@@ -356,7 +363,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  copyBtnText: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  copyBtnText: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   menuSection: { paddingHorizontal: S.xl, marginBottom: S.lg },
   menuItem: {
     flexDirection: 'row',
@@ -367,8 +374,7 @@ const styles = StyleSheet.create({
     borderTopColor: C.BORDER,
   },
   menuItemFirst: { borderTopWidth: 0 },
-  menuItemEmoji: { fontSize: 18, width: 28 },
-  menuItemLabel: { flex: 1, color: C.WHITE, fontSize: 15 },
+  menuItemLabel: { flex: 1, color: C.TEXT, fontSize: 15 },
   menuItemArrow: { color: C.MUTED, fontSize: 20 },
   logoutItem: {
     paddingVertical: S.lg,
@@ -390,7 +396,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     padding: S.xxl,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: C.WHITE, textAlign: 'center', marginBottom: S.xl },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: C.TEXT, textAlign: 'center', marginBottom: S.xl },
   avatarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -408,8 +414,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: C.BORDER,
   },
-  avatarOptionSelected: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.2)' },
-  avatarEmoji: { fontSize: 28 },
+  avatarOptionSelected: { borderWidth: 3, borderColor: C.WHITE },
   saveBtn: {
     backgroundColor: C.PURPLE,
     borderRadius: 999,

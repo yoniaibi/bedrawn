@@ -20,12 +20,12 @@ type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
 const FILTERS = ['All', 'Tonight', 'Bundles', 'High Value', 'Just Listed'];
 const CATEGORIES = [
-  { emoji: '👗', label: 'Fashion' },
-  { emoji: '⌚', label: 'Watches' },
-  { emoji: '👟', label: 'Trainers' },
-  { emoji: '👜', label: 'Bags' },
-  { emoji: '💎', label: 'Luxury' },
-  { emoji: '🧢', label: 'Streetwear' },
+  { label: 'Fashion' },
+  { label: 'Watches' },
+  { label: 'Trainers' },
+  { label: 'Bags' },
+  { label: 'Luxury' },
+  { label: 'Streetwear' },
 ];
 const TRENDING = ['Chanel', 'Rolex', 'Jordan 1', 'Supreme', 'Louis Vuitton', 'Off-White'];
 const RECENT_SEARCHES = ['Vintage Levi\'s', 'AP Royal Oak', 'Prada bag'];
@@ -54,7 +54,7 @@ export function SearchScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Search bar */}
       <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Text style={styles.searchIcon}>⌕</Text>
         <TextInput
           ref={inputRef}
           style={styles.searchInput}
@@ -100,7 +100,6 @@ export function SearchScreen() {
             <View style={styles.categoryGrid}>
               {CATEGORIES.map(cat => (
                 <TouchableOpacity key={cat.label} style={styles.categoryCard}>
-                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
                   <Text style={styles.categoryLabel}>{cat.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -115,7 +114,7 @@ export function SearchScreen() {
                   style={styles.trendingChip}
                   onPress={() => setQuery(term)}
                 >
-                  <Text style={styles.trendingText}>🔥 {term}</Text>
+                  <Text style={styles.trendingText}>{term}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -128,7 +127,7 @@ export function SearchScreen() {
                 style={styles.recentRow}
                 onPress={() => setQuery(term)}
               >
-                <Text style={styles.recentIcon}>🕐</Text>
+                <Text style={styles.recentIcon}>↺</Text>
                 <Text style={styles.recentText}>{term}</Text>
               </TouchableOpacity>
             ))}
@@ -148,7 +147,6 @@ export function SearchScreen() {
               ))}
               {filteredDraws.length === 0 && (
                 <View style={styles.noResults}>
-                  <Text style={styles.noResultsEmoji}>🔍</Text>
                   <Text style={styles.noResultsText}>No draws found</Text>
                   <Text style={styles.noResultsSub}>Try a different search term</Text>
                 </View>
@@ -172,14 +170,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: C.BORDER,
   },
-  searchIcon: { fontSize: 16 },
+  searchIcon: { fontSize: 18, color: C.GREY },
   searchInput: {
     flex: 1,
     backgroundColor: C.CARD,
     borderRadius: 999,
     paddingHorizontal: S.md,
     paddingVertical: S.sm,
-    color: C.WHITE,
+    color: C.TEXT,
     fontSize: 15,
     borderWidth: 1,
     borderColor: C.BORDER,
@@ -196,11 +194,11 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     backgroundColor: C.CARD,
   },
-  filterChipActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.15)' },
+  filterChipActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   filterText: { color: C.GREY, fontSize: 13 },
   filterTextActive: { color: C.PURPLE, fontWeight: '600' },
   emptyStateContent: { padding: S.xl },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.WHITE, marginBottom: S.md, marginTop: S.lg },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: C.TEXT, marginBottom: S.md, marginTop: S.lg },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, marginBottom: S.sm },
   categoryCard: {
     flexDirection: 'row',
@@ -213,8 +211,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  categoryEmoji: { fontSize: 16 },
-  categoryLabel: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  categoryLabel: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   trendingRow: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
   trendingChip: {
     backgroundColor: C.CARD2,
@@ -224,7 +221,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  trendingText: { color: C.WHITE, fontSize: 13 },
+  trendingText: { color: C.TEXT, fontSize: 13 },
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -233,13 +230,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: C.BORDER,
   },
-  recentIcon: { fontSize: 16 },
+  recentIcon: { fontSize: 16, color: C.MUTED },
   recentText: { color: C.GREY, fontSize: 14 },
   resultsSection: { padding: S.xl },
   resultsLabel: { color: C.GREY, fontSize: 13, marginBottom: S.lg },
   resultsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   noResults: { width: '100%', alignItems: 'center', paddingTop: S.xxxl },
-  noResultsEmoji: { fontSize: 48, marginBottom: S.lg },
-  noResultsText: { color: C.WHITE, fontSize: 18, fontWeight: '700', marginBottom: S.sm },
+  noResultsText: { color: C.TEXT, fontSize: 18, fontWeight: '700', marginBottom: S.sm },
   noResultsSub: { color: C.GREY, fontSize: 14 },
 });

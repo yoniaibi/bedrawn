@@ -145,11 +145,24 @@ function AccountStackNav() {
   );
 }
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+  const iconMap: Record<string, string> = {
+    Home:       '⊙',
+    Live:       '◉',
+    Tickets:    '◈',
+    GrandDraw:  '◆',
+    Account:    '○',
+  };
   return (
-    <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.5 }}>
-      {emoji}
-    </Text>
+    <View style={{
+      width: 28, height: 28, borderRadius: 8,
+      alignItems: 'center', justifyContent: 'center',
+      backgroundColor: focused ? C.PURPLE_LIGHT : 'transparent',
+    }}>
+      <Text style={{ fontSize: 13, color: focused ? C.PURPLE : C.MUTED, fontWeight: '700' }}>
+        {iconMap[label] ?? '○'}
+      </Text>
+    </View>
   );
 }
 
@@ -159,7 +172,7 @@ export function TabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: C.BG,
+          backgroundColor: C.WHITE,
           borderTopColor: C.BORDER,
           borderTopWidth: 1,
           height: 80,
@@ -168,43 +181,33 @@ export function TabNavigator() {
         },
         tabBarActiveTintColor: C.PURPLE,
         tabBarInactiveTintColor: C.MUTED,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.2 },
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeStackNav}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Home" focused={focused} /> }}
       />
       <Tab.Screen
         name="Live"
         component={LiveStackNav}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔴" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Live" focused={focused} /> }}
       />
       <Tab.Screen
         name="Tickets"
         component={TicketsStackNav}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🎫" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Tickets" focused={focused} /> }}
       />
       <Tab.Screen
         name="Grand Draw"
         component={GrandDrawStackNav}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="✨" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="GrandDraw" focused={focused} /> }}
       />
       <Tab.Screen
         name="Account"
         component={AccountStackNav}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Account" focused={focused} /> }}
       />
     </Tab.Navigator>
   );

@@ -13,56 +13,48 @@ import { S } from '../../theme/spacing';
 
 const CATEGORIES = [
   {
-    emoji: '👜',
     label: 'Bags',
     description: 'Chanel, LV, Prada, Bottega & more',
     accent: '#EC4899',
     drawCount: 24,
   },
   {
-    emoji: '⌚',
     label: 'Watches',
     description: 'Rolex, AP, Omega, Cartier',
     accent: '#F59E0B',
     drawCount: 11,
   },
   {
-    emoji: '👟',
     label: 'Trainers',
     description: 'Nike, Jordan, Adidas, New Balance',
     accent: '#8B5CF6',
     drawCount: 31,
   },
   {
-    emoji: '👗',
     label: 'Fashion',
     description: 'Designer clothing & accessories',
     accent: '#EC4899',
     drawCount: 18,
   },
   {
-    emoji: '🧢',
     label: 'Streetwear',
     description: 'Supreme, Palace, Off-White & more',
     accent: '#3B82F6',
     drawCount: 15,
   },
   {
-    emoji: '💎',
     label: 'Luxury',
     description: 'Ultra-premium, high-value items',
     accent: '#F59E0B',
     drawCount: 7,
   },
   {
-    emoji: '💍',
     label: 'Jewellery',
     description: 'Fine and fashion jewellery',
     accent: '#A78BFA',
     drawCount: 9,
   },
   {
-    emoji: '🕰',
     label: 'Vintage',
     description: 'Archive, vintage & rare pieces',
     accent: '#C49A3C',
@@ -71,9 +63,9 @@ const CATEGORIES = [
 ];
 
 const COMING_SOON = [
-  { emoji: '🎨', label: 'Art & Prints' },
-  { emoji: '📱', label: 'Tech' },
-  { emoji: '🏠', label: 'Homeware' },
+  { label: 'Art & Prints' },
+  { label: 'Tech' },
+  { label: 'Homeware' },
 ];
 
 export function CategoriesScreen() {
@@ -98,7 +90,6 @@ export function CategoriesScreen() {
             <TouchableOpacity key={cat.label} style={styles.categoryCard} activeOpacity={0.8}>
               <View style={[styles.accentBar, { backgroundColor: cat.accent }]} />
               <View style={styles.categoryContent}>
-                <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
                 <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{cat.label}</Text>
                   <Text style={styles.categoryDesc}>{cat.description}</Text>
@@ -117,7 +108,6 @@ export function CategoriesScreen() {
         <View style={styles.comingSoonRow}>
           {COMING_SOON.map(cat => (
             <View key={cat.label} style={styles.comingSoonCard}>
-              <Text style={styles.comingSoonEmoji}>{cat.emoji}</Text>
               <Text style={styles.comingSoonLabel}>{cat.label}</Text>
               <Text style={styles.comingSoonBadge}>Soon</Text>
             </View>
@@ -126,7 +116,7 @@ export function CategoriesScreen() {
 
         {/* Suggest card */}
         <View style={styles.suggestCard}>
-          <Text style={styles.suggestTitle}>💡 Don't see your category?</Text>
+          <Text style={styles.suggestTitle}>Don't see your category?</Text>
           <Text style={styles.suggestText}>
             We add new categories based on community demand. Let us know what you'd like to see!
           </Text>
@@ -151,7 +141,7 @@ const styles = StyleSheet.create({
     borderBottomColor: C.BORDER,
   },
   back: { color: C.GREY, fontSize: 15 },
-  title: { fontSize: 17, fontWeight: '700', color: C.WHITE },
+  title: { fontSize: 17, fontWeight: '700', color: C.TEXT },
   content: { padding: S.xl, paddingBottom: S.xxxl },
   sectionLabel: { fontSize: 13, fontWeight: '700', color: C.GREY, letterSpacing: 0.5, marginBottom: S.md },
   categoryGrid: { gap: S.md },
@@ -171,12 +161,11 @@ const styles = StyleSheet.create({
     padding: S.lg,
     gap: S.md,
   },
-  categoryEmoji: { fontSize: 28, width: 36 },
   categoryInfo: { flex: 1 },
-  categoryName: { color: C.WHITE, fontWeight: '700', fontSize: 15 },
+  categoryName: { color: C.TEXT, fontWeight: '700', fontSize: 15 },
   categoryDesc: { color: C.GREY, fontSize: 12, marginTop: 2 },
   countBadge: { alignItems: 'center' },
-  countText: { color: C.WHITE, fontWeight: '800', fontSize: 18 },
+  countText: { color: C.TEXT, fontWeight: '800', fontSize: 18 },
   countLabel: { color: C.MUTED, fontSize: 10 },
   comingSoonRow: { flexDirection: 'row', gap: S.md },
   comingSoonCard: {
@@ -190,8 +179,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     gap: S.xs,
   },
-  comingSoonEmoji: { fontSize: 28 },
-  comingSoonLabel: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  comingSoonLabel: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   comingSoonBadge: {
     backgroundColor: C.CARD2,
     borderRadius: 999,
@@ -210,7 +198,7 @@ const styles = StyleSheet.create({
     marginTop: S.xl,
     gap: S.sm,
   },
-  suggestTitle: { color: C.WHITE, fontWeight: '700', fontSize: 15 },
+  suggestTitle: { color: C.TEXT, fontWeight: '700', fontSize: 15 },
   suggestText: { color: C.GREY, fontSize: 13, lineHeight: 18 },
   suggestBtn: { alignSelf: 'flex-start' },
   suggestBtnText: { color: C.PURPLE, fontWeight: '600', fontSize: 13 },

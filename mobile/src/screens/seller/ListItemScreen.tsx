@@ -15,12 +15,12 @@ import { S } from '../../theme/spacing';
 const TOTAL_STEPS = 5;
 
 const ITEM_TYPES = [
-  { emoji: '👜', label: 'Bag / Purse' },
-  { emoji: '⌚', label: 'Watch' },
-  { emoji: '👟', label: 'Trainers' },
-  { emoji: '👗', label: 'Clothing' },
-  { emoji: '💍', label: 'Jewellery' },
-  { emoji: '🎁', label: 'Bundle' },
+  { label: 'Bag / Purse' },
+  { label: 'Watch' },
+  { label: 'Trainers' },
+  { label: 'Clothing' },
+  { label: 'Jewellery' },
+  { label: 'Bundle' },
 ];
 
 const CONDITIONS = ['Brand New', 'Excellent', 'Very Good', 'Good', 'Fair'];
@@ -89,7 +89,6 @@ export function ListItemScreen() {
                   style={[styles.typeCard, itemType === t.label && styles.typeCardActive]}
                   onPress={() => setItemType(t.label)}
                 >
-                  <Text style={styles.typeEmoji}>{t.emoji}</Text>
                   <Text style={[styles.typeLabel, itemType === t.label && styles.typeLabelActive]}>
                     {t.label}
                   </Text>
@@ -107,7 +106,7 @@ export function ListItemScreen() {
             <View style={styles.photoGrid}>
               {Array.from({ length: 6 }, (_, i) => (
                 <TouchableOpacity key={i} style={styles.photoSlot}>
-                  <Text style={styles.photoSlotIcon}>{i === 0 ? '📷' : '+'}</Text>
+                  <Text style={styles.photoSlotIcon}>+</Text>
                   <Text style={styles.photoSlotText}>{i === 0 ? 'Cover' : 'Photo'}</Text>
                 </TouchableOpacity>
               ))}
@@ -346,7 +345,7 @@ const styles = StyleSheet.create({
   progressDotActive: { backgroundColor: C.PURPLE },
   stepLabel: { color: C.GREY, fontSize: 13 },
   content: { padding: S.xl, paddingBottom: 120 },
-  stepTitle: { fontSize: 22, fontWeight: '800', color: C.WHITE, marginBottom: S.sm },
+  stepTitle: { fontSize: 22, fontWeight: '800', color: C.TEXT, marginBottom: S.sm },
   stepSub: { color: C.GREY, fontSize: 14, marginBottom: S.xl, lineHeight: 20 },
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
   typeCard: {
@@ -360,8 +359,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     gap: S.xs,
   },
-  typeCardActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.15)' },
-  typeEmoji: { fontSize: 28 },
+  typeCardActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   typeLabel: { color: C.GREY, fontSize: 12, fontWeight: '600', textAlign: 'center' },
   typeLabelActive: { color: C.PURPLE },
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
@@ -388,7 +386,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     borderRadius: 10,
     padding: S.lg,
-    color: C.WHITE,
+    color: C.TEXT,
     fontSize: 15,
   },
   textArea: { height: 100, textAlignVertical: 'top' },
@@ -401,7 +399,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     backgroundColor: C.CARD,
   },
-  conditionPillActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.15)' },
+  conditionPillActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   conditionText: { color: C.GREY, fontSize: 13 },
   conditionTextActive: { color: C.PURPLE, fontWeight: '600' },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
@@ -413,7 +411,7 @@ const styles = StyleSheet.create({
     borderColor: C.BORDER,
     backgroundColor: C.CARD,
   },
-  catChipActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.15)' },
+  catChipActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   catChipText: { color: C.GREY, fontSize: 13 },
   catChipTextActive: { color: C.PURPLE, fontWeight: '600' },
   ticketPriceRow: { flexDirection: 'row', gap: S.md },
@@ -426,7 +424,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.BORDER,
   },
-  pricePillActive: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.2)' },
+  pricePillActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   priceText: { color: C.GREY, fontSize: 16, fontWeight: '700' },
   priceTextActive: { color: C.PURPLE },
   earningsCard: {
@@ -437,10 +435,10 @@ const styles = StyleSheet.create({
     padding: S.lg,
     gap: S.sm,
   },
-  earningsTitle: { color: C.WHITE, fontWeight: '700', fontSize: 14, marginBottom: S.xs },
+  earningsTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, marginBottom: S.xs },
   earningsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   earningsLabel: { color: C.GREY, fontSize: 13 },
-  earningsValue: { color: C.WHITE, fontSize: 13, fontWeight: '600' },
+  earningsValue: { color: C.TEXT, fontSize: 13, fontWeight: '600' },
   earningsNeg: { color: C.RED, fontSize: 13 },
   earningsTotalRow: {
     borderTopWidth: 1,
@@ -448,7 +446,7 @@ const styles = StyleSheet.create({
     paddingTop: S.sm,
     marginTop: S.xs,
   },
-  earningsTotalLabel: { color: C.WHITE, fontWeight: '700', fontSize: 14 },
+  earningsTotalLabel: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   earningsTotalValue: { color: C.GREEN, fontWeight: '800', fontSize: 16 },
   reviewCard: {
     backgroundColor: C.CARD,
@@ -461,7 +459,7 @@ const styles = StyleSheet.create({
   },
   reviewRow: { fontSize: 14, lineHeight: 22 },
   reviewLabel: { color: C.GREY },
-  reviewValue: { color: C.WHITE, fontWeight: '600' },
+  reviewValue: { color: C.TEXT, fontWeight: '600' },
   reviewGold: { color: C.GOLD },
   checkboxRow: { flexDirection: 'row', gap: S.md, alignItems: 'flex-start' },
   checkbox: {
