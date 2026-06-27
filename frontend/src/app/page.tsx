@@ -131,11 +131,23 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
   );
 }
 
+const HERO_IMAGES = [
+  // Fashion model in luxury outfit
+  'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&h=900&fit=crop&q=85&auto=format',
+  // Designer handbag close-up
+  'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1600&h=900&fit=crop&q=85&auto=format',
+  // Model in high fashion editorial
+  'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&h=900&fit=crop&q=85&auto=format',
+  // Luxury watch on wrist
+  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1600&h=900&fit=crop&q=85&auto=format',
+];
+
 export default function LandingPage() {
   const { isAuthed, authLoading } = useAuth();
   const router = useRouter();
   const [winnerIdx, setWinnerIdx] = useState(0);
   const [heroLoaded, setHeroLoaded] = useState(false);
+  const [heroIdx, setHeroIdx] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
@@ -147,10 +159,19 @@ export default function LandingPage() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHeroLoaded(false);
+      setHeroIdx(i => (i + 1) % HERO_IMAGES.length);
+    }, 6000);
+    return () => clearInterval(id);
+  }, []);
+
   if (authLoading) {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Logo width={200} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 80, width: 'auto' }} />
       </div>
     );
   }
@@ -163,11 +184,13 @@ export default function LandingPage() {
       {/* ─── NAV ─── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border)',
+        background: 'rgba(253,250,255,0.97)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(124,58,237,0.1)',
+        boxShadow: '0 1px 12px rgba(124,58,237,0.06)',
       }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Logo width={120} />
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
           <div className="desktop-flex" style={{ gap: 28, alignItems: 'center' }}>
             <a href="#how" style={{ color: 'var(--text)', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>How it works</a>
             <a href="#tonight" style={{ color: 'var(--text)', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>Tonight</a>
@@ -187,18 +210,20 @@ export default function LandingPage() {
 
       {/* ─── HERO ─── */}
       <div style={{ position: 'relative', minHeight: '80vh', overflow: 'hidden', background: '#0A0A14' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={draws[1].imageUrl}
-          alt="Bedrawn luxury draw"
+          key={heroIdx}
+          src={HERO_IMAGES[heroIdx]}
+          alt="BeDrawn luxury fashion"
           onLoad={() => setHeroLoaded(true)}
           style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
-            opacity: heroLoaded ? 0.45 : 0, transition: 'opacity 0.6s ease',
+            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top',
+            opacity: heroLoaded ? 0.6 : 0, transition: 'opacity 1s ease',
           }}
         />
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(105deg, rgba(10,10,20,0.95) 0%, rgba(10,10,20,0.8) 45%, rgba(10,10,20,0.3) 100%)',
+          background: 'linear-gradient(105deg, rgba(10,10,20,0.92) 0%, rgba(10,10,20,0.72) 40%, rgba(10,10,20,0.2) 100%)',
         }} />
         <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '100px 24px 80px', display: 'flex', alignItems: 'center', minHeight: '80vh' }}>
           <div style={{ maxWidth: 620 }}>
@@ -636,7 +661,8 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: 24 }}>
             <div>
-              <Logo width={110} bg='#111111' />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 40, width: 'auto', opacity: 0.85 }} />
               <p style={{ margin: '12px 0 4px', fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Their loss. Your win.</p>
               <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>hello@bedrawn.app</p>
             </div>

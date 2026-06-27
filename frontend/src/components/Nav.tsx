@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Logo from './Logo';
 
 const tabs = [
   { href: '/home',       label: 'Home' },
@@ -17,8 +16,10 @@ export function TopNav() {
     <>
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-        background: 'var(--white)',
-        borderBottom: '1px solid var(--border)',
+        background: 'rgba(253,250,255,0.97)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(124,58,237,0.1)',
+        boxShadow: '0 1px 12px rgba(124,58,237,0.06)',
         height: 60,
         display: 'flex', alignItems: 'center',
       }}>
@@ -29,7 +30,8 @@ export function TopNav() {
         }}>
           {/* Logo */}
           <Link href="/home" style={{ textDecoration: 'none', flexShrink: 0, marginRight: 40 }}>
-            <Logo width={110} bg="var(--white)" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-ticket.png" alt="BeDrawn" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
           </Link>
 
           {/* Desktop nav links */}
