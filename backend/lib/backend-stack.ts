@@ -87,6 +87,21 @@ export class BackendStack extends cdk.Stack {
       ...commonProps,
       entry: path.join(__dirname, 'lambda/post-item.ts'),
     });
+
+    // Draw endpoints
+    const getDrawsFn = new nodejs.NodejsFunction(this, 'GetDraws', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-draws.ts'),
+    });
+    const getDrawFn = new nodejs.NodejsFunction(this, 'GetDraw', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-draw.ts'),
+    });
+    const postDrawFn = new nodejs.NodejsFunction(this, 'PostDraw', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/post-draw.ts'),
+      timeout: cdk.Duration.seconds(10),
+    });
     const putItemFn = new nodejs.NodejsFunction(this, 'PutItem', {
       ...commonProps,
       entry: path.join(__dirname, 'lambda/put-item.ts'),
@@ -160,6 +175,9 @@ export class BackendStack extends cdk.Stack {
     table.grantReadData(walletBalanceFn);
     table.grantReadWriteData(enterDrawFn);
     table.grantReadWriteData(resolveDrawsFn);
+    table.grantReadData(getDrawsFn);
+    table.grantReadData(getDrawFn);
+    table.grantReadWriteData(postDrawFn);
 
     // EventBridge rule — resolve draws at 9pm UK time (21:00 UTC = 9pm GMT; 10pm BST in summer)
     const ninepmRule = new events.Rule(this, 'ResolveDrawsSchedule', {
@@ -197,6 +215,11 @@ export class BackendStack extends cdk.Stack {
     api.addRoutes({ path: '/draws/{id}/payout', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('ConfirmPayoutInt', confirmPayoutFn), authorizer });
     api.addRoutes({ path: '/wallet/balance', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('WalletBalanceInt', walletBalanceFn), authorizer });
     api.addRoutes({ path: '/draws/{id}/enter', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('EnterDrawInt', enterDrawFn), authorizer });
+
+    // Draw CRUD — GET /draws and GET /draws/{id} are public; POST /draws requires auth
+    api.addRoutes({ path: '/draws', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetDrawsInt', getDrawsFn) });
+    api.addRoutes({ path: '/draws/{id}', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetDrawInt', getDrawFn) });
+    api.addRoutes({ path: '/draws', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('PostDrawInt', postDrawFn), authorizer });
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });

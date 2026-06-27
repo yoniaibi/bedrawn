@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
 import ActivityTicker from '@/components/ActivityTicker';
 import { draws } from '@/lib/mockData';
+import type { Draw } from '@/lib/mockData';
 
 const socialProof = [
   '@emily just bought 5 tickets — 2 mins ago',
@@ -15,16 +16,36 @@ const socialProof = [
 ];
 
 export default function DrawDetailClient({ id }: { id: string }) {
-  const draw = draws.find(d => d.id === id);
+  const mockDraw = draws.find(d => d.id === id) ?? null;
+  const [draw, setDraw] = useState<Draw | null>(mockDraw);
+  const [loading, setLoading] = useState(!mockDraw);
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (mockDraw) return;
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) { setLoading(false); return; }
+    fetch(`${url}/draws/${id}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [id, mockDraw]);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div style={{ textAlign: 'center', padding: '60px 32px', color: 'var(--grey)' }}>Loading…</div>
+      </AppShell>
+    );
+  }
 
   if (!draw) {
     return (
       <AppShell>
         <div style={{ textAlign: 'center', padding: '60px 32px' }}>
-          <p style={{ fontSize: 32, margin: '0 0 8px' }}>🔍</p>
-          <p style={{ color: 'var(--text)', fontSize: 16 }}>Draw not found</p>
+          <p style={{ color: 'var(--text)', fontSize: 16, margin: '0 0 12px' }}>Draw not found</p>
           <Link href="/home" style={{ color: 'var(--purple)' }}>← Back to home</Link>
         </div>
       </AppShell>
@@ -69,7 +90,6 @@ export default function DrawDetailClient({ id }: { id: string }) {
         <div style={{ padding: '20px 16px' }}>
           <p className="serif" style={{ fontSize: 24, color: 'var(--text)', margin: '0 0 8px', lineHeight: 1.2 }}>{draw.title}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 20 }}>{draw.sellerEmoji}</span>
             <span style={{ fontSize: 14, color: 'var(--grey)' }}>{draw.seller}</span>
             {draw.isVerified && <span style={{ color: 'var(--purple)', fontSize: 12 }}>✓</span>}
           </div>

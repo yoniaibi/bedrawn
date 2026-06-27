@@ -1,8 +1,10 @@
 'use client';
 
+import '@/lib/amplify';
 import { useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const STEPS = ['Type', 'Photos', 'Details', 'Pricing', 'Review'];
 const TYPES = [
@@ -31,6 +33,8 @@ export default function ListItemPage() {
   const [totalTickets, setTotalTickets] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const earnings = retailValue && ticketPrice
     ? parseFloat(retailValue) * 0.88
@@ -246,15 +250,43 @@ export default function ListItemPage() {
                   </p>
                 </div>
               </div>
+              {submitError && (
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 8, padding: '10px 14px' }}>
+                  <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{submitError}</p>
+                </div>
+              )}
               <button
-                onClick={() => setSubmitted(true)}
-                disabled={!agreed}
+                onClick={async () => {
+                  if (!agreed || submitting) return;
+                  setSubmitting(true);
+                  setSubmitError('');
+                  try {
+                    const session = await fetchAuthSession();
+                    const token = session.tokens?.accessToken?.toString();
+                    if (!token) throw new Error('Please log in to list an item');
+                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice, totalTickets, retailValue }),
+                    });
+                    if (!res.ok) {
+                      const body = await res.json().catch(() => ({}));
+                      throw new Error(body.error ?? `Error ${res.status}`);
+                    }
+                    setSubmitted(true);
+                  } catch (err: unknown) {
+                    setSubmitError(err instanceof Error ? err.message : 'Submission failed');
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                disabled={!agreed || submitting}
                 style={{
                   width: '100%', padding: 16, borderRadius: 999, border: 'none',
-                  background: agreed ? 'linear-gradient(135deg, var(--purple), var(--pink))' : 'var(--muted)',
-                  color: 'var(--white)', fontSize: 16, fontWeight: 700, cursor: agreed ? 'pointer' : 'not-allowed',
+                  background: agreed && !submitting ? 'linear-gradient(135deg, var(--purple), var(--pink))' : 'var(--muted)',
+                  color: 'var(--white)', fontSize: 16, fontWeight: 700, cursor: agreed && !submitting ? 'pointer' : 'not-allowed',
                 }}
-              >Submit listing</button>
+              >{submitting ? 'Submitting…' : 'Submit listing'}</button>
             </div>
           )}
 

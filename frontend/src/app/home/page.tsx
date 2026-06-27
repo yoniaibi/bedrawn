@@ -8,7 +8,8 @@ import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 import ActivityTicker from '@/components/ActivityTicker';
-import { draws, currentUser, activityMessages, recentWinners } from '@/lib/mockData';
+import { draws as mockDraws, currentUser, activityMessages, recentWinners } from '@/lib/mockData';
+import type { Draw } from '@/lib/mockData';
 
 const categories = [
   { id: 'all',         label: 'All' },
@@ -26,13 +27,23 @@ export default function HomePage() {
   const [category, setCategory] = useState('all');
   const [filter, setFilter] = useState('');
   const [winnerIdx, setWinnerIdx] = useState(0);
+  const [allDraws, setAllDraws] = useState<Draw[]>(mockDraws);
 
   useEffect(() => {
     const id = setInterval(() => setWinnerIdx(i => (i + 1) % recentWinners.length), 9000);
     return () => clearInterval(id);
   }, []);
 
-  const filtered = draws.filter(d => {
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) return;
+    fetch(`${url}/draws`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (data?.draws?.length) setAllDraws(data.draws as Draw[]); })
+      .catch(() => {});
+  }, []);
+
+  const filtered = allDraws.filter(d => {
     if (category !== 'all' && d.category !== category) return false;
     if (filter === 'Tonight') return d.isClosingTonight;
     if (filter === 'Womenswear') return d.style === 'Womenswear';
@@ -42,14 +53,16 @@ export default function HomePage() {
     return true;
   });
 
-  const hero = draws.find(d => d.isClosingTonight) ?? draws[0];
-  const heroPct = Math.round((hero.soldTickets / hero.totalTickets) * 100);
-  const heroPrice = hero.ticketPrice >= 100 ? `£${(hero.ticketPrice / 100).toFixed(2)}` : `${hero.ticketPrice}p`;
-  const tonightCount = draws.filter(d => d.isClosingTonight).length;
+  const hero = allDraws.find(d => d.isClosingTonight) ?? allDraws[0];
+  const heroPct = hero ? Math.round((hero.soldTickets / hero.totalTickets) * 100) : 0;
+  const heroPrice = hero ? (hero.ticketPrice >= 100 ? `£${(hero.ticketPrice / 100).toFixed(2)}` : `${hero.ticketPrice}p`) : '';
+  const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
   const w = recentWinners[winnerIdx];
 
-  const womenswear = draws.filter(d => d.style === 'Womenswear').slice(0, 8);
-  const menswear = draws.filter(d => d.style === 'Menswear').slice(0, 8);
+  const womenswear = allDraws.filter(d => d.style === 'Womenswear').slice(0, 8);
+  const menswear = allDraws.filter(d => d.style === 'Menswear').slice(0, 8);
+
+  if (!hero) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}>Loading draws…</div></AppShell>;
 
   return (
     <AppShell>
