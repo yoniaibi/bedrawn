@@ -49,7 +49,8 @@ export default function DrawDetailClient({ id }: { id: string }) {
         </div>
 
         {/* Hero image */}
-        <div style={{ height: 280, background: draw.imageColor, position: 'relative' }}>
+        <div style={{ height: 280, background: 'var(--card)', position: 'relative', overflow: 'hidden' }}>
+          <img src={draw.imageUrl} alt={draw.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(13,11,20,0.6))' }} />
           {draw.isClosingTonight && (
             <div style={{ position: 'absolute', top: 16, left: 16 }}>

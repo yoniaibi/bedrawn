@@ -1,19 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0D0B14;
-  --card: #15121F;
-  --card2: #1C1830;
-  --border: #2A2440;
+  /* Backgrounds */
+  --bg: #0E0B1F;
+  --card: #1A1545;
+  --card2: #231C56;
+  --border: #2D2460;
+
+  /* Brand */
+  --violet: #2D1B69;
+  --royal: #6D28D9;
   --purple: #8B5CF6;
   --purple-dark: #6D28D9;
-  --pink: #EC4899;
-  --gold: #F59E0B;
+  --pink: #F472B6;
+  --rose: #C43070;
+  --ink: #1A1040;
+
+  /* Gold — winners only */
+  --gold: #F9C846;
+
+  /* Text */
   --white: #FFFFFF;
-  --grey: #9CA3AF;
-  --muted: #4B5563;
-  --green: #10B981;
-  --red: #EF4444;
+  --grey: #B8B0D8;
+  --muted: #6B5D8F;
+  --text-muted: #3D3266;
+
+  /* Semantic */
+  --green: #1D9E75;
+  --red: #E24B4A;
 }
 
 @theme inline {
@@ -161,4 +175,119 @@ button {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Draw card hover */
+.draw-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.draw-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.22), 0 4px 16px rgba(0, 0, 0, 0.5);
+  border-color: var(--purple) !important;
+}
+.draw-card:hover img {
+  transform: scale(1.05);
+}
+.draw-card img {
+  transition: transform 0.35s ease;
+}
+.draw-card-scarce:hover {
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.22), 0 4px 16px rgba(0, 0, 0, 0.5);
+  border-color: var(--red) !important;
+}
+
+/* Hero image hover */
+.hero-draw {
+  transition: box-shadow 0.25s ease;
+}
+.hero-draw:hover {
+  box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+}
+
+/* Button hover effects */
+.btn-primary {
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Category pill / filter chip hover */
+.pill-btn {
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.pill-btn:hover {
+  border-color: var(--purple);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+/* Sidebar / nav link hover */
+.nav-link {
+  transition: background 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
+  border-radius: 8px;
+}
+.nav-link:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--purple);
+}
+
+/* Ticket card hover */
+.ticket-card {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.ticket-card:hover {
+  border-color: var(--purple);
+  box-shadow: 0 8px 28px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+/* List item row hover */
+.list-row {
+  transition: background 0.15s ease;
+  border-radius: 10px;
+}
+.list-row:hover {
+  background: rgba(139, 92, 246, 0.06);
+}
+
+/* Tonight's draw row hover */
+.tonight-row {
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+.tonight-row:hover {
+  border-color: var(--purple);
+  background: rgba(139, 92, 246, 0.05);
+  transform: translateX(2px);
+}
+
+/* Save button heart hover */
+.save-btn {
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+.save-btn:hover {
+  transform: scale(1.25);
+  color: var(--pink) !important;
+}
+
+/* Landing page draw card hover */
+.landing-draw-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(139, 92, 246, 0.25);
+  border-color: var(--purple);
+}
+
+/* Glow pulse on scarce cards */
+@keyframes glow-red {
+  0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+  50% { box-shadow: 0 0 20px rgba(239,68,68,0.6); }
+}
+.draw-card-scarce {
+  animation: glow-red 2s ease-in-out infinite;
 }

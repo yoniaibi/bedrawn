@@ -89,7 +89,9 @@ export default function TicketsPage() {
                   {/* Top section */}
                   <div style={{ padding: '14px', display: 'flex', gap: 12 }}>
                     <div style={{ position: 'relative' }}>
-                      <div style={{ width: 52, height: 52, borderRadius: 8, background: t.draw.imageColor, flexShrink: 0 }} />
+                      <div style={{ width: 52, height: 52, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--card)' }}>
+                        <img src={t.draw.imageUrl} alt={t.draw.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
                       {t.draw.isClosingTonight && (
                         <div style={{ position: 'absolute', bottom: -4, right: -4 }}>
                           <LiveDot size={10} />

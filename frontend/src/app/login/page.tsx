@@ -1,5 +1,7 @@
 'use client';
 
+import '@/lib/amplify';
+import Logo from '@/components/Logo';
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -47,10 +49,9 @@ function LoginContent() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', textAlign: 'center', margin: '0 0 8px' }}>DRAWN</p>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+          <Logo width={140} />
         </Link>
-        <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 15, margin: '0 0 24px' }}>Welcome back</p>
 
         {justVerified && (
           <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid var(--green)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>

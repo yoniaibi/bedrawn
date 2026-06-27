@@ -14,9 +14,11 @@ export interface Draw {
   isClosingTonight: boolean;
   isVerified: boolean;
   description: string;
-  imageColor: string;
+  imageUrl: string;
   tags: string[];
 }
+
+const UNS = 'https://images.unsplash.com';
 
 export const draws: Draw[] = [
   {
@@ -35,7 +37,7 @@ export const draws: Draw[] = [
     isClosingTonight: true,
     isVerified: true,
     description: 'Iconic Chanel Classic Flap in black caviar leather with gold hardware. Carried twice, comes with original box, authenticity card, and dustbag. Purchased from Chanel Selfridges.',
-    imageColor: '#1a1a2e',
+    imageUrl: `${UNS}/photo-1548036328-c9fa89d128fa?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Chanel', 'Designer', 'Handbag'],
   },
   {
@@ -53,8 +55,8 @@ export const draws: Draw[] = [
     isBundle: false,
     isClosingTonight: true,
     isVerified: true,
-    description: 'Rolex Submariner 126610LV "Starbucks" in perfect condition. Box and papers 2023. Never worn outside. Serial number available on request.',
-    imageColor: '#0a2744',
+    description: 'Rolex Submariner 126610LV in perfect condition. Box and papers 2023. Never worn outside. Serial number available on request.',
+    imageUrl: `${UNS}/photo-1587836374828-4dbafa94cf0e?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Rolex', 'Luxury', 'Watch'],
   },
   {
@@ -72,8 +74,8 @@ export const draws: Draw[] = [
     isBundle: false,
     isClosingTonight: false,
     isVerified: true,
-    description: 'DS Air Jordan 1 Chicago Lost & Found, UK9. Original box, lace bags, receipt. Trophy Room collab — legitimately sourced.',
-    imageColor: '#8B1A1A',
+    description: 'DS Air Jordan 1 Chicago Lost & Found, UK9. Original box, lace bags, receipt. Legitimately sourced.',
+    imageUrl: `${UNS}/photo-1542291026-7eec264c27ff?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Jordan', 'Nike', 'Sneakers'],
   },
   {
@@ -92,7 +94,7 @@ export const draws: Draw[] = [
     isClosingTonight: true,
     isVerified: true,
     description: 'Bottega Veneta The Pouch in cream intrecciato leather. Brand new with tags and full packaging. Gift from a client — never used.',
-    imageColor: '#D4C5A9',
+    imageUrl: `${UNS}/photo-1584917865442-de89df76afd3?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Bottega', 'Designer', 'Clutch'],
   },
   {
@@ -111,7 +113,7 @@ export const draws: Draw[] = [
     isClosingTonight: false,
     isVerified: false,
     description: 'Supreme Box Logo Hoodie FW22, size Large. DS, worn for 5 minutes for a photo. Original receipt included.',
-    imageColor: '#CC0000',
+    imageUrl: `${UNS}/photo-1556821840-3a63f15732ce?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Supreme', 'Streetwear', 'Hoodie'],
   },
   {
@@ -130,7 +132,7 @@ export const draws: Draw[] = [
     isClosingTonight: true,
     isVerified: true,
     description: 'Cartier Love Bracelet in 18k yellow gold. Size 18. Comes with original screwdriver, box, and receipt. Light surface scratches consistent with wear.',
-    imageColor: '#B8860B',
+    imageUrl: `${UNS}/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Cartier', 'Jewellery', 'Gold'],
   },
   {
@@ -149,7 +151,7 @@ export const draws: Draw[] = [
     isClosingTonight: false,
     isVerified: true,
     description: 'Four luxury essentials: Acne Studios leather belt, Toteme cashmere scarf, Jacquemus mini bag, JW Anderson puzzle earrings. All authenticated.',
-    imageColor: '#2D1B4E',
+    imageUrl: `${UNS}/photo-1483985988355-763728e1935b?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Bundle', 'Multi-brand', 'Gift'],
   },
   {
@@ -168,7 +170,7 @@ export const draws: Draw[] = [
     isClosingTonight: false,
     isVerified: true,
     description: 'Prada Re-Nylon backpack in black. Used three times. Full packaging included. Prada triangle logo intact and firm.',
-    imageColor: '#111111',
+    imageUrl: `${UNS}/photo-1553062407-98eeb64c6a62?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Prada', 'Backpack', 'Designer'],
   },
   {
@@ -187,7 +189,7 @@ export const draws: Draw[] = [
     isClosingTonight: false,
     isVerified: false,
     description: 'Balenciaga Track 2 EU42, deadstock. Original box, extra laces, tag. Perfect Christmas present for yourself.',
-    imageColor: '#C0C0C0',
+    imageUrl: `${UNS}/photo-1595950653106-6c9ebd614d3a?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Balenciaga', 'Sneakers', 'Designer'],
   },
   {
@@ -205,8 +207,8 @@ export const draws: Draw[] = [
     isBundle: false,
     isClosingTonight: true,
     isVerified: true,
-    description: 'Christian Dior Saddle Bag in tan grained calfskin. Purchased 2021. Light wear on corners, all hardware gold and intact. Card included.',
-    imageColor: '#8B6914',
+    description: 'Christian Dior Saddle Bag in tan grained calfskin. Purchased 2021. Light wear on corners, all hardware gold and intact.',
+    imageUrl: `${UNS}/photo-1566150905458-1bf1fc113f0d?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Dior', 'Saddle', 'Handbag'],
   },
   {
@@ -225,7 +227,7 @@ export const draws: Draw[] = [
     isClosingTonight: false,
     isVerified: true,
     description: 'Curated archive bundle: Palace FW21 jacket, KAWS x Uniqlo tee (DS), CDG PLAY cardigan, Off-White belt. Sizes L throughout.',
-    imageColor: '#1C1C3C',
+    imageUrl: `${UNS}/photo-1552346154-21d32810aba3?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Bundle', 'Archive', 'Streetwear'],
   },
   {
@@ -244,7 +246,7 @@ export const draws: Draw[] = [
     isClosingTonight: false,
     isVerified: true,
     description: 'Omega Speedmaster Professional Moonwatch 310.30.42.50.01.001. Bought 2022 from authorized dealer. Box and papers, polished to showroom condition.',
-    imageColor: '#1A1A2E',
+    imageUrl: `${UNS}/photo-1523275335684-37898b6baf30?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Omega', 'Speedmaster', 'Watch'],
   },
 ];

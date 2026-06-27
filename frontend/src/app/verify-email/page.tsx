@@ -1,5 +1,7 @@
 'use client';
 
+import '@/lib/amplify';
+import Logo from '@/components/Logo';
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -71,6 +73,24 @@ function VerifyEmailContent() {
       router.push('/login?verified=true');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Invalid code. Please try again.';
+
+      // Account was already confirmed (e.g. via admin) — just sign in
+      if (message.includes('Current status is CONFIRMED') || message.includes('already confirmed')) {
+        const storedPw = sessionStorage.getItem('drawn_pending_pw');
+        if (storedPw) {
+          try {
+            await signIn({ username: email, password: storedPw });
+            sessionStorage.removeItem('drawn_pending_pw');
+            sessionStorage.removeItem('drawn_pending_email');
+            login();
+            router.push('/home');
+            return;
+          } catch {}
+        }
+        router.push('/login?verified=true');
+        return;
+      }
+
       setError(message);
       setLoading(false);
     }
@@ -93,8 +113,8 @@ function VerifyEmailContent() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', margin: '0 0 32px' }}>DRAWN</p>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <Logo width={140} />
         </Link>
 
         <p style={{ fontSize: 36, margin: '0 0 16px' }}>📬</p>

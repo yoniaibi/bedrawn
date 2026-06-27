@@ -6,6 +6,6 @@ const app = new cdk.App();
 new BackendStack(app, 'BedrawnStack', {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
+    region: 'eu-west-1',
   },
 });

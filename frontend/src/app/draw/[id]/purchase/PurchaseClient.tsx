@@ -45,7 +45,9 @@ export default function PurchaseClient({ id }: { id: string }) {
 
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px 16px', display: 'flex', gap: 12 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 10, background: draw.imageColor, flexShrink: 0 }} />
+            <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--card2)' }}>
+              <img src={draw.imageUrl} alt={draw.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
             <div>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--white)' }}>{draw.title}</p>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--grey)' }}>{priceDisplay} per ticket · £{draw.retailValue.toLocaleString()} retail</p>

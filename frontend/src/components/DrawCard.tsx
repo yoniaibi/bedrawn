@@ -23,18 +23,23 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
   return (
     <Link href={`/draw/${draw.id}`} style={{ textDecoration: 'none', display: 'block', width: fullWidth ? '100%' : undefined }}>
       <div
-        className="animate-fade-in-up"
+        className={`draw-card animate-fade-in-up${scarce ? ' draw-card-scarce' : ''}`}
         style={{
           background: 'var(--card)',
           border: scarce ? '1.5px solid var(--red)' : '1px solid var(--border)',
           borderRadius: 12,
           overflow: 'hidden',
           cursor: 'pointer',
-          animation: scarce ? 'pulse-opacity 2s ease-in-out infinite' : undefined,
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
         }}
       >
         {/* Image area */}
-        <div style={{ position: 'relative', height: fullWidth ? 200 : 140, background: draw.imageColor }}>
+        <div style={{ position: 'relative', height: fullWidth ? 200 : 140, background: 'var(--card)', overflow: 'hidden' }}>
+          <img
+            src={draw.imageUrl}
+            alt={draw.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
           {draw.isBundle && (
             <span style={{
               position: 'absolute', top: 8, left: 8,
@@ -85,25 +90,24 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
           </button>
         </div>
 
-        {/* Card body */}
+        {/* Card body — hierarchy: price ratio → title → progress → seller */}
         <div style={{ padding: '10px 10px 12px' }}>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: 'var(--white)', lineHeight: 1.3, marginBottom: 4 }}>
+          {/* Price ratio — the hook, most prominent */}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 5 }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--pink)' }}>{price}</span>
+            <span style={{ fontSize: 11, color: 'var(--grey)' }}>→</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--white)' }}>£{draw.retailValue.toLocaleString()}</span>
+          </div>
+          <p style={{ margin: '0 0 7px', fontSize: 11, fontWeight: 600, color: 'var(--grey)', lineHeight: 1.3 }}>
             {draw.title}
           </p>
-          <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--grey)' }}>
-            {draw.sellerEmoji} {draw.seller}
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <span style={{
-              background: 'rgba(139,92,246,0.15)', border: '1px solid var(--purple)',
-              color: 'var(--purple)', fontSize: 11, fontWeight: 700,
-              padding: '2px 8px', borderRadius: 999,
-            }}>{price} → £{draw.retailValue.toLocaleString()}</span>
+          <ProgressBar percent={pct} height={4} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+            <p style={{ margin: 0, fontSize: 9, color: 'var(--muted)' }}>
+              {draw.sellerEmoji} {draw.seller}
+            </p>
+            <p style={{ margin: 0, fontSize: 9, color: 'var(--muted)' }}>{pct}% sold</p>
           </div>
-          <ProgressBar percent={pct} height={3} />
-          <p style={{ margin: '4px 0 0', fontSize: 10, color: 'var(--muted)' }}>
-            {pct}% sold · {draw.soldTickets.toLocaleString()} tickets
-          </p>
         </div>
       </div>
     </Link>

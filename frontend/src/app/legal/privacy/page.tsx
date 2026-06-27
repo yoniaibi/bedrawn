@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import AppShell from '@/components/AppShell';
 
 const sections = [
   {
@@ -40,7 +39,7 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <AppShell>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
@@ -62,6 +61,6 @@ export default function PrivacyPage() {
           </p>
         </div>
       </div>
-    </AppShell>
+    </div>
   );
 }

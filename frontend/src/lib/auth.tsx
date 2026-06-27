@@ -1,5 +1,6 @@
 'use client';
 
+import '@/lib/amplify'; // must be imported before any aws-amplify calls
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 

@@ -5,6 +5,8 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as ses from 'aws-cdk-lib/aws-ses';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { HttpApi, CorsHttpMethod, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -72,6 +74,8 @@ export class BackendStack extends cdk.Stack {
 
     const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName };
     const commonProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: commonEnv };
+    const stripeEnv = { ...commonEnv, STRIPE_WEBHOOK_SECRET: '' }; // webhook secret added after first deploy
+    const stripeProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: stripeEnv };
 
     const getItemsFn = new nodejs.NodejsFunction(this, 'GetItems', {
       ...commonProps,
@@ -93,12 +97,49 @@ export class BackendStack extends cdk.Stack {
       ...commonProps,
       entry: path.join(__dirname, 'lambda/get-upload-url.ts'),
     });
+    const waitlistFn = new nodejs.NodejsFunction(this, 'Waitlist', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/waitlist.ts'),
+    });
+
+    // Stripe Lambdas — read Stripe secret key from SSM at runtime
+    const createSellerAccountFn = new nodejs.NodejsFunction(this, 'CreateSellerAccount', {
+      ...stripeProps,
+      entry: path.join(__dirname, 'lambda/create-seller-account.ts'),
+      timeout: cdk.Duration.seconds(15),
+    });
+    const walletTopupFn = new nodejs.NodejsFunction(this, 'WalletTopup', {
+      ...stripeProps,
+      entry: path.join(__dirname, 'lambda/wallet-topup.ts'),
+      timeout: cdk.Duration.seconds(15),
+    });
+    const confirmPayoutFn = new nodejs.NodejsFunction(this, 'ConfirmPayout', {
+      ...stripeProps,
+      entry: path.join(__dirname, 'lambda/confirm-payout.ts'),
+      timeout: cdk.Duration.seconds(15),
+    });
+    const stripeWebhookFn = new nodejs.NodejsFunction(this, 'StripeWebhook', {
+      ...stripeProps,
+      entry: path.join(__dirname, 'lambda/stripe-webhook.ts'),
+      timeout: cdk.Duration.seconds(15),
+    });
+
+    // Grant SSM read access to Stripe Lambdas
+    const stripeSecretPolicy = new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:eu-west-1:${this.account}:parameter/bedrawn/stripe/*`],
+    });
+    [createSellerAccountFn, walletTopupFn, confirmPayoutFn, stripeWebhookFn].forEach(fn => {
+      fn.addToRolePolicy(stripeSecretPolicy);
+      table.grantReadWriteData(fn);
+    });
 
     table.grantReadData(getItemsFn);
     table.grantWriteData(postItemFn);
     table.grantWriteData(putItemFn);
     table.grantWriteData(deleteItemFn);
     bucket.grantPut(getUploadUrlFn);
+    table.grantReadWriteData(waitlistFn);
 
     // Cognito JWT authorizer for all protected routes
     const authorizer = new HttpUserPoolAuthorizer('CognitoAuthorizer', userPool, {
@@ -119,6 +160,14 @@ export class BackendStack extends cdk.Stack {
     api.addRoutes({ path: '/items/{id}', methods: [HttpMethod.PUT], integration: new HttpLambdaIntegration('PutItemInt', putItemFn), authorizer });
     api.addRoutes({ path: '/items/{id}', methods: [HttpMethod.DELETE], integration: new HttpLambdaIntegration('DeleteItemInt', deleteItemFn), authorizer });
     api.addRoutes({ path: '/upload-url', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('GetUploadUrlInt', getUploadUrlFn), authorizer });
+    // Public — no authorizer, waitlist signup before launch
+    api.addRoutes({ path: '/waitlist', methods: [HttpMethod.POST, HttpMethod.OPTIONS], integration: new HttpLambdaIntegration('WaitlistInt', waitlistFn) });
+    // Public — Stripe webhook (verified by signature inside Lambda)
+    api.addRoutes({ path: '/webhooks/stripe', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('StripeWebhookInt', stripeWebhookFn) });
+    // Authenticated Stripe routes
+    api.addRoutes({ path: '/seller/account', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('CreateSellerAccountInt', createSellerAccountFn), authorizer });
+    api.addRoutes({ path: '/wallet/topup', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('WalletTopupInt', walletTopupFn), authorizer });
+    api.addRoutes({ path: '/draws/{id}/payout', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('ConfirmPayoutInt', confirmPayoutFn), authorizer });
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });

@@ -8,6 +8,7 @@ import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 import ActivityTicker from '@/components/ActivityTicker';
+import Logo from '@/components/Logo';
 import { draws, currentUser, activityMessages, recentWinners } from '@/lib/mockData';
 
 const categories = [
@@ -67,7 +68,7 @@ export default function HomePage() {
           borderBottom: '1px solid var(--border)', position: 'sticky', top: 0,
           background: 'var(--bg)', zIndex: 10,
         }}>
-          <p className="serif" style={{ fontSize: 24, color: 'var(--gold)', margin: 0 }}>DRAWN</p>
+          <Logo width={100} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               background: 'rgba(245,158,11,0.15)', border: '1px solid var(--gold)',
@@ -108,10 +109,11 @@ export default function HomePage() {
 
         {/* Hero draw */}
         <Link href={`/draw/${hero.id}`} style={{ textDecoration: 'none', display: 'block', margin: '0 16px 16px' }}>
-          <div style={{
+          <div className="hero-draw" style={{
             borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)',
-            background: hero.imageColor, height: 240, position: 'relative',
+            height: 240, position: 'relative', background: 'var(--card)',
           }}>
+            <img src={hero.imageUrl} alt={hero.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{
               position: 'absolute', inset: 0,
               background: 'linear-gradient(to bottom, transparent 30%, rgba(13,11,20,0.95))',

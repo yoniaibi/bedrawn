@@ -1,5 +1,7 @@
 'use client';
 
+import '@/lib/amplify';
+import Logo from '@/components/Logo';
 import { useState } from 'react';
 import Link from 'next/link';
 import { resetPassword } from 'aws-amplify/auth';
@@ -29,8 +31,8 @@ export default function ForgotPasswordPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', margin: '0 0 32px' }}>DRAWN</p>
+        <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <Logo width={140} />
         </Link>
 
         {sent ? (

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { BottomNav, Sidebar } from './Nav';
+import Logo from './Logo';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthed, authLoading } = useAuth();
@@ -17,8 +18,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <p className="serif" style={{ fontSize: 32, color: 'var(--gold)', margin: '0 0 16px' }}>DRAWN</p>
-          <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--purple)', borderRadius: '50%', margin: '0 auto', animation: 'spin-slow 0.8s linear infinite' }} />
+          <Logo width={160} />
+          <div style={{ width: 28, height: 28, border: '2.5px solid var(--border)', borderTopColor: 'var(--purple)', borderRadius: '50%', margin: '20px auto 0', animation: 'spin-slow 0.8s linear infinite' }} />
         </div>
       </div>
     );

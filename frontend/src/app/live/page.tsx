@@ -195,7 +195,9 @@ export default function LivePage() {
                     display: 'flex', gap: 12, alignItems: 'center',
                   }}>
                     <span style={{ fontSize: 20, color: 'var(--purple)', fontWeight: 700, width: 24 }}>{i + 1}</span>
-                    <div style={{ width: 44, height: 44, borderRadius: 8, background: d.imageColor, flexShrink: 0 }} />
+                    <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', flexShrink: 0, background: 'var(--card)' }}>
+                      <img src={d.imageUrl} alt={d.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</p>
                       <p style={{ margin: '2px 0', fontSize: 11, color: 'var(--grey)' }}>{price} → £{d.retailValue.toLocaleString()}</p>
