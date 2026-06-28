@@ -307,6 +307,23 @@ export class BackendStack extends cdk.Stack {
     table.grantReadData(getWalletTransactionsFn);
     api.addRoutes({ path: '/wallet/transactions', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetWalletTransactionsInt', getWalletTransactionsFn), authorizer });
 
+    // Push notification device token storage
+    const storePushTokenFn = new nodejs.NodejsFunction(this, 'StorePushToken', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/store-push-token.ts'),
+    });
+    table.grantReadWriteData(storePushTokenFn);
+    api.addRoutes({ path: '/notifications/token', methods: [HttpMethod.POST, HttpMethod.DELETE], integration: new HttpLambdaIntegration('StorePushTokenInt', storePushTokenFn), authorizer });
+
+    // Admin — manual draw resolution for testing
+    const adminResolveDrawFn = new nodejs.NodejsFunction(this, 'AdminResolveDraw', {
+      ...commonProps,
+      environment: { ...commonEnv, ADMIN_EMAILS: 'yoniaibi@gmail.com' },
+      entry: path.join(__dirname, 'lambda/admin-resolve-draw.ts'),
+    });
+    table.grantReadWriteData(adminResolveDrawFn);
+    api.addRoutes({ path: '/admin/draws/{id}/resolve', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('AdminResolveDrawInt', adminResolveDrawFn), authorizer });
+
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: userPoolClient.userPoolClientId, description: 'Cognito User Pool Client ID' });

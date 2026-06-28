@@ -42,6 +42,9 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
   const [email, setEmail] = useState('');
+  const [authToken, setAuthToken] = useState('');
+  const [resolving, setResolving] = useState<string | null>(null);
+  const [resolveResult, setResolveResult] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -53,6 +56,7 @@ export default function AdminPage() {
         // Get email + groups from token
         const payload = JSON.parse(atob(token.split('.')[1]));
         setEmail(payload.email ?? payload.username ?? '');
+        setAuthToken(token);
         const raw = String(payload['cognito:groups'] ?? '');
         const groups = raw.replace(/^\[|\]$/g, '').split(',').map((g: string) => g.trim()).filter(Boolean);
         if (!groups.includes('admin')) {
@@ -76,6 +80,33 @@ export default function AdminPage() {
     };
     load();
   }, []);
+
+  const handleResolve = async (drawId: string, drawTitle: string) => {
+    if (!confirm(`Manually resolve draw:\n"${drawTitle}"\n\nThis will pick a winner now. Continue?`)) return;
+    setResolving(drawId);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/draws/${drawId}/resolve`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResolveResult(prev => ({ ...prev, [drawId]: `Error: ${data.error}` }));
+      } else if (data.result === 'resolved') {
+        setResolveResult(prev => ({ ...prev, [drawId]: `Winner: ${data.winnerId} (${data.soldTickets} tickets sold)` }));
+        setDraws(prev => prev.map(d => d.id === drawId ? { ...d, status: 'resolved', winnerId: data.winnerId } : d));
+        setCounts(prev => ({ ...prev, open: Math.max(0, (prev.open ?? 1) - 1), resolved: (prev.resolved ?? 0) + 1 }));
+      } else {
+        setResolveResult(prev => ({ ...prev, [drawId]: `Cancelled: ${data.reason}` }));
+        setDraws(prev => prev.map(d => d.id === drawId ? { ...d, status: 'cancelled' } : d));
+        setCounts(prev => ({ ...prev, open: Math.max(0, (prev.open ?? 1) - 1), cancelled: (prev.cancelled ?? 0) + 1 }));
+      }
+    } catch (e) {
+      setResolveResult(prev => ({ ...prev, [drawId]: e instanceof Error ? e.message : 'Failed' }));
+    } finally {
+      setResolving(null);
+    }
+  };
 
   const displayed = filter === 'all' ? draws : draws.filter(d => d.status === filter);
 
@@ -134,6 +165,7 @@ export default function AdminPage() {
             const pct = d.totalTickets > 0 ? Math.round((d.soldTickets / d.totalTickets) * 100) : 0;
             const st = STATUS_STYLE[d.status] ?? STATUS_STYLE.open;
             const revenue = d.soldTickets * d.ticketPricePence;
+            const result = resolveResult[d.id];
             return (
               <div key={d.id} style={{
                 background: 'var(--card)', border: '1px solid var(--border)',
@@ -154,9 +186,25 @@ export default function AdminPage() {
                       @{d.sellerHandle} · closes {d.closingDate} · {fmt(d.ticketPricePence)}/ticket · retail {fmt(d.retailValuePence)}
                     </p>
                   </div>
-                  <Link href={`/draw/${d.id}`} style={{ color: 'var(--purple)', fontSize: 12, textDecoration: 'none', fontWeight: 600, flexShrink: 0 }}>
-                    View →
-                  </Link>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+                    {d.status === 'open' && (
+                      <button
+                        onClick={() => handleResolve(d.id, d.title)}
+                        disabled={resolving === d.id}
+                        style={{
+                          padding: '5px 12px', borderRadius: 8, cursor: resolving === d.id ? 'default' : 'pointer',
+                          background: 'rgba(245,158,11,0.15)', border: '1px solid var(--gold)',
+                          color: 'var(--gold)', fontSize: 12, fontWeight: 700,
+                          opacity: resolving === d.id ? 0.6 : 1,
+                        }}
+                      >
+                        {resolving === d.id ? 'Resolving…' : 'Resolve now'}
+                      </button>
+                    )}
+                    <Link href={`/draw/${d.id}`} style={{ color: 'var(--purple)', fontSize: 12, textDecoration: 'none', fontWeight: 600 }}>
+                      View →
+                    </Link>
+                  </div>
                 </div>
 
                 {/* Progress bar */}
@@ -168,13 +216,19 @@ export default function AdminPage() {
                   <span style={{ fontWeight: 600, color: 'var(--text)' }}>Revenue: {fmt(revenue)}</span>
                 </div>
 
-                {d.status === 'resolved' && d.winnerId && (
+                {result && (
+                  <div style={{ marginTop: 10, padding: '8px 12px', background: result.startsWith('Error') ? 'rgba(239,68,68,0.06)' : 'rgba(245,158,11,0.08)', border: `1px solid ${result.startsWith('Error') ? 'var(--red)' : 'var(--gold)'}`, borderRadius: 8, fontSize: 12 }}>
+                    <span style={{ color: result.startsWith('Error') ? 'var(--red)' : 'var(--gold)', fontWeight: 700 }}>Result: </span>
+                    <span style={{ color: 'var(--text)', fontFamily: 'monospace' }}>{result}</span>
+                  </div>
+                )}
+                {!result && d.status === 'resolved' && d.winnerId && (
                   <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(245,158,11,0.08)', border: '1px solid var(--gold)', borderRadius: 8, fontSize: 12 }}>
                     <span style={{ color: 'var(--gold)', fontWeight: 700 }}>Winner: </span>
                     <span style={{ color: 'var(--text)', fontFamily: 'monospace' }}>{d.winnerId}</span>
                   </div>
                 )}
-                {d.status === 'cancelled' && d.cancelReason && (
+                {!result && d.status === 'cancelled' && d.cancelReason && (
                   <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(239,68,68,0.06)', border: '1px solid var(--red)', borderRadius: 8, fontSize: 12 }}>
                     <span style={{ color: 'var(--red)', fontWeight: 700 }}>Cancelled: </span>
                     <span style={{ color: 'var(--text)' }}>{d.cancelReason}</span>
