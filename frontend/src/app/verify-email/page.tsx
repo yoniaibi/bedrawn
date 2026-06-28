@@ -4,7 +4,7 @@ import '@/lib/amplify';
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { confirmSignUp, signIn, resendSignUpCode } from 'aws-amplify/auth';
+import { confirmSignUp, signIn, resendSignUpCode, fetchAuthSession } from 'aws-amplify/auth';
 import { useAuth } from '@/lib/auth';
 
 function VerifyEmailContent() {
@@ -61,6 +61,24 @@ function VerifyEmailContent() {
           await signIn({ username: email, password: storedPw });
           sessionStorage.removeItem('drawn_pending_pw');
           sessionStorage.removeItem('drawn_pending_email');
+          // Save handle + name to profile
+          const handle = sessionStorage.getItem('drawn_pending_handle');
+          const name = sessionStorage.getItem('drawn_pending_name');
+          sessionStorage.removeItem('drawn_pending_handle');
+          sessionStorage.removeItem('drawn_pending_name');
+          if (handle || name) {
+            try {
+              const session = await fetchAuthSession();
+              const token = session.tokens?.accessToken?.toString();
+              if (token) {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ handle, name }),
+                });
+              }
+            } catch { /* non-fatal */ }
+          }
           login();
           router.push('/interests');
           return;

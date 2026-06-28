@@ -221,6 +221,31 @@ export class BackendStack extends cdk.Stack {
     api.addRoutes({ path: '/draws/{id}', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetDrawInt', getDrawFn) });
     api.addRoutes({ path: '/draws', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('PostDrawInt', postDrawFn), authorizer });
 
+    // Notifications
+    const getNotificationsFn = new nodejs.NodejsFunction(this, 'GetNotifications', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-notifications.ts'),
+    });
+    table.grantReadWriteData(getNotificationsFn);
+    api.addRoutes({ path: '/notifications', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetNotificationsInt', getNotificationsFn), authorizer });
+
+    // Admin — all draws regardless of status
+    const getAdminDrawsFn = new nodejs.NodejsFunction(this, 'GetAdminDraws', {
+      ...commonProps,
+      environment: { ...commonEnv, ADMIN_EMAILS: 'yoniaibi@gmail.com' },
+      entry: path.join(__dirname, 'lambda/get-admin-draws.ts'),
+    });
+    table.grantReadData(getAdminDrawsFn);
+    api.addRoutes({ path: '/admin/draws', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetAdminDrawsInt', getAdminDrawsFn), authorizer });
+
+    // User profile (handle/display name)
+    const putProfileFn = new nodejs.NodejsFunction(this, 'PutProfile', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/put-profile.ts'),
+    });
+    table.grantReadWriteData(putProfileFn);
+    api.addRoutes({ path: '/profile', methods: [HttpMethod.PUT], integration: new HttpLambdaIntegration('PutProfileInt', putProfileFn), authorizer });
+
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: userPoolClient.userPoolClientId, description: 'Cognito User Pool Client ID' });

@@ -6,8 +6,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signUp } from 'aws-amplify/auth';
 
+const HANDLE_RE = /^[a-zA-Z0-9_]{3,20}$/;
+
 export default function SignupPage() {
   const [name, setName] = useState('');
+  const [handle, setHandle] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -18,6 +21,8 @@ export default function SignupPage() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = 'Full name is required';
+    if (!handle.trim()) e.handle = 'Username is required';
+    else if (!HANDLE_RE.test(handle)) e.handle = '3–20 characters, letters, numbers or underscores only';
     if (!email.includes('@')) e.email = 'Enter a valid email address';
     if (password.length < 8) e.password = 'Password must be at least 8 characters';
     if (!agreed) e.agreed = 'You must accept the Terms of Service';
@@ -33,13 +38,12 @@ export default function SignupPage() {
       await signUp({
         username: email,
         password,
-        options: {
-          userAttributes: { email, name },
-        },
+        options: { userAttributes: { email, name } },
       });
-      // Store password briefly so verify page can auto-sign-in after confirmation
       sessionStorage.setItem('drawn_pending_email', email);
       sessionStorage.setItem('drawn_pending_pw', password);
+      sessionStorage.setItem('drawn_pending_handle', handle);
+      sessionStorage.setItem('drawn_pending_name', name);
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
@@ -62,6 +66,19 @@ export default function SignupPage() {
             <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Full name</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
             {errors.name && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.name}</p>}
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Username</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--purple)', fontSize: 14, fontWeight: 700, pointerEvents: 'none' }}>@</span>
+              <input
+                value={handle}
+                onChange={e => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                placeholder="yourname"
+                style={{ paddingLeft: 28 }}
+              />
+            </div>
+            {errors.handle && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.handle}</p>}
           </div>
           <div>
             <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Email address</label>
