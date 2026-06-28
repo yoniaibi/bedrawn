@@ -124,14 +124,47 @@ export default function DrawDetailClient({ id }: { id: string }) {
           </p>
         </div>
 
+        {/* Winner banner — shown when draw is resolved */}
+        {draw.status === 'resolved' && (
+          <div style={{
+            margin: '0 16px 20px',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(124,58,237,0.06))',
+            border: '1.5px solid var(--gold)', borderRadius: 16, padding: '20px 20px',
+            textAlign: 'center',
+          }}>
+            <p style={{ margin: '0 0 4px', fontSize: 24 }}>🎉</p>
+            <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 800, color: 'var(--gold)' }}>
+              Winner: @{draw.winnerHandle ?? 'winner'}
+            </p>
+            <p style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--muted)' }}>This draw has closed</p>
+            <Link href={`/draw/${draw.id}/winner`} style={{
+              display: 'inline-block', padding: '10px 24px', borderRadius: 999,
+              background: 'var(--gold)', color: '#000',
+              fontWeight: 700, fontSize: 13, textDecoration: 'none',
+            }}>
+              View winner announcement →
+            </Link>
+          </div>
+        )}
+
         {/* Sticky CTA */}
         <div style={{ position: 'fixed', bottom: 64, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 500, padding: '12px 16px', background: 'var(--bg)', borderTop: '1px solid var(--border)', zIndex: 50 }}>
-          {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600 }}>⏰ Closing tonight at 9pm</p>}
-          <Link href={`/draw/${draw.id}/purchase`} style={{ textDecoration: 'none' }}>
-            <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, var(--purple), var(--pink))', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
-              Enter draw · {price}
-            </button>
-          </Link>
+          {draw.status === 'resolved' ? (
+            <Link href={`/draw/${draw.id}/winner`} style={{ textDecoration: 'none' }}>
+              <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 16, fontWeight: 700 }}>
+                🏆 See who won
+              </button>
+            </Link>
+          ) : (
+            <>
+              {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600 }}>⏰ Closing tonight at 9pm</p>}
+              <Link href={`/draw/${draw.id}/purchase`} style={{ textDecoration: 'none' }}>
+                <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, var(--purple), var(--pink))', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
+                  Enter draw · {price}
+                </button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </AppShell>

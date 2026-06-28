@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   ScrollView,
@@ -11,14 +11,20 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { currentUser } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
 export function SettingsScreen() {
   const navigation = useNavigation();
-  const [handle, setHandle] = useState(currentUser.handle);
-  const [email, setEmail] = useState('yoniaibi@gmail.com');
+  const [handle, setHandle] = useState('');
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    apiGet<{ handle: string; name: string }>('/profile')
+      .then(p => setHandle(p.handle ?? ''))
+      .catch(() => {});
+  }, []);
   const [notifications, setNotifications] = useState({
     draws: true,
     wins: true,

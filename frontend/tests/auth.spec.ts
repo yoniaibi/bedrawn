@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { suppressCookieBanner } from './helpers';
+
+test.beforeEach(async ({ page }) => {
+  await suppressCookieBanner(page);
+});
 
 test.describe('Landing page', () => {
   test('shows DRAWN logo and auth CTAs', async ({ page }) => {

@@ -1,9 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  FlatList,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,7 +14,8 @@ import { ActivityTicker } from '../../components/ActivityTicker';
 import { DrawCard } from '../../components/DrawCard';
 import { LiveDot } from '../../components/LiveDot';
 import { ProgressBar } from '../../components/ProgressBar';
-import { activityMessages, currentUser, draws } from '../../data/mockData';
+import { Draw, activityMessages } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import { HomeStackParamList } from '../../navigation/TabNavigator';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
@@ -33,34 +33,90 @@ const CATEGORIES = [
 
 const FILTERS = ['Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
 
-const womenswear = draws.filter(d => d.style === 'Womenswear' || d.category === 'Bags').slice(0, 4);
-const menswear = draws.filter(d => d.style === 'Menswear' || d.category === 'Streetwear').slice(0, 4);
-const unisex = draws.filter(d => d.style === 'Unisex').slice(0, 4);
-const heroDrawItem = draws[0];
+const IMAGE_COLORS = [
+  '#1a1a2e', '#16213e', '#0f3460', '#1e1e2e', '#2d1b69',
+  '#1a0a2e', '#0d1117', '#1a1a3e', '#2d0a0a', '#0a2d0a',
+];
+
+interface ApiDraw {
+  drawId: string;
+  title: string;
+  seller: string;
+  ticketPricePence: number;
+  retailValuePence: number;
+  soldTickets: number;
+  totalTickets: number;
+  category?: string;
+  style?: string;
+  isBundle?: boolean;
+  isClosingTonight?: boolean;
+  isVerified?: boolean;
+  description?: string;
+}
+
+// API returns the same shape as mock Draw (id not drawId; ticketPrice in pence; retailValue in pounds)
+function adaptDraw(d: ApiDraw, index: number): Draw {
+  return {
+    id: (d as any).id ?? d.drawId,
+    title: d.title,
+    seller: d.seller,
+    sellerEmoji: '✦',
+    ticketPrice: (d as any).ticketPrice ?? d.ticketPricePence,
+    retailValue: (d as any).retailValue ?? Math.round(d.retailValuePence / 100),
+    totalTickets: d.totalTickets,
+    soldTickets: d.soldTickets,
+    category: d.category ?? '',
+    style: d.style ?? '',
+    condition: 'Excellent',
+    isBundle: d.isBundle ?? false,
+    isClosingTonight: d.isClosingTonight ?? false,
+    isVerified: d.isVerified ?? true,
+    description: d.description ?? '',
+    imageColor: IMAGE_COLORS[index % IMAGE_COLORS.length],
+  };
+}
 
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const [activeFilter, setActiveFilter] = useState('Tonight');
+  const [allDraws, setAllDraws] = useState<Draw[]>([]);
+  const [balancePence, setBalancePence] = useState<number | null>(null);
   const streakScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (currentUser.streak >= 2) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(streakScale, { toValue: 1.15, duration: 600, useNativeDriver: true }),
-          Animated.timing(streakScale, { toValue: 1, duration: 600, useNativeDriver: true }),
-        ])
-      );
-      pulse.start();
-      return () => pulse.stop();
-    }
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(streakScale, { toValue: 1.15, duration: 600, useNativeDriver: true }),
+        Animated.timing(streakScale, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
   }, [streakScale]);
 
-  const goToDetail = (draw: typeof draws[0]) => {
+  const fetchDraws = useCallback(() => {
+    apiGet<{ draws: ApiDraw[] }>('/draws')
+      .then(d => setAllDraws((d.draws ?? []).map(adaptDraw)))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchDraws();
+    apiGet<{ balancePence: number }>('/wallet/balance')
+      .then(d => setBalancePence(d.balancePence))
+      .catch(() => {});
+  }, [fetchDraws]);
+
+  const heroDrawItem = allDraws[0];
+  const womenswear = allDraws.filter(d => d.style === 'Womenswear' || d.category === 'Bags').slice(0, 4);
+  const menswear = allDraws.filter(d => d.style === 'Menswear' || d.category === 'Streetwear').slice(0, 4);
+  const unisex = allDraws.filter(d => d.style === 'Unisex').slice(0, 4);
+
+  const goToDetail = (draw: Draw) => {
     navigation.navigate('DrawDetail', { draw });
   };
 
-  const balancePounds = (currentUser.balance / 100).toFixed(2);
+  const balanceLabel = balancePence === null ? '...' : `£${(balancePence / 100).toFixed(2)}`;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -70,7 +126,7 @@ export function HomeScreen() {
           <Text style={styles.logo}>DRAWN</Text>
           <View style={styles.navRight}>
             <Animated.View style={[styles.streakBadge, { transform: [{ scale: streakScale }] }]}>
-              <Text style={styles.streakText}>{currentUser.streak} day streak</Text>
+              <Text style={styles.streakText}>3 day streak</Text>
             </Animated.View>
             <TouchableOpacity
               style={styles.walletPill}
@@ -79,7 +135,7 @@ export function HomeScreen() {
               <Text style={styles.searchIcon}>Search</Text>
             </TouchableOpacity>
             <View style={styles.walletPill}>
-              <Text style={styles.walletText}>£{balancePounds}</Text>
+              <Text style={styles.walletText}>{balanceLabel}</Text>
             </View>
           </View>
         </View>
@@ -88,46 +144,48 @@ export function HomeScreen() {
           <ActivityTicker messages={activityMessages} />
         </View>
 
-        {/* Won Banner */}
-        <TouchableOpacity style={styles.wonBanner} activeOpacity={0.85}>
-          <Text style={styles.wonText}>You won! Air Jordan 1 Retro High OG</Text>
-          <Text style={styles.wonSub}>Tap to view your order →</Text>
-        </TouchableOpacity>
-
         {/* Hero draw */}
-        <View style={styles.section}>
-          <View style={styles.heroCard}>
-            <View style={[styles.heroImage, { backgroundColor: heroDrawItem.imageColor }]}>
-              <View style={styles.closingPill}>
-                <LiveDot />
-                <Text style={styles.closingText}>CLOSING TONIGHT · 9PM</Text>
-              </View>
-              <View style={styles.watchingRow}>
-                <Text style={styles.watchingText}>247 watching</Text>
-              </View>
-            </View>
-            <View style={styles.heroContent}>
-              <Text style={styles.heroTitle}>{heroDrawItem.title}</Text>
-              <Text style={styles.heroSeller}>{heroDrawItem.seller}</Text>
-              <View style={styles.heroRow}>
-                <View style={styles.pricePill}>
-                  <Text style={styles.priceText}>
-                    {heroDrawItem.ticketPrice}p → £{heroDrawItem.retailValue.toLocaleString()}
-                  </Text>
+        {heroDrawItem && (
+          <View style={styles.section}>
+            <View style={styles.heroCard}>
+              <View style={[styles.heroImage, { backgroundColor: heroDrawItem.imageColor }]}>
+                <View style={styles.closingPill}>
+                  <LiveDot />
+                  <Text style={styles.closingText}>CLOSING TONIGHT · 9PM</Text>
+                </View>
+                <View style={styles.watchingRow}>
+                  <Text style={styles.watchingText}>247 watching</Text>
                 </View>
               </View>
-              <ProgressBar percent={67} height={5} />
-              <Text style={styles.heroPercent}>67% sold · 330 tickets left</Text>
-              <TouchableOpacity
-                style={styles.enterBtn}
-                onPress={() => goToDetail(heroDrawItem)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.enterBtnText}>Enter draw</Text>
-              </TouchableOpacity>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroTitle}>{heroDrawItem.title}</Text>
+                <Text style={styles.heroSeller}>{heroDrawItem.seller}</Text>
+                <View style={styles.heroRow}>
+                  <View style={styles.pricePill}>
+                    <Text style={styles.priceText}>
+                      {heroDrawItem.ticketPrice}p → £{heroDrawItem.retailValue.toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+                <ProgressBar
+                  percent={Math.round((heroDrawItem.soldTickets / heroDrawItem.totalTickets) * 100)}
+                  height={5}
+                />
+                <Text style={styles.heroPercent}>
+                  {Math.round((heroDrawItem.soldTickets / heroDrawItem.totalTickets) * 100)}% sold ·{' '}
+                  {heroDrawItem.totalTickets - heroDrawItem.soldTickets} tickets left
+                </Text>
+                <TouchableOpacity
+                  style={styles.enterBtn}
+                  onPress={() => goToDetail(heroDrawItem)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.enterBtnText}>Enter draw</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Recent winner */}
         <View style={styles.winnerBanner}>
@@ -141,7 +199,7 @@ export function HomeScreen() {
         <View style={styles.tonightStrip}>
           <View style={styles.tonightLeft}>
             <LiveDot />
-            <Text style={styles.tonightText}>8 draws tonight at 9pm · you're in 3</Text>
+            <Text style={styles.tonightText}>{allDraws.length} draws tonight at 9pm</Text>
           </View>
           <TouchableOpacity>
             <Text style={styles.tonightLink}>Watch live →</Text>
@@ -182,71 +240,79 @@ export function HomeScreen() {
         </ScrollView>
 
         {/* Curated row: Womenswear */}
-        <View style={styles.section}>
-          <View style={styles.rowHeader}>
-            <Text style={styles.rowTitle}>Womenswear & Accessories</Text>
-            <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+        {womenswear.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.rowHeader}>
+              <Text style={styles.rowTitle}>Womenswear & Accessories</Text>
+              <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalCards}
+            >
+              {womenswear.map(draw => (
+                <View key={draw.id} style={styles.horizontalCardWrapper}>
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
+                </View>
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalCards}
-          >
-            {womenswear.map(draw => (
-              <View key={draw.id} style={styles.horizontalCardWrapper}>
-                <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        )}
 
         {/* Curated row: Menswear */}
-        <View style={styles.section}>
-          <View style={styles.rowHeader}>
-            <Text style={styles.rowTitle}>Menswear & Streetwear</Text>
-            <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+        {menswear.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.rowHeader}>
+              <Text style={styles.rowTitle}>Menswear & Streetwear</Text>
+              <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalCards}
+            >
+              {menswear.map(draw => (
+                <View key={draw.id} style={styles.horizontalCardWrapper}>
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
+                </View>
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalCards}
-          >
-            {menswear.map(draw => (
-              <View key={draw.id} style={styles.horizontalCardWrapper}>
-                <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        )}
 
         {/* Curated row: Unisex */}
-        <View style={styles.section}>
-          <View style={styles.rowHeader}>
-            <Text style={styles.rowTitle}>Unisex & Everything Else</Text>
-            <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+        {unisex.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.rowHeader}>
+              <Text style={styles.rowTitle}>Unisex & Everything Else</Text>
+              <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalCards}
+            >
+              {unisex.map(draw => (
+                <View key={draw.id} style={styles.horizontalCardWrapper}>
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
+                </View>
+              ))}
+            </ScrollView>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalCards}
-          >
-            {unisex.map(draw => (
-              <View key={draw.id} style={styles.horizontalCardWrapper}>
-                <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        )}
 
         {/* 2-col grid */}
-        <View style={styles.section}>
-          <Text style={styles.rowTitle}>All draws</Text>
-          <View style={styles.grid}>
-            {draws.map(draw => (
-              <DrawCard key={draw.id} draw={draw} onPress={() => goToDetail(draw)} />
-            ))}
+        {allDraws.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.rowTitle}>All draws</Text>
+            <View style={styles.grid}>
+              {allDraws.map(draw => (
+                <DrawCard key={draw.id} draw={draw} onPress={() => goToDetail(draw)} />
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Footer */}
         <View style={styles.footer}>
@@ -292,17 +358,6 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 12, color: C.GREY, fontWeight: '600' },
   walletText: { color: C.TEXT, fontSize: 12, fontWeight: '700' },
   section: { paddingHorizontal: S.xl, marginBottom: S.lg },
-  wonBanner: {
-    marginHorizontal: S.xl,
-    marginBottom: S.md,
-    backgroundColor: C.GOLD_LIGHT,
-    borderWidth: 1,
-    borderColor: C.BORDER,
-    borderRadius: 12,
-    padding: S.md,
-  },
-  wonText: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
-  wonSub: { color: C.GREY, fontSize: 12, marginTop: 2 },
   heroCard: {
     backgroundColor: C.CARD,
     borderRadius: 16,
@@ -327,7 +382,7 @@ const styles = StyleSheet.create({
   watchingRow: { alignSelf: 'flex-end' },
   watchingText: { color: C.WHITE, fontSize: 12, fontWeight: '600', opacity: 0.9 },
   heroContent: { padding: S.lg },
-  heroTitle: { fontSize: 18, fontWeight: '800', color: C.TEXT, marginBottom: 4, fontFamily: 'serif' },
+  heroTitle: { fontSize: 18, fontWeight: '800', color: C.TEXT, marginBottom: 4 },
   heroSeller: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
   heroRow: { flexDirection: 'row', marginBottom: S.sm },
   pricePill: {

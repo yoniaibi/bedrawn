@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CountdownTimer } from '../../components/CountdownTimer';
 import { LiveDot } from '../../components/LiveDot';
 import { ProgressBar } from '../../components/ProgressBar';
-import { currentUser, grandDraw } from '../../data/mockData';
+import { grandDraw } from '../../data/mockData';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
@@ -83,7 +83,7 @@ const ACHIEVEMENTS_BADGES = [
 export function GrandDrawScreen() {
   const [claimed, setClaimed] = useState(false);
   const { days, hours, minutes } = getDaysUntilEndOfMonth();
-  const entries = currentUser.grandDrawEntries;
+  const entries = 0; // real grand draw entries not yet available via API
   const total = grandDraw.totalEntries;
   const oddsIn = Math.round(total / entries);
   const entriesPercent = Math.round((entries / total) * 100);
@@ -160,16 +160,16 @@ export function GrandDrawScreen() {
         {/* Streak card */}
         <View style={styles.card}>
           <View style={styles.streakRow}>
-            <Text style={styles.streakNum}>{currentUser.streak}</Text>
+            <Text style={styles.streakNum}>3</Text>
             <Text style={styles.streakSub}>day streak</Text>
           </View>
           <View style={styles.streakStats}>
             <View style={styles.streakStat}>
-              <Text style={styles.streakStatVal}>{currentUser.longestStreak}</Text>
+              <Text style={styles.streakStatVal}>7</Text>
               <Text style={styles.streakStatLabel}>Longest streak</Text>
             </View>
             <View style={styles.streakStat}>
-              <Text style={styles.streakStatVal}>{currentUser.allTimeEarned}</Text>
+              <Text style={styles.streakStatVal}>45</Text>
               <Text style={styles.streakStatLabel}>All-time earned</Text>
             </View>
           </View>

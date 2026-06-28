@@ -106,7 +106,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           style={{
             flex: 1, padding: compact ? '12px 16px' : '14px 16px', fontSize: 15,
             border: '1px solid var(--border)', borderRadius: 10,
-            background: 'var(--white)', color: 'var(--text)', outline: 'none',
+            background: 'var(--card)', color: 'var(--text)', outline: 'none',
           }}
         />
         <button
@@ -281,7 +281,7 @@ export default function LandingPage() {
       </div>
 
       {/* ─── STATS BAR ─── */}
-      <div style={{ background: 'var(--white)', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
           {[
             { value: 'From 10p', label: 'Per ticket' },
@@ -329,7 +329,7 @@ export default function LandingPage() {
               const priceLabel = d.ticketPrice >= 100 ? `£${(d.ticketPrice / 100).toFixed(2)}` : `${d.ticketPrice}p`;
               return (
                 <a key={d.id} href="#waitlist" style={{ textDecoration: 'none' }}>
-                  <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--white)', cursor: 'pointer', transition: 'box-shadow 0.15s' }}
+                  <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', transition: 'box-shadow 0.15s' }}
                     onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(124,58,237,0.15)')}
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
                     <div style={{ position: 'relative', height: 140 }}>
@@ -385,7 +385,7 @@ export default function LandingPage() {
           <p style={{ margin: '0 0 44px', fontSize: 16, color: 'var(--grey)', lineHeight: 1.6 }}>Real people, real items, real draws. Every single night.</p>
           <div className="landing-split">
             {testimonials.map(t => (
-              <div key={t.handle} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 20, padding: '24px' }}>
+              <div key={t.handle} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                   <div style={{
                     width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
@@ -453,7 +453,7 @@ export default function LandingPage() {
                   { value: '99.1%',   label: 'Pass rate' },
                   { value: '36h',     label: 'Avg turnaround' },
                 ].map(s => (
-                  <div key={s.label} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
+                  <div key={s.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
                     <p className="serif" style={{ margin: '0 0 3px', fontSize: 22, color: 'var(--purple)', fontWeight: 700 }}>{s.value}</p>
                     <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>{s.label}</p>
                   </div>
@@ -461,7 +461,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
-              <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 20, padding: '28px', boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: '28px', boxShadow: '0 4px 24px rgba(0,0,0,0.07)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
                     <img src={draws[0].imageUrl} alt="Auth" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -547,7 +547,7 @@ export default function LandingPage() {
           <h2 style={{ margin: '0 0 36px', fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>Everything you want to know.</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {faqs.map((faq, i) => (
-              <div key={i} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div key={i} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', background: 'none', border: 'none', cursor: 'pointer', gap: 16 }}
@@ -574,7 +574,7 @@ export default function LandingPage() {
           <p style={{ margin: '0 0 36px', fontSize: 15, color: 'var(--grey)', lineHeight: 1.6 }}>
             There are hundreds of resale and raffle sites. Not one combines a real marketplace with a nightly live draw at 10p.
           </p>
-          <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 100px 100px', borderBottom: '1px solid var(--border)', padding: '14px 22px', background: 'var(--card)' }}>
               <span style={{ fontSize: 12, color: 'var(--muted)' }}></span>
               {['Vinted', 'eBay', 'StockX', 'Bedrawn'].map(h => (
@@ -602,7 +602,7 @@ export default function LandingPage() {
       {/* ─── FOUNDING SELLERS ─── */}
       <div id="sellers" style={{ padding: '80px 0', background: 'var(--purple-light)' }}>
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px' }}>
-          <div style={{ background: 'var(--white)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 24, padding: '52px 48px' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 24, padding: '52px 48px' }}>
             <span style={{ display: 'inline-block', background: 'var(--gold-light)', border: '1px solid var(--gold)', color: 'var(--gold)', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 999, letterSpacing: '0.1em', marginBottom: 18 }}>
               LIMITED — 100 SPOTS
             </span>
@@ -626,6 +626,65 @@ export default function LandingPage() {
               background: 'linear-gradient(135deg, var(--purple), var(--pink))',
               color: 'var(--white)', fontSize: 15, fontWeight: 700, textDecoration: 'none',
             }}>Apply to sell →</a>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── APP DOWNLOAD ─── */}
+      <div style={{ padding: '72px 0', background: 'var(--bg)' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(236,72,153,0.08))',
+            border: '1px solid rgba(124,58,237,0.2)',
+            borderRadius: 24, padding: '48px 52px',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            gap: 32, flexWrap: 'wrap',
+          }}>
+            <div style={{ flex: '1 1 340px' }}>
+              <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                The best experience
+              </p>
+              <h2 style={{ margin: '0 0 12px', fontSize: 36, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.5, lineHeight: 1.1 }}>
+                Get the DRAWN app.
+              </h2>
+              <p style={{ margin: '0 0 28px', fontSize: 15, color: 'var(--grey)', lineHeight: 1.6 }}>
+                Watch draws go live, get instant win notifications, and manage your tickets — all from your phone at 9pm.
+              </p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <a
+                  href="#"
+                  aria-label="Download on the App Store"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 10,
+                    background: '#000000', color: '#FFFFFF',
+                    borderRadius: 12, padding: '12px 22px',
+                    textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                >
+                  <span style={{ fontSize: 22, lineHeight: 1 }}>⬛</span>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>Download on the</p>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>App Store</p>
+                  </div>
+                </a>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)',
+                  borderRadius: 12, padding: '12px 22px', color: 'var(--purple)', fontSize: 13,
+                }}>
+                  <span>📱</span>
+                  <span style={{ fontWeight: 600 }}>Coming soon on Android</span>
+                </div>
+              </div>
+            </div>
+            <div style={{
+              flex: '0 0 180px', height: 180,
+              background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+              borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 80,
+            }}>
+              📲
+            </div>
           </div>
         </div>
       </div>

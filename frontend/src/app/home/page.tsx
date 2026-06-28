@@ -142,7 +142,7 @@ export default function HomePage() {
                   </div>
                   <button className="btn-primary" style={{
                     padding: '12px 32px', borderRadius: 999,
-                    background: 'var(--white)', border: 'none',
+                    background: 'var(--card)', border: 'none',
                     color: 'var(--purple)', fontSize: 15, fontWeight: 700,
                   }}>
                     Enter draw · {heroPrice}
@@ -203,7 +203,7 @@ export default function HomePage() {
                 className="pill-btn"
                 style={{
                   padding: '8px 18px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
-                  background: category === cat.id ? 'var(--purple)' : 'var(--white)',
+                  background: category === cat.id ? 'var(--purple)' : 'var(--card)',
                   border: `1.5px solid ${category === cat.id ? 'var(--purple)' : 'var(--border)'}`,
                   color: category === cat.id ? 'var(--white)' : 'var(--text)',
                   fontSize: 13, fontWeight: category === cat.id ? 700 : 500,
@@ -300,8 +300,33 @@ export default function HomePage() {
           )}
         </section>
 
+        {/* App download banner */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(236,72,153,0.06))',
+          border: '1px solid rgba(124,58,237,0.15)',
+          borderRadius: 16, padding: '20px 24px', marginTop: 40,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 32 }}>📲</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Get the DRAWN app</p>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>Watch draws go live at 9pm and get instant win notifications</p>
+            </div>
+          </div>
+          <a href="#" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            background: '#000', color: '#fff',
+            borderRadius: 10, padding: '10px 20px',
+            textDecoration: 'none', fontSize: 13, fontWeight: 700,
+            whiteSpace: 'nowrap',
+          }}>
+            ⬛ Download on App Store
+          </a>
+        </div>
+
         {/* Footer */}
-        <div style={{ borderTop: '1px solid var(--border)', marginTop: 48, paddingTop: 20, textAlign: 'center' }}>
+        <div style={{ borderTop: '1px solid var(--border)', marginTop: 24, paddingTop: 20, textAlign: 'center' }}>
           <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
             All draws verified · Every night at 9pm · Free postal entry available
           </p>

@@ -17,6 +17,7 @@ import { PurchaseSuccessScreen } from '../screens/draw/PurchaseSuccessScreen';
 import { GrandDrawScreen } from '../screens/grand-draw/GrandDrawScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { PrivacyScreen } from '../screens/legal/PrivacyScreen';
+import { ProfileScreen } from '../screens/account/ProfileScreen';
 import { TermsScreen } from '../screens/legal/TermsScreen';
 import { LiveScreen } from '../screens/live/LiveScreen';
 import { BecomeSellerScreen } from '../screens/seller/BecomeSellerScreen';
@@ -64,6 +65,7 @@ export type AccountStackParamList = {
   ListItem: undefined;
   SellerDashboard: undefined;
   Settings: undefined;
+  Profile: undefined;
   Terms: undefined;
   Privacy: undefined;
 } & DrawStackParamList;
@@ -136,6 +138,7 @@ function AccountStackNav() {
       <AccountStack.Screen name="ListItem" component={ListItemScreen} />
       <AccountStack.Screen name="SellerDashboard" component={SellerDashboardScreen} />
       <AccountStack.Screen name="Settings" component={SettingsScreen} />
+      <AccountStack.Screen name="Profile" component={ProfileScreen} />
       <AccountStack.Screen name="Terms" component={TermsScreen} />
       <AccountStack.Screen name="Privacy" component={PrivacyScreen} />
       <AccountStack.Screen name="DrawDetail" component={DrawDetailScreen} />

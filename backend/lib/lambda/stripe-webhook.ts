@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, UpdateCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { getStripe } from './stripe-client';
@@ -43,13 +43,25 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
       const amountPence: number = pi.amount;
 
+      const topupAt = new Date().toISOString();
       await db.send(new UpdateCommand({
         TableName: process.env.TABLE_NAME,
         Key: { PK: `USER#${userId}`, SK: 'WALLET' },
         UpdateExpression: 'ADD balancePence :amt SET updatedAt = :d',
         ExpressionAttributeValues: {
           ':amt': amountPence,
-          ':d': new Date().toISOString(),
+          ':d': topupAt,
+        },
+      }));
+      await db.send(new PutCommand({
+        TableName: process.env.TABLE_NAME,
+        Item: {
+          PK: `USER#${userId}`,
+          SK: `TX#${topupAt}`,
+          type: 'topup',
+          description: 'Wallet top-up',
+          amountPence,
+          createdAt: topupAt,
         },
       }));
       break;

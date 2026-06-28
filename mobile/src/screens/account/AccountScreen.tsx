@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal,
   ScrollView,
@@ -12,9 +12,21 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../navigation/RootNavigator';
 import { AccountStackParamList } from '../../navigation/TabNavigator';
-import { currentUser, orders } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
+
+interface Stats {
+  activeDraws: number;
+  totalTickets: number;
+  wins: number;
+  totalDrawsEntered: number;
+}
+
+interface Profile {
+  handle: string;
+  name: string;
+}
 
 type Nav = NativeStackNavigationProp<AccountStackParamList>;
 
@@ -35,9 +47,8 @@ const AVATAR_COLORS = [
   '#6D28D9', '#92400E', '#065F46', '#991B1B', '#1E3A8A', '#581C87',
 ];
 
-function AvatarModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+function AvatarModal({ visible, onClose, initials }: { visible: boolean; onClose: () => void; initials: string }) {
   const [selected, setSelected] = useState(AVATAR_COLORS[0]);
-  const initials = currentUser.handle.slice(1, 3).toUpperCase();
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -70,6 +81,7 @@ function AvatarModal({ visible, onClose }: { visible: boolean; onClose: () => vo
 }
 
 const MENU_ITEMS = [
+  { label: 'Edit Profile', screen: 'Profile' as const },
   { label: 'My Wallet', screen: 'Wallet' as const },
   { label: 'My Orders', screen: 'Orders' as const },
   { label: 'Saved Draws', screen: 'SavedDraws' as const },
@@ -80,13 +92,26 @@ const MENU_ITEMS = [
   { label: 'Terms of Service', screen: 'Terms' as const },
 ];
 
-const recentWins = orders.filter(o => o.status === 'won').slice(0, 2);
-
 export function AccountScreen() {
   const navigation = useNavigation<Nav>();
   const auth = useAuth();
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [balancePence, setBalancePence] = useState<number | null>(null);
+
+  useEffect(() => {
+    apiGet<Stats>('/me/stats').then(setStats).catch(() => {});
+    apiGet<Profile>('/profile').then(setProfile).catch(() => {});
+    apiGet<{ balancePence: number }>('/wallet/balance')
+      .then(d => setBalancePence(d.balancePence))
+      .catch(() => {});
+  }, []);
+
+  const handle = profile?.handle ?? '...';
+  const initials = handle.replace(/^@/, '').slice(0, 2).toUpperCase();
+  const referralCode = 'DRAWN-' + handle.replace(/^@/, '').toUpperCase();
 
   const handleCopy = () => {
     setCopied(true);
@@ -103,10 +128,10 @@ export function AccountScreen() {
             onPress={() => setAvatarModalVisible(true)}
           >
             <Text style={[styles.avatarText, { color: C.WHITE, fontSize: 28, fontWeight: '700' }]}>
-              {currentUser.handle.slice(1, 3).toUpperCase()}
+              {initials}
             </Text>
           </TouchableOpacity>
-          <Text style={styles.handle}>{currentUser.handle}</Text>
+          <Text style={styles.handle}>{handle}</Text>
 
           {/* Badge row */}
           <View style={styles.badgeRow}>
@@ -114,7 +139,7 @@ export function AccountScreen() {
               <Text style={styles.foundingBadgeText}>✦ Founding Member</Text>
             </View>
             <View style={styles.streakBadge}>
-              <Text style={styles.streakBadgeText}>{currentUser.streak} day streak</Text>
+              <Text style={styles.streakBadgeText}>3 day streak</Text>
             </View>
           </View>
 
@@ -123,7 +148,9 @@ export function AccountScreen() {
             style={styles.walletPill}
             onPress={() => navigation.navigate('Wallet')}
           >
-            <Text style={styles.walletAmount}>£{(currentUser.balance / 100).toFixed(2)}</Text>
+            <Text style={styles.walletAmount}>
+              {balancePence === null ? '...' : `£${(balancePence / 100).toFixed(2)}`}
+            </Text>
             <Text style={styles.walletArrow}>→</Text>
           </TouchableOpacity>
         </View>
@@ -131,10 +158,10 @@ export function AccountScreen() {
         {/* Stats */}
         <View style={styles.statsRow}>
           {[
-            { value: currentUser.activeDraws, label: 'Active' },
-            { value: currentUser.totalTickets, label: 'Tickets' },
-            { value: currentUser.wins, label: 'Won' },
-            { value: `£${currentUser.totalValue}`, label: 'Value' },
+            { value: stats ? String(stats.activeDraws) : '—', label: 'Active' },
+            { value: stats ? String(stats.totalTickets) : '—', label: 'Tickets' },
+            { value: stats ? String(stats.wins) : '—', label: 'Won' },
+            { value: stats ? String(stats.totalDrawsEntered) : '—', label: 'Entered' },
           ].map(stat => (
             <View key={stat.label} style={styles.statItem}>
               <Text style={styles.statValue}>{stat.value}</Text>
@@ -169,30 +196,10 @@ export function AccountScreen() {
           ))}
         </View>
 
-        {/* Recent wins */}
-        {recentWins.length > 0 && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent wins</Text>
-            </View>
-            {recentWins.map(order => (
-              <View key={order.id} style={styles.winCard}>
-                <View style={[styles.winThumb, { backgroundColor: order.imageColor }]} />
-                <View style={styles.winInfo}>
-                  <Text style={styles.winTitle}>{order.title}</Text>
-                  <Text style={styles.winValue}>Worth £{order.retailValue.toLocaleString()}</Text>
-                  <Text style={styles.winDate}>{order.date}</Text>
-                </View>
-                <Text style={styles.winStar}>★</Text>
-              </View>
-            ))}
-          </>
-        )}
-
         {/* Referral card */}
         <View style={styles.referralCard}>
           <Text style={styles.referralTitle}>Refer a friend, earn £1</Text>
-          <Text style={styles.referralSub}>Your code: <Text style={styles.referralCode}>{currentUser.referralCode}</Text></Text>
+          <Text style={styles.referralSub}>Your code: <Text style={styles.referralCode}>{referralCode}</Text></Text>
           <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
             <Text style={styles.copyBtnText}>{copied ? 'Copied! ✓' : 'Copy code'}</Text>
           </TouchableOpacity>
@@ -224,6 +231,7 @@ export function AccountScreen() {
       <AvatarModal
         visible={avatarModalVisible}
         onClose={() => setAvatarModalVisible(false)}
+        initials={initials}
       />
     </SafeAreaView>
   );

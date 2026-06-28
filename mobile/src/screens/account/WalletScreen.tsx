@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,13 +9,17 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { currentUser, walletTransactions } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
-const TOP_UP_OPTIONS = [500, 1000, 2000, 5000]; // pence
-
-type FlashState = { amount: number; visible: boolean };
+interface Transaction {
+  id: string;
+  type: 'topup' | 'spend' | 'win' | 'refund';
+  description: string;
+  amountPence: number;
+  createdAt: string;
+}
 
 const TX_ICONS: Record<string, string> = {
   topup: '+',
@@ -25,14 +30,23 @@ const TX_ICONS: Record<string, string> = {
 
 export function WalletScreen() {
   const navigation = useNavigation();
-  const [balance, setBalance] = useState(currentUser.balance);
-  const [flash, setFlash] = useState<FlashState>({ amount: 0, visible: false });
+  const [balancePence, setBalancePence] = useState<number | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleTopUp = (pence: number) => {
-    setBalance(prev => prev + pence);
-    setFlash({ amount: pence, visible: true });
-    setTimeout(() => setFlash({ amount: 0, visible: false }), 2000);
-  };
+  const fetchBalance = useCallback(() => {
+    apiGet<{ balancePence: number }>('/wallet/balance')
+      .then(d => setBalancePence(d.balancePence))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchBalance();
+    apiGet<{ transactions: Transaction[] }>('/wallet/transactions')
+      .then(d => setTransactions(d.transactions ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [fetchBalance]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -49,52 +63,49 @@ export function WalletScreen() {
         {/* Balance */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceLabel}>Available balance</Text>
-          <Text style={styles.balanceAmount}>£{(balance / 100).toFixed(2)}</Text>
-          {flash.visible && (
-            <View style={styles.flashBadge}>
-              <Text style={styles.flashText}>+£{(flash.amount / 100).toFixed(2)} added ✓</Text>
-            </View>
-          )}
+          <Text style={styles.balanceAmount}>
+            {balancePence === null ? '...' : `£${(balancePence / 100).toFixed(2)}`}
+          </Text>
         </View>
 
-        {/* Top-up grid */}
+        {/* Top-up notice */}
         <View style={styles.topUpSection}>
           <Text style={styles.sectionTitle}>Top up</Text>
-          <View style={styles.topUpGrid}>
-            {TOP_UP_OPTIONS.map(pence => (
-              <TouchableOpacity
-                key={pence}
-                style={styles.topUpCard}
-                onPress={() => handleTopUp(pence)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.topUpAmount}>£{(pence / 100).toFixed(0)}</Text>
-                <Text style={styles.topUpSub}>{pence / 10} tickets</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.topUpNotice}>
+            <Text style={styles.topUpNoticeText}>
+              To top up your wallet, visit{'\n'}
+              <Text style={styles.topUpLink}>bedrawn.co.uk/account/wallet</Text>
+              {'\n'}on your browser.
+            </Text>
           </View>
         </View>
 
         {/* Transaction history */}
         <View style={styles.historySection}>
           <Text style={styles.sectionTitle}>Transaction history</Text>
-          {walletTransactions.map(tx => (
-            <View key={tx.id} style={styles.txRow}>
-              <View style={styles.txIcon}>
-                <Text style={styles.txIconText}>{TX_ICONS[tx.type]}</Text>
+          {loading ? (
+            <ActivityIndicator color={C.PURPLE} style={{ marginTop: S.xl }} />
+          ) : transactions.length === 0 ? (
+            <Text style={styles.emptyText}>No transactions yet</Text>
+          ) : (
+            transactions.map(tx => (
+              <View key={tx.id} style={styles.txRow}>
+                <View style={styles.txIcon}>
+                  <Text style={styles.txIconText}>{TX_ICONS[tx.type] ?? '·'}</Text>
+                </View>
+                <View style={styles.txInfo}>
+                  <Text style={styles.txDesc}>{tx.description}</Text>
+                  <Text style={styles.txDate}>{tx.createdAt}</Text>
+                </View>
+                <Text style={[
+                  styles.txAmount,
+                  tx.amountPence > 0 ? styles.txAmountCredit : styles.txAmountDebit,
+                ]}>
+                  {tx.amountPence > 0 ? '+' : ''}£{Math.abs(tx.amountPence / 100).toFixed(2)}
+                </Text>
               </View>
-              <View style={styles.txInfo}>
-                <Text style={styles.txDesc}>{tx.description}</Text>
-                <Text style={styles.txDate}>{tx.date}</Text>
-              </View>
-              <Text style={[
-                styles.txAmount,
-                tx.amount > 0 ? styles.txAmountCredit : styles.txAmountDebit
-              ]}>
-                {tx.amount > 0 ? '+' : ''}£{Math.abs(tx.amount / 100).toFixed(2)}
-              </Text>
-            </View>
-          ))}
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -123,32 +134,21 @@ const styles = StyleSheet.create({
     borderColor: C.PURPLE,
   },
   balanceLabel: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
-  balanceAmount: { fontSize: 44, fontWeight: '800', color: C.TEXT, fontFamily: 'serif' },
-  flashBadge: {
-    marginTop: S.md,
-    backgroundColor: C.GREEN_LIGHT,
-    borderWidth: 1,
-    borderColor: C.GREEN,
-    borderRadius: 999,
-    paddingHorizontal: S.md,
-    paddingVertical: 4,
-  },
-  flashText: { color: C.GREEN, fontWeight: '700', fontSize: 13 },
+  balanceAmount: { fontSize: 44, fontWeight: '800', color: C.TEXT },
   topUpSection: { paddingHorizontal: S.xl, marginBottom: S.xl },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: C.TEXT, marginBottom: S.md },
-  topUpGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
-  topUpCard: {
-    width: '47%',
+  topUpNotice: {
     backgroundColor: C.CARD,
     borderRadius: 14,
     padding: S.lg,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: C.BORDER,
+    alignItems: 'center',
   },
-  topUpAmount: { fontSize: 24, fontWeight: '800', color: C.TEXT },
-  topUpSub: { color: C.GREY, fontSize: 12, marginTop: 2 },
+  topUpNoticeText: { color: C.GREY, fontSize: 14, textAlign: 'center', lineHeight: 22 },
+  topUpLink: { color: C.PURPLE, fontWeight: '700' },
   historySection: { paddingHorizontal: S.xl, marginBottom: S.xxl },
+  emptyText: { color: C.MUTED, fontSize: 14, textAlign: 'center', marginTop: S.xl },
   txRow: {
     flexDirection: 'row',
     alignItems: 'center',

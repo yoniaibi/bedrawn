@@ -19,14 +19,29 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     Limit: 50,
   }));
 
-  const notifications = (result.Items ?? []).map(item => ({
-    id: item.SK as string,
-    type: item.type as string,
-    drawId: item.drawId as string,
-    drawTitle: item.drawTitle as string,
-    read: item.read as boolean,
-    createdAt: item.createdAt as string,
-  }));
+  const notifications = (result.Items ?? []).map(item => {
+    const type = item.type as string;
+    const drawTitle = item.drawTitle as string | undefined;
+    let title = item.title as string | undefined;
+    let body = item.body as string | undefined;
+    if (!title) {
+      if (type === 'draw_won') title = '🎉 You won!';
+      else title = 'Notification';
+    }
+    if (!body && type === 'draw_won' && drawTitle) {
+      body = `You won the draw for: ${drawTitle}`;
+    }
+    return {
+      id: item.SK as string,
+      type,
+      title,
+      body,
+      drawId: item.drawId as string | undefined,
+      drawTitle,
+      read: item.read as boolean,
+      createdAt: item.createdAt as string,
+    };
+  });
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

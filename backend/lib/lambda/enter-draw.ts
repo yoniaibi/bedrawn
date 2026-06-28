@@ -29,10 +29,20 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   if (!draw) return { statusCode: 404, headers: cors, body: JSON.stringify({ error: 'Draw not found' }) };
   if (draw.status !== 'open') return { statusCode: 409, headers: cors, body: JSON.stringify({ error: 'Draw is no longer open' }) };
 
+  // Reject entries after closing date (UK midnight)
+  if (draw.closingDate) {
+    const ukToday = new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London' })
+      .split('/').reverse().join('-');
+    if (ukToday > draw.closingDate) {
+      return { statusCode: 409, headers: cors, body: JSON.stringify({ error: 'This draw has closed' }) };
+    }
+  }
+
   const costPence = draw.ticketPricePence * ticketCount;
 
-  // Atomic: deduct wallet balance + upsert entry record
+  // Atomic: deduct wallet balance + upsert entry record + write transaction record
   // If wallet balance is insufficient the condition fails and throws ConditionalCheckFailedException
+  const purchasedAt = new Date().toISOString();
   try {
     await db.send(new TransactWriteCommand({
       TransactItems: [
@@ -44,7 +54,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
             ConditionExpression: 'balancePence >= :cost',
             ExpressionAttributeValues: {
               ':cost': costPence,
-              ':d': new Date().toISOString(),
+              ':d': purchasedAt,
             },
           },
         },
@@ -56,7 +66,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
             ExpressionAttributeValues: {
               ':qty': ticketCount,
               ':uid': userId,
-              ':d': new Date().toISOString(),
+              ':d': purchasedAt,
             },
           },
         },
@@ -72,7 +82,37 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
               ':cost': costPence,
               ':zero': 0,
               ':open': 'open',
-              ':d': new Date().toISOString(),
+              ':d': purchasedAt,
+            },
+          },
+        },
+        {
+          Update: {
+            TableName: TABLE,
+            Key: { PK: `USER#${userId}`, SK: `ORDER#${drawId}` },
+            UpdateExpression: 'ADD ticketCount :qty SET drawId = :drawId, drawTitle = :title, drawImageUrl = :img, ticketPricePence = :price, enteredAt = if_not_exists(enteredAt, :ts), closingDate = :close',
+            ExpressionAttributeValues: {
+              ':qty': ticketCount,
+              ':drawId': drawId,
+              ':title': draw.title,
+              ':img': (draw.imageUrls as string[] | undefined)?.[0] ?? '',
+              ':price': draw.ticketPricePence,
+              ':ts': purchasedAt,
+              ':close': draw.closingDate ?? '',
+            },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `TX#${purchasedAt}`,
+              type: 'purchase',
+              description: `Tickets for: ${draw.title as string}`,
+              amountPence: -costPence,
+              drawId,
+              createdAt: purchasedAt,
             },
           },
         },

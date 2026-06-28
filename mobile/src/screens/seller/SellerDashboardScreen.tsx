@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,47 +10,48 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from '../../components/ProgressBar';
-import { draws } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
-const SELLER_DRAWS = draws.filter(d => d.seller === 'luxe_resale').concat(draws.slice(0, 1));
+interface DrawStat {
+  drawId?: string;
+  id?: string;  // API returns 'id', we normalise below
+  title: string;
+  status: string; // API: 'open'|'resolved'|'cancelled'; we map to display label
+  soldTickets: number;
+  totalTickets: number;
+  earningsPence?: number;
+  sellerRevenuePence?: number; // API returns this name
+}
 
-const DRAW_STATS = [
-  {
-    draw: draws[0],
-    status: 'live',
-    tickets: 847,
-    total: 1000,
-    earnings: 84.7,
-  },
-  {
-    draw: draws[6],
-    status: 'live',
-    tickets: 389,
-    total: 500,
-    earnings: 38.9,
-  },
-  {
-    draw: draws[4],
-    status: 'completed',
-    tickets: 600,
-    total: 600,
-    earnings: 60.0,
-  },
-];
+interface SellerStats {
+  totalEarningsPence: number;
+  pendingEarningsPence?: number;
+  pendingPayoutPence?: number; // API returns this name
+  draws: DrawStat[];
+}
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  open: { label: 'Live', color: C.PINK, bg: 'rgba(236,72,153,0.1)' },
   live: { label: 'Live', color: C.PINK, bg: 'rgba(236,72,153,0.1)' },
+  resolved: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(16,185,129,0.1)' },
   completed: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(16,185,129,0.1)' },
+  cancelled: { label: 'Cancelled', color: C.MUTED, bg: C.CARD2 },
   pending: { label: 'Pending', color: C.GOLD, bg: 'rgba(245,158,11,0.1)' },
 };
 
 export function SellerDashboardScreen() {
   const navigation = useNavigation();
+  const [stats, setStats] = useState<SellerStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const totalEarnings = DRAW_STATS.reduce((s, d) => s + d.earnings, 0);
-  const pendingEarnings = DRAW_STATS.filter(d => d.status === 'live').reduce((s, d) => s + d.earnings, 0);
+  useEffect(() => {
+    apiGet<SellerStats>('/seller/stats')
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -61,80 +63,95 @@ export function SellerDashboardScreen() {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.title}>My Dashboard</Text>
-            <Text style={styles.handle}>@yoniaibi</Text>
           </View>
           <View style={{ width: 60 }} />
         </View>
 
-        {/* Earnings cards */}
-        <View style={styles.earningsRow}>
-          <View style={styles.earningsCard}>
-            <Text style={styles.earningsLabel}>Total earned</Text>
-            <Text style={styles.earningsValue}>£{totalEarnings.toFixed(2)}</Text>
-            <Text style={styles.earningsCaption}>Since joining</Text>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={C.PURPLE} />
           </View>
-          <View style={[styles.earningsCard, styles.earningsPending]}>
-            <Text style={styles.earningsLabel}>Pending</Text>
-            <Text style={[styles.earningsValue, styles.earningsPendingValue]}>
-              £{pendingEarnings.toFixed(2)}
-            </Text>
-            <Text style={styles.earningsCaption}>From live draws</Text>
-          </View>
-        </View>
-
-        {/* Action buttons */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={styles.listBtn}
-            onPress={() => (navigation as any).navigate('ListItem')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.listBtnText}>+ List new item</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.payoutsBtn}>
-            <Text style={styles.payoutsBtnText}>Payouts</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Draw items */}
-        <Text style={styles.sectionTitle}>Your draws</Text>
-        {DRAW_STATS.map(item => {
-          const pct = Math.round((item.tickets / item.total) * 100);
-          const config = STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG];
-          return (
-            <View key={item.draw.id} style={styles.drawCard}>
-              <View style={styles.drawTop}>
-                <View style={[styles.drawThumb, { backgroundColor: item.draw.imageColor }]} />
-                <View style={styles.drawInfo}>
-                  <Text style={styles.drawTitle} numberOfLines={2}>{item.draw.title}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
-                    <Text style={[styles.statusText, { color: config.color }]}>{config.label}</Text>
-                  </View>
-                </View>
-                <Text style={styles.drawEarnings}>£{item.earnings.toFixed(2)}</Text>
+        ) : (
+          <>
+            {/* Earnings cards */}
+            <View style={styles.earningsRow}>
+              <View style={styles.earningsCard}>
+                <Text style={styles.earningsLabel}>Total earned</Text>
+                <Text style={styles.earningsValue}>
+                  £{stats ? (stats.totalEarningsPence / 100).toFixed(2) : '0.00'}
+                </Text>
+                <Text style={styles.earningsCaption}>Since joining</Text>
               </View>
-              <ProgressBar percent={pct} height={4} />
-              <Text style={styles.drawStats}>
-                {item.tickets} / {item.total} tickets · {pct}% sold
-              </Text>
+              <View style={[styles.earningsCard, styles.earningsPending]}>
+                <Text style={styles.earningsLabel}>Pending</Text>
+                <Text style={[styles.earningsValue, styles.earningsPendingValue]}>
+                  £{stats ? ((stats.pendingEarningsPence ?? stats.pendingPayoutPence ?? 0) / 100).toFixed(2) : '0.00'}
+                </Text>
+                <Text style={styles.earningsCaption}>From live draws</Text>
+              </View>
             </View>
-          );
-        })}
 
-        {/* Performance tips */}
-        <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>Seller tips</Text>
-          {[
-            'Add more photos to increase trust and ticket sales',
-            'Closing tonight draws get 3× more entries',
-            'Bundles earn 40% more on average',
-          ].map((tip, i) => (
-            <View key={i} style={styles.tip}>
-              <Text style={styles.tipBullet}>•</Text>
-              <Text style={styles.tipText}>{tip}</Text>
+            {/* Action buttons */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.listBtn}
+                onPress={() => (navigation as any).navigate('ListItem')}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.listBtnText}>+ List new item</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.payoutsBtn}>
+                <Text style={styles.payoutsBtnText}>Payouts</Text>
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
+
+            {/* Draw items */}
+            {stats && stats.draws.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Your draws</Text>
+                {stats.draws.map(item => {
+                  const pct = Math.round((item.soldTickets / item.totalTickets) * 100);
+                  const config = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
+                  return (
+                    <View key={item.drawId ?? item.id} style={styles.drawCard}>
+                      <View style={styles.drawTop}>
+                        <View style={styles.drawThumb} />
+                        <View style={styles.drawInfo}>
+                          <Text style={styles.drawTitle} numberOfLines={2}>{item.title}</Text>
+                          <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
+                            <Text style={[styles.statusText, { color: config.color }]}>{config.label}</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.drawEarnings}>
+                          £{((item.earningsPence ?? item.sellerRevenuePence ?? 0) / 100).toFixed(2)}
+                        </Text>
+                      </View>
+                      <ProgressBar percent={pct} height={4} />
+                      <Text style={styles.drawStats}>
+                        {item.soldTickets} / {item.totalTickets} tickets · {pct}% sold
+                      </Text>
+                    </View>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Performance tips */}
+            <View style={styles.tipsCard}>
+              <Text style={styles.tipsTitle}>Seller tips</Text>
+              {[
+                'Add more photos to increase trust and ticket sales',
+                'Closing tonight draws get 3× more entries',
+                'Bundles earn 40% more on average',
+              ].map((tip, i) => (
+                <View key={i} style={styles.tip}>
+                  <Text style={styles.tipBullet}>•</Text>
+                  <Text style={styles.tipText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -154,7 +171,7 @@ const styles = StyleSheet.create({
   back: { color: C.GREY, fontSize: 15 },
   headerCenter: { alignItems: 'center' },
   title: { fontSize: 16, fontWeight: '700', color: C.TEXT },
-  handle: { color: C.PURPLE, fontSize: 12 },
+  center: { padding: S.xxl, alignItems: 'center' },
   earningsRow: {
     flexDirection: 'row',
     gap: S.md,
@@ -171,7 +188,7 @@ const styles = StyleSheet.create({
   },
   earningsPending: { borderColor: C.GOLD },
   earningsLabel: { color: C.GREY, fontSize: 12, marginBottom: S.xs },
-  earningsValue: { color: C.TEXT, fontSize: 26, fontWeight: '800', fontFamily: 'serif' },
+  earningsValue: { color: C.TEXT, fontSize: 26, fontWeight: '800' },
   earningsPendingValue: { color: C.GOLD },
   earningsCaption: { color: C.MUTED, fontSize: 11, marginTop: 2 },
   actionRow: { flexDirection: 'row', gap: S.md, paddingHorizontal: S.xl, marginBottom: S.xl },
@@ -211,7 +228,7 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   drawTop: { flexDirection: 'row', alignItems: 'center', gap: S.md },
-  drawThumb: { width: 56, height: 56, borderRadius: 10 },
+  drawThumb: { width: 56, height: 56, borderRadius: 10, backgroundColor: C.CARD2 },
   drawInfo: { flex: 1, gap: S.xs },
   drawTitle: { color: C.TEXT, fontWeight: '600', fontSize: 13, lineHeight: 18 },
   statusBadge: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: S.sm, paddingVertical: 3 },

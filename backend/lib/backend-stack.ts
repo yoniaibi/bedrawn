@@ -53,7 +53,7 @@ export class BackendStack extends cdk.Stack {
       preventUserExistenceErrors: true,
     });
 
-    // S3 bucket for file uploads
+    // S3 bucket for file uploads — public read so image URLs work permanently
     const bucket = new s3.Bucket(this, 'BedrawnBucket', {
       cors: [{
         allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT],
@@ -61,9 +61,20 @@ export class BackendStack extends cdk.Stack {
         allowedHeaders: ['*'],
         maxAge: 3000,
       }],
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      blockPublicAccess: new s3.BlockPublicAccess({
+        blockPublicAcls: true,
+        ignorePublicAcls: true,
+        blockPublicPolicy: false,
+        restrictPublicBuckets: false,
+      }),
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
+    bucket.addToResourcePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      principals: [new iam.StarPrincipal()],
+      actions: ['s3:GetObject'],
+      resources: [bucket.arnForObjects('uploads/*')],
+    }));
 
     // DynamoDB table
     const table = new dynamodb.Table(this, 'BedrawnTable', {
@@ -74,7 +85,7 @@ export class BackendStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName };
+    const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, BUCKET_REGION: this.region };
     const commonProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: commonEnv };
     const stripeEnv = { ...commonEnv, STRIPE_WEBHOOK_SECRET: '' }; // webhook secret added after first deploy
     const stripeProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: stripeEnv };
@@ -243,8 +254,58 @@ export class BackendStack extends cdk.Stack {
       ...commonProps,
       entry: path.join(__dirname, 'lambda/put-profile.ts'),
     });
+    const getProfileFn = new nodejs.NodejsFunction(this, 'GetProfile', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-profile.ts'),
+    });
     table.grantReadWriteData(putProfileFn);
+    table.grantReadData(getProfileFn);
     api.addRoutes({ path: '/profile', methods: [HttpMethod.PUT], integration: new HttpLambdaIntegration('PutProfileInt', putProfileFn), authorizer });
+    api.addRoutes({ path: '/profile', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetProfileInt', getProfileFn), authorizer });
+
+    // User order history + stats
+    const getMyEntriesFn = new nodejs.NodejsFunction(this, 'GetMyEntries', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-my-entries.ts'),
+    });
+    const getMyStatsFn = new nodejs.NodejsFunction(this, 'GetMyStats', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-my-stats.ts'),
+    });
+    table.grantReadData(getMyEntriesFn);
+    table.grantReadData(getMyStatsFn);
+    api.addRoutes({ path: '/me/entries', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetMyEntriesInt', getMyEntriesFn), authorizer });
+    api.addRoutes({ path: '/me/stats', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetMyStatsInt', getMyStatsFn), authorizer });
+
+    // Saved draws
+    const toggleSaveDrawFn = new nodejs.NodejsFunction(this, 'ToggleSaveDraw', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/toggle-save-draw.ts'),
+    });
+    const getSavedDrawsFn = new nodejs.NodejsFunction(this, 'GetSavedDraws', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-saved-draws.ts'),
+    });
+    table.grantReadWriteData(toggleSaveDrawFn);
+    table.grantReadData(getSavedDrawsFn);
+    api.addRoutes({ path: '/draws/{id}/save', methods: [HttpMethod.GET, HttpMethod.POST, HttpMethod.DELETE], integration: new HttpLambdaIntegration('ToggleSaveDrawInt', toggleSaveDrawFn), authorizer });
+    api.addRoutes({ path: '/me/saved', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSavedDrawsInt', getSavedDrawsFn), authorizer });
+
+    // Seller stats
+    const getSellerStatsFn = new nodejs.NodejsFunction(this, 'GetSellerStats', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-seller-stats.ts'),
+    });
+    table.grantReadData(getSellerStatsFn);
+    api.addRoutes({ path: '/seller/stats', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSellerStatsInt', getSellerStatsFn), authorizer });
+
+    // Wallet transactions
+    const getWalletTransactionsFn = new nodejs.NodejsFunction(this, 'GetWalletTransactions', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-wallet-transactions.ts'),
+    });
+    table.grantReadData(getWalletTransactionsFn);
+    api.addRoutes({ path: '/wallet/transactions', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetWalletTransactionsInt', getWalletTransactionsFn), authorizer });
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });

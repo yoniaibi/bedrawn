@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityTicker } from '../../components/ActivityTicker';
-import { activityMessages, currentUser } from '../../data/mockData';
+import { activityMessages } from '../../data/mockData';
+import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
@@ -25,12 +26,19 @@ export function PurchaseScreen({ route, navigation }: Props) {
   const { draw } = route.params;
   const [qty, setQty] = useState(1);
   const [inputVal, setInputVal] = useState('1');
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    apiGet<{ balancePence: number }>('/wallet/balance')
+      .then(d => setWalletBalance(d.balancePence))
+      .catch(() => {});
+  }, []);
 
   const totalPence = qty * draw.ticketPrice;
   const totalPounds = (totalPence / 100).toFixed(2);
-  const balancePence = currentUser.balance;
-  const balancePounds = (balancePence / 100).toFixed(2);
-  const hasSufficientBalance = balancePence >= totalPence;
+  const balancePence = walletBalance ?? 0;
+  const balancePounds = walletBalance === null ? '...' : (balancePence / 100).toFixed(2);
+  const hasSufficientBalance = walletBalance !== null && balancePence >= totalPence;
 
   const handleQtyInput = (text: string) => {
     setInputVal(text);

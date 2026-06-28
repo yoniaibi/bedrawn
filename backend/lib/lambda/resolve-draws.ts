@@ -43,6 +43,8 @@ async function notifyWinner(winnerId: string, drawId: string, drawTitle: string)
       PK: `USER#${winnerId}`,
       SK: `NOTIF#${now}`,
       type: 'draw_won',
+      title: '🎉 You won!',
+      body: `You won the draw for: ${drawTitle}`,
       drawId,
       drawTitle,
       read: false,

@@ -16,6 +16,10 @@ export interface Draw {
   description: string;
   imageUrl: string;
   tags: string[];
+  closingDate?: string; // ISO date string YYYY-MM-DD
+  status?: 'open' | 'resolved' | 'cancelled';
+  winnerHandle?: string;
+  resolvedAt?: string;
 }
 
 const UNS = 'https://images.unsplash.com';

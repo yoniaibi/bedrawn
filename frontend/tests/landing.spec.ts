@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { suppressCookieBanner } from './helpers';
 
 test.describe('Landing page — content', () => {
   test.beforeEach(async ({ page }) => {
+    await suppressCookieBanner(page);
     await page.goto('/');
     await page.waitForTimeout(1500);
   });

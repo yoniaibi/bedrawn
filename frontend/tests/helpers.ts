@@ -24,6 +24,20 @@ const ACCESS_TOKEN = makeJwt({
   jti: 'mock-jti-access',
 });
 
+const ADMIN_ACCESS_TOKEN = makeJwt({
+  sub: 'mock-admin-id-456',
+  username: 'adminuser',
+  'cognito:username': 'adminuser',
+  email: 'yoniaibi@gmail.com',
+  'cognito:groups': ['admin'],
+  exp,
+  iat: now,
+  token_use: 'access',
+  client_id: CLIENT_ID,
+  scope: 'aws.cognito.signin.user.admin',
+  jti: 'mock-jti-admin',
+});
+
 const ID_TOKEN = makeJwt({
   sub: 'mock-user-id-123',
   'cognito:username': 'testuser',
@@ -36,12 +50,12 @@ const ID_TOKEN = makeJwt({
   jti: 'mock-jti-id',
 });
 
-/**
- * Injects Amplify v6 session tokens into localStorage and mocks the Cognito
- * GetUser endpoint so AppShell's getCurrentUser() returns a valid user.
- */
-export async function injectAuth(page: Page) {
-  // Mock the Cognito API endpoint — Amplify may call GetUser to validate session
+async function setupAuth(page: Page, accessToken: string, username: string, email: string) {
+  // Suppress cookie consent banner before any page load — runs on every navigation
+  await page.addInitScript(() => {
+    localStorage.setItem('bedrawn_cookie_consent', 'accepted');
+  });
+
   await page.route('https://cognito-idp.eu-west-1.amazonaws.com/', async route => {
     const target = route.request().headers()['x-amz-target'] ?? '';
     if (target.includes('GetUser')) {
@@ -49,10 +63,10 @@ export async function injectAuth(page: Page) {
         status: 200,
         contentType: 'application/x-amz-json-1.1',
         body: JSON.stringify({
-          Username: 'testuser',
+          Username: username,
           UserAttributes: [
             { Name: 'sub', Value: 'mock-user-id-123' },
-            { Name: 'email', Value: 'test@bedrawn.app' },
+            { Name: 'email', Value: email },
             { Name: 'email_verified', Value: 'true' },
           ],
         }),
@@ -65,23 +79,47 @@ export async function injectAuth(page: Page) {
   await page.goto('/');
   await page.waitForTimeout(500);
 
-  await page.evaluate(({ clientId, accessToken, idToken }) => {
+  await page.evaluate(({ clientId, accessToken: at, idToken, username: u, email: e }) => {
     const prefix = `CognitoIdentityServiceProvider.${clientId}`;
-    localStorage.setItem(`${prefix}.LastAuthUser`, 'testuser');
-    localStorage.setItem(`${prefix}.testuser.accessToken`, accessToken);
-    localStorage.setItem(`${prefix}.testuser.idToken`, idToken);
-    localStorage.setItem(`${prefix}.testuser.refreshToken`, 'mock-refresh-token');
-    localStorage.setItem(`${prefix}.testuser.clockDrift`, '0');
-    localStorage.setItem(`${prefix}.testuser.userData`, JSON.stringify({
-      UserAttributes: [{ Name: 'email', Value: 'test@bedrawn.app' }],
-      Username: 'testuser',
+    localStorage.setItem(`${prefix}.LastAuthUser`, u);
+    localStorage.setItem(`${prefix}.${u}.accessToken`, at);
+    localStorage.setItem(`${prefix}.${u}.idToken`, idToken);
+    localStorage.setItem(`${prefix}.${u}.refreshToken`, 'mock-refresh-token');
+    localStorage.setItem(`${prefix}.${u}.clockDrift`, '0');
+    localStorage.setItem(`${prefix}.${u}.userData`, JSON.stringify({
+      UserAttributes: [{ Name: 'email', Value: e }],
+      Username: u,
     }));
-  }, { clientId: CLIENT_ID, accessToken: ACCESS_TOKEN, idToken: ID_TOKEN });
+    // Dismiss cookie consent banner so it never blocks test interactions
+    localStorage.setItem('bedrawn_cookie_consent', 'accepted');
+  }, { clientId: CLIENT_ID, accessToken, idToken: ID_TOKEN, username, email });
 }
 
-/** Mock an authenticated API call — returns given body for any matching path */
+/**
+ * Suppresses the cookie consent banner for tests that don't call injectAuth.
+ * Must be called before page.goto() — it runs as an init script injected on every navigation.
+ */
+export async function suppressCookieBanner(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('bedrawn_cookie_consent', 'accepted');
+  });
+}
+
+/** Injects a standard (non-admin) Amplify session */
+export async function injectAuth(page: Page) {
+  await setupAuth(page, ACCESS_TOKEN, 'testuser', 'test@bedrawn.app');
+}
+
+/** Injects an admin Amplify session with cognito:groups = ['admin'] */
+export async function injectAdminAuth(page: Page) {
+  await setupAuth(page, ADMIN_ACCESS_TOKEN, 'adminuser', 'yoniaibi@gmail.com');
+}
+
+const API_BASE = 'https://uctmxxb939.execute-api.eu-west-1.amazonaws.com';
+
+/** Mock an API call — intercepts only the real API host to avoid capturing page navigations */
 export async function mockApi(page: Page, path: string, body: unknown, status = 200) {
-  await page.route(`**${path}`, route => route.fulfill({
+  await page.route(`${API_BASE}${path}`, route => route.fulfill({
     status,
     contentType: 'application/json',
     body: JSON.stringify(body),

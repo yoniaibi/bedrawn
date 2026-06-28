@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,20 +10,37 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from '../../components/ProgressBar';
-import { draws, ticketHoldings } from '../../data/mockData';
-import { TicketsStackParamList } from '../../navigation/TabNavigator';
+import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
-type Nav = NativeStackNavigationProp<TicketsStackParamList>;
+interface Entry {
+  drawId: string;
+  drawTitle: string;
+  drawImageUrl?: string;
+  ticketCount: number;
+  ticketPricePence: number;
+  enteredAt: string;
+  closingDate: string;
+  status: string;
+  isWinner: boolean;
+  soldTickets?: number;
+  totalTickets?: number;
+}
 
 export function TicketsScreen() {
-  const navigation = useNavigation<Nav>();
-  const totalTickets = ticketHoldings.reduce((s, t) => s + t.ticketCount, 0);
-  const totalValue = ticketHoldings.reduce((s, t) => {
-    const draw = draws.find(d => d.id === t.drawId);
-    return s + (draw?.retailValue ?? 0);
-  }, 0);
+  const navigation = useNavigation();
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiGet<{ entries: Entry[] }>('/me/entries')
+      .then(d => setEntries((d.entries ?? []).filter(e => e.status === 'open' && !e.isWinner)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalTickets = entries.reduce((s, e) => s + e.ticketCount, 0);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -33,99 +50,80 @@ export function TicketsScreen() {
           <Text style={styles.title}>My Tickets</Text>
         </View>
 
-        {/* Summary strip */}
-        <View style={styles.summaryStrip}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{totalTickets}</Text>
-            <Text style={styles.statLabel}>tickets</Text>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator color={C.PURPLE} />
           </View>
-          <View style={styles.divider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>£{totalValue.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>in draws</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{ticketHoldings.length}</Text>
-            <Text style={styles.statLabel}>draws</Text>
-          </View>
-        </View>
+        ) : (
+          <>
+            {/* Summary strip */}
+            <View style={styles.summaryStrip}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{totalTickets}</Text>
+                <Text style={styles.statLabel}>tickets</Text>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{entries.length}</Text>
+                <Text style={styles.statLabel}>draws</Text>
+              </View>
+            </View>
 
-        {/* Callout */}
-        <View style={styles.callout}>
-          <Text style={styles.calloutText}>
-            Win up to{' '}
-            <Text style={styles.calloutBold}>£{totalValue.toLocaleString()}</Text>
-            {' '}for as little as{' '}
-            <Text style={styles.calloutBold}>10p</Text>
-          </Text>
-        </View>
+            {/* Ticket cards */}
+            {entries.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No active tickets</Text>
+                <Text style={styles.emptySubtitle}>
+                  Browse draws and enter for as little as 10p.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.cardsSection}>
+                {entries.map(entry => {
+                  const pct = entry.totalTickets
+                    ? Math.round(((entry.soldTickets ?? 0) / entry.totalTickets) * 100)
+                    : 0;
+                  const odds = entry.totalTickets
+                    ? ((entry.ticketCount / entry.totalTickets) * 100).toFixed(1)
+                    : '?';
+                  const oddsNum = parseFloat(odds);
 
-        {/* Ticket cards */}
-        <View style={styles.cardsSection}>
-          {ticketHoldings.map(holding => {
-            const draw = draws.find(d => d.id === holding.drawId)!;
-            const pct = Math.round((holding.soldTickets / holding.totalTickets) * 100);
-            const odds = ((holding.ticketCount / holding.totalTickets) * 100).toFixed(1);
-            const oddsNum = parseFloat(odds);
+                  return (
+                    <View key={entry.drawId} style={styles.ticketCard}>
+                      <View style={styles.cardTop}>
+                        <View style={styles.thumbnail} />
+                        <View style={styles.cardInfo}>
+                          <Text style={styles.cardTitle} numberOfLines={2}>{entry.drawTitle}</Text>
+                          <View style={styles.oddsRow}>
+                            {!isNaN(oddsNum) && (
+                              <Text style={[
+                                styles.oddsText,
+                                oddsNum >= 1 ? styles.oddsGold : oddsNum >= 0.5 ? styles.oddsLilac : styles.oddsGrey,
+                              ]}>
+                                {odds}% odds
+                              </Text>
+                            )}
+                            <View style={styles.nightBadgePurple}>
+                              <Text style={styles.nightBadgeTextPurple}>Draws tonight at 9pm</Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
 
-            return (
-              <TouchableOpacity
-                key={holding.id}
-                style={styles.ticketCard}
-                onPress={() => navigation.navigate('DrawDetail', { draw })}
-                activeOpacity={0.85}
-              >
-                <View style={styles.cardTop}>
-                  <View style={[styles.thumbnail, { backgroundColor: draw.imageColor }]} />
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.cardTitle} numberOfLines={2}>{draw.title}</Text>
-                    <Text style={styles.cardSeller}>{draw.seller}</Text>
-                    <View style={styles.oddsRow}>
-                      <Text style={[
-                        styles.oddsText,
-                        oddsNum >= 1 ? styles.oddsGold : oddsNum >= 0.5 ? styles.oddsLilac : styles.oddsGrey
-                      ]}>
-                        {odds}% odds
-                      </Text>
-                      <View style={[styles.nightBadge, holding.isTonight ? styles.nightBadgePink : styles.nightBadgePurple]}>
-                        <Text style={[styles.nightBadgeText, holding.isTonight ? styles.nightBadgeTextPink : styles.nightBadgeTextPurple]}>
-                          {holding.isTonight ? 'Draws tonight at 9pm' : 'Draws tomorrow'}
+                      {pct > 0 && <ProgressBar percent={pct} height={4} />}
+
+                      <View style={styles.cardFooter}>
+                        <Text style={styles.footerStat}>
+                          {entry.ticketCount} tickets · {entry.ticketPricePence}p each
                         </Text>
+                        <Text style={styles.closingDate}>{entry.closingDate}</Text>
                       </View>
                     </View>
-                  </View>
-                </View>
-
-                <ProgressBar percent={pct} height={4} />
-
-                <View style={styles.cardFooter}>
-                  <Text style={styles.footerStat}>
-                    {holding.ticketCount} tickets · {holding.ticketPrice}p each
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.moreBtn}
-                    onPress={() => navigation.navigate('Purchase', { draw })}
-                  >
-                    <Text style={styles.moreBtnText}>+ More</Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Empty state placeholder */}
-        {ticketHoldings.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No tickets yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Browse draws and enter for as little as 10p.
-            </Text>
-            <TouchableOpacity style={styles.browseBtn}>
-              <Text style={styles.browseBtnText}>Browse draws</Text>
-            </TouchableOpacity>
-          </View>
+                  );
+                })}
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -136,6 +134,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.BG },
   header: { paddingHorizontal: S.xl, paddingTop: S.lg, paddingBottom: S.md },
   title: { fontSize: 24, fontWeight: '800', color: C.TEXT },
+  center: { padding: S.xxl, alignItems: 'center' },
   summaryStrip: {
     flexDirection: 'row',
     backgroundColor: C.CARD,
@@ -150,20 +149,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '800', color: C.GOLD },
   statLabel: { fontSize: 11, color: C.GREY, marginTop: 2 },
   divider: { width: 1, backgroundColor: C.BORDER },
-  callout: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: S.sm,
-    marginHorizontal: S.xl,
-    backgroundColor: C.PURPLE_LIGHT,
-    borderWidth: 1,
-    borderColor: C.PURPLE,
-    borderRadius: 10,
-    padding: S.md,
-    marginBottom: S.xl,
-  },
-  calloutText: { color: C.GREY, fontSize: 13, flex: 1, lineHeight: 18 },
-  calloutBold: { color: C.TEXT, fontWeight: '700' },
   cardsSection: { paddingHorizontal: S.xl, gap: S.md, marginBottom: S.xxl },
   ticketCard: {
     backgroundColor: C.CARD,
@@ -174,38 +159,27 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   cardTop: { flexDirection: 'row', gap: S.md },
-  thumbnail: { width: 72, height: 72, borderRadius: 10 },
+  thumbnail: { width: 72, height: 72, borderRadius: 10, backgroundColor: C.CARD2 },
   cardInfo: { flex: 1, gap: S.xs },
   cardTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  cardSeller: { color: C.GREY, fontSize: 12 },
   oddsRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, flexWrap: 'wrap' },
   oddsText: { fontSize: 12, fontWeight: '700' },
   oddsGold: { color: C.GOLD },
   oddsLilac: { color: '#A78BFA' },
   oddsGrey: { color: C.GREY },
-  nightBadge: { borderRadius: 999, paddingHorizontal: S.sm, paddingVertical: 3 },
-  nightBadgePink: { backgroundColor: 'rgba(236,72,153,0.15)', borderWidth: 1, borderColor: C.PINK },
-  nightBadgePurple: { backgroundColor: C.PURPLE_LIGHT, borderWidth: 1, borderColor: C.PURPLE },
-  nightBadgeText: { fontSize: 10, fontWeight: '600' },
-  nightBadgeTextPink: { color: C.PINK },
-  nightBadgeTextPurple: { color: C.PURPLE },
+  nightBadgePurple: {
+    backgroundColor: C.PURPLE_LIGHT,
+    borderRadius: 999,
+    paddingHorizontal: S.sm,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: C.PURPLE,
+  },
+  nightBadgeTextPurple: { color: C.PURPLE, fontSize: 10, fontWeight: '600' },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   footerStat: { color: C.GREY, fontSize: 12 },
-  moreBtn: {
-    backgroundColor: C.PURPLE,
-    borderRadius: 999,
-    paddingHorizontal: S.md,
-    paddingVertical: 5,
-  },
-  moreBtnText: { color: C.WHITE, fontSize: 12, fontWeight: '700' },
+  closingDate: { color: C.MUTED, fontSize: 11 },
   emptyState: { alignItems: 'center', paddingTop: S.xxxl, paddingHorizontal: S.xl },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: C.TEXT, marginBottom: S.sm },
   emptySubtitle: { fontSize: 14, color: C.GREY, textAlign: 'center', marginBottom: S.xl },
-  browseBtn: {
-    backgroundColor: C.PURPLE,
-    borderRadius: 999,
-    paddingVertical: S.md,
-    paddingHorizontal: S.xxl,
-  },
-  browseBtnText: { color: C.WHITE, fontWeight: '700', fontSize: 15 },
 });

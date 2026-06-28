@@ -40,6 +40,17 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     userTickets = (entryResult.Item as any)?.ticketCount ?? 0;
   }
 
+  // Fetch winner's handle if draw is resolved
+  let winnerHandle: string | undefined;
+  if (item.status === 'resolved' && item.winnerId) {
+    const winnerProfile = await db.send(new GetCommand({
+      TableName: TABLE,
+      Key: { PK: `USER#${item.winnerId}`, SK: 'PROFILE' },
+    }));
+    winnerHandle = (winnerProfile.Item as any)?.handle
+      ?? `user_${(item.winnerId as string).slice(0, 6)}`;
+  }
+
   const draw = {
     id: item.id,
     title: item.title ?? '',
@@ -62,6 +73,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     tags: item.tags ?? [],
     status: item.status,
     closingDate: item.closingDate,
+    winnerId: item.status === 'resolved' ? item.winnerId : undefined,
+    winnerHandle: item.status === 'resolved' ? winnerHandle : undefined,
+    resolvedAt: item.resolvedAt,
     userTickets,
   };
 

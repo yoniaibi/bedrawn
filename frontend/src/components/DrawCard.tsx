@@ -25,7 +25,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
       <div
         className={`draw-card animate-fade-in-up${scarce ? ' draw-card-scarce' : ''}`}
         style={{
-          background: 'var(--white)',
+          background: 'var(--card)',
           border: scarce ? '1.5px solid var(--red)' : '1px solid var(--border)',
           borderRadius: 14,
           overflow: 'hidden',
@@ -110,7 +110,13 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
           <ProgressBar percent={pct} height={3} />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
             <p style={{ margin: 0, fontSize: 10, color: 'var(--muted)' }}>{draw.seller}</p>
-            <p style={{ margin: 0, fontSize: 10, color: 'var(--muted)' }}>{pct}% sold</p>
+            {draw.closingDate ? (
+              <p style={{ margin: 0, fontSize: 10, color: draw.isClosingTonight ? 'var(--pink)' : 'var(--muted)' }}>
+                {draw.isClosingTonight ? 'Closes tonight' : `Closes ${new Date(draw.closingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+              </p>
+            ) : (
+              <p style={{ margin: 0, fontSize: 10, color: 'var(--muted)' }}>{pct}% sold</p>
+            )}
           </div>
         </div>
       </div>
