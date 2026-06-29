@@ -39,10 +39,10 @@ function toDrawShape(item: Record<string, any>) {
   };
 }
 
-export const handler = async (_event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
-    // Try GSI first (status=open, sorted by closingDate)
-    // If the GSI doesn't exist yet, fall back to scan
+    const q = event.queryStringParameters?.q?.toLowerCase().trim() ?? '';
+
     let items: Record<string, any>[] = [];
 
     try {
@@ -52,38 +52,36 @@ export const handler = async (_event: APIGatewayProxyEventV2): Promise<APIGatewa
         KeyConditionExpression: '#s = :open',
         ExpressionAttributeNames: { '#s': 'status' },
         ExpressionAttributeValues: { ':open': 'open' },
-        ScanIndexForward: true, // earliest closing dates first
-        Limit: 100,
+        ScanIndexForward: true,
+        Limit: 200,
       }));
       items = (result.Items ?? []) as Record<string, any>[];
     } catch {
-      // GSI not yet provisioned — fall back to a filtered scan
       const result = await db.send(new ScanCommand({
         TableName: TABLE,
         FilterExpression: 'begins_with(PK, :prefix) AND SK = :meta AND #s = :open',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: {
-          ':prefix': 'DRAW#',
-          ':meta': 'META',
-          ':open': 'open',
-        },
+        ExpressionAttributeValues: { ':prefix': 'DRAW#', ':meta': 'META', ':open': 'open' },
       }));
       items = (result.Items ?? []) as Record<string, any>[];
     }
 
-    const draws = items.map(toDrawShape);
+    if (q) {
+      items = items.filter(item =>
+        (item.title as string ?? '').toLowerCase().includes(q) ||
+        (item.category as string ?? '').toLowerCase().includes(q) ||
+        (item.sellerHandle as string ?? '').toLowerCase().includes(q) ||
+        (item.description as string ?? '').toLowerCase().includes(q)
+      );
+    }
 
     return {
       statusCode: 200,
       headers: cors,
-      body: JSON.stringify({ draws }),
+      body: JSON.stringify({ draws: items.map(toDrawShape) }),
     };
   } catch (err) {
     console.error('get-draws error', err);
-    return {
-      statusCode: 500,
-      headers: cors,
-      body: JSON.stringify({ error: 'Failed to fetch draws' }),
-    };
+    return { statusCode: 500, headers: cors, body: JSON.stringify({ error: 'Failed to fetch draws' }) };
   }
 };

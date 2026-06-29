@@ -7,7 +7,7 @@ import DrawCard from '@/components/DrawCard';
 import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
-import ActivityTicker from '@/components/ActivityTicker';
+
 import { draws as mockDraws, currentUser, activityMessages, recentWinners } from '@/lib/mockData';
 import type { Draw } from '@/lib/mockData';
 
@@ -66,13 +66,6 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      {/* Activity ticker — full width */}
-      <div style={{ background: 'var(--purple)', overflow: 'hidden' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
-          <ActivityTicker messages={activityMessages} />
-        </div>
-      </div>
-
       <div className="page-container" style={{ paddingTop: 20, paddingBottom: 32 }}>
 
         {/* ── Hero section ── */}
@@ -102,17 +95,17 @@ export default function HomePage() {
                 padding: '20px 24px',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{
-                    background: 'rgba(236,72,153,0.9)',
-                    color: 'var(--white)', fontSize: 11, fontWeight: 700,
-                    padding: '5px 12px', borderRadius: 999,
-                    display: 'flex', alignItems: 'center', gap: 6,
+                    background: 'rgba(244,114,182,0.15)',
+                    border: '1px solid rgba(244,114,182,0.35)',
+                    color: '#F472B6', fontSize: 10, fontWeight: 600,
+                    padding: '3px 10px', borderRadius: 6,
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                    backdropFilter: 'blur(8px)',
                   }}>
-                    <LiveDot size={6} /> CLOSING TONIGHT · 9PM
-                  </span>
-                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, background: 'rgba(0,0,0,0.4)', padding: '4px 10px', borderRadius: 999 }}>
-                    247 watching
+                    <LiveDot size={5} /> Closing Tonight
                   </span>
                 </div>
 
@@ -123,15 +116,10 @@ export default function HomePage() {
                   <p style={{ margin: '0 0 12px', fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>
                     by {hero.seller}
                   </p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <span style={{
-                      background: 'var(--purple)', color: 'var(--white)',
-                      fontSize: 14, fontWeight: 800, padding: '6px 16px', borderRadius: 999,
-                    }}>{heroPrice}</span>
-                    <span style={{
-                      background: 'rgba(217,119,6,0.9)', color: 'var(--white)',
-                      fontSize: 13, fontWeight: 700, padding: '6px 14px', borderRadius: 999,
-                    }}>£{hero.retailValue.toLocaleString()} retail</span>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 12 }}>
+                    <span className="serif" style={{ fontSize: 28, color: 'var(--accent-pink)', fontWeight: 700 }}>{heroPrice}</span>
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>→</span>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.70)' }}>£{hero.retailValue.toLocaleString()} retail</span>
                   </div>
                   <ProgressBar percent={heroPct} height={4} />
                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '6px 0 16px' }}>
@@ -140,12 +128,13 @@ export default function HomePage() {
                       <CountdownTimer />
                     </span>
                   </div>
-                  <button className="btn-primary" style={{
-                    padding: '12px 32px', borderRadius: 999,
-                    background: 'var(--card)', border: 'none',
-                    color: 'var(--purple)', fontSize: 15, fontWeight: 700,
+                  <button style={{
+                    height: 52, borderRadius: 10, border: 'none',
+                    background: 'var(--accent-pink)', color: '#FFFFFF',
+                    fontSize: 15, fontWeight: 700, padding: '0 28px', cursor: 'pointer',
+                    letterSpacing: '0.01em',
                   }}>
-                    Enter draw · {heroPrice}
+                    Enter draw — {heroPrice} per ticket
                   </button>
                 </div>
               </div>
@@ -155,82 +144,66 @@ export default function HomePage() {
 
         {/* ── Tonight strip ── */}
         <div style={{
-          background: 'var(--purple-light)',
-          border: '1px solid rgba(124,58,237,0.2)',
-          borderRadius: 14, padding: '16px 20px',
+          background: 'var(--bg-raised)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 14, padding: '14px 18px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: 28, flexWrap: 'wrap', gap: 12,
+          marginBottom: 24, flexWrap: 'wrap', gap: 12,
         }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--purple)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <LiveDot size={7} />
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
               {tonightCount} draws closing tonight at 9pm
-            </p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--grey)' }}>
-              You are entered in 3 of them
             </p>
           </div>
           <Link href="/live" style={{
-            color: 'var(--purple)', fontSize: 13, fontWeight: 700,
+            color: 'var(--accent-lilac)', fontSize: 13, fontWeight: 600,
             textDecoration: 'none',
-            padding: '8px 18px', border: '1.5px solid var(--purple)',
-            borderRadius: 999, whiteSpace: 'nowrap',
+            padding: '7px 16px', border: '1px solid var(--border-accent)',
+            borderRadius: 10, whiteSpace: 'nowrap',
+            background: 'rgba(196,181,253,0.08)',
           }}>
-            Watch live
+            Watch live →
           </Link>
         </div>
 
         {/* ── Recent winner ── */}
         <div style={{
-          background: 'var(--gold-light)',
-          border: '1px solid rgba(217,119,6,0.25)',
+          background: 'var(--bg-raised)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: 12, padding: '12px 16px',
-          marginBottom: 28,
+          marginBottom: 24,
         }}>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text)' }}>
-            <span style={{ fontWeight: 700, color: 'var(--gold)' }}>Winner</span>{' '}
-            <strong>{w.handle}</strong> just won {w.item} — paid {w.paid}p, worth{' '}
-            <span style={{ fontWeight: 700, color: 'var(--gold)' }}>£{w.value.toLocaleString()}</span>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{w.handle}</span>{' '}
+            just won {w.item} — paid {w.paid}p, retail{' '}
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>£{w.value.toLocaleString()}</span>
           </p>
         </div>
 
-        {/* ── Category pills ── */}
-        <div style={{ overflowX: 'auto', marginBottom: 6 }} className="scrollbar-hide">
+        {/* ── Filter chips (category + filter combined) ── */}
+        <div style={{ overflowX: 'auto', marginBottom: 24 }} className="scrollbar-hide">
           <div style={{ display: 'flex', gap: 8, width: 'max-content', paddingBottom: 4 }}>
             {categories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
-                className="pill-btn"
-                style={{
-                  padding: '8px 18px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
-                  background: category === cat.id ? 'var(--purple)' : 'var(--card)',
-                  border: `1.5px solid ${category === cat.id ? 'var(--purple)' : 'var(--border)'}`,
-                  color: category === cat.id ? 'var(--white)' : 'var(--text)',
-                  fontSize: 13, fontWeight: category === cat.id ? 700 : 500,
-                }}
+                className={`chip${category === cat.id ? ' active' : ''}`}
+                style={{ fontFamily: 'inherit' }}
               >
                 {cat.label}
               </button>
             ))}
-          </div>
-        </div>
-
-        {/* Filter chips */}
-        <div style={{ overflowX: 'auto', marginBottom: 28 }} className="scrollbar-hide">
-          <div style={{ display: 'flex', gap: 8, width: 'max-content', paddingBottom: 4 }}>
+            <div style={{ width: 1, background: 'var(--border-subtle)', margin: '0 4px' }} />
             {filters.map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(filter === f ? '' : f)}
-                style={{
-                  padding: '6px 14px', borderRadius: 999, cursor: 'pointer', whiteSpace: 'nowrap',
-                  background: filter === f ? 'var(--purple-light)' : 'transparent',
-                  border: `1px solid ${filter === f ? 'var(--purple)' : 'var(--border)'}`,
-                  color: filter === f ? 'var(--purple)' : 'var(--grey)',
-                  fontSize: 12, fontWeight: filter === f ? 700 : 400,
-                  transition: 'all 0.15s',
-                }}
-              >{f}</button>
+                className={`chip${filter === f ? ' active' : ''}`}
+                style={{ fontFamily: 'inherit' }}
+              >
+                {f}{f === 'Tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
+              </button>
             ))}
           </div>
         </div>
@@ -238,8 +211,8 @@ export default function HomePage() {
         {/* ── Womenswear row ── */}
         <section style={{ marginBottom: 36 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>Womenswear &amp; Accessories</h2>
-            <Link href="/categories" style={{ fontSize: 13, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>See all</Link>
+            <h2 style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Womenswear &amp; Accessories</h2>
+            <Link href="/categories" style={{ fontSize: 12, color: 'var(--accent-lilac)', textDecoration: 'none', fontWeight: 600 }}>See all</Link>
           </div>
           <div style={{ overflowX: 'auto' }} className="scrollbar-hide">
             <div style={{ display: 'flex', gap: 14, width: 'max-content', paddingBottom: 4 }}>
@@ -255,8 +228,8 @@ export default function HomePage() {
         {/* ── Menswear row ── */}
         <section style={{ marginBottom: 36 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>Menswear &amp; Streetwear</h2>
-            <Link href="/categories" style={{ fontSize: 13, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>See all</Link>
+            <h2 style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Menswear &amp; Streetwear</h2>
+            <Link href="/categories" style={{ fontSize: 12, color: 'var(--accent-lilac)', textDecoration: 'none', fontWeight: 600 }}>See all</Link>
           </div>
           <div style={{ overflowX: 'auto' }} className="scrollbar-hide">
             <div style={{ display: 'flex', gap: 14, width: 'max-content', paddingBottom: 4 }}>
@@ -272,11 +245,11 @@ export default function HomePage() {
         {/* ── Main grid ── */}
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
+            <h2 style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
               {category === 'all' ? 'All draws' : category}
-              {filter ? <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--grey)', marginLeft: 8 }}>{filter}</span> : null}
+              {filter ? <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text-tertiary)', marginLeft: 8 }}>{filter}</span> : null}
             </h2>
-            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{filtered.length} draws</span>
+            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{filtered.length} draws</span>
           </div>
 
           <div className="draw-grid">
@@ -302,17 +275,14 @@ export default function HomePage() {
 
         {/* App download banner */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(236,72,153,0.06))',
-          border: '1px solid rgba(124,58,237,0.15)',
+          background: 'var(--bg-raised)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: 16, padding: '20px 24px', marginTop: 40,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 32 }}>📲</span>
-            <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Get the DRAWN app</p>
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>Watch draws go live at 9pm and get instant win notifications</p>
-            </div>
+          <div>
+            <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Get the DRAWN app</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>Watch draws go live at 9pm and get instant win notifications</p>
           </div>
           <a href="#" style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -321,13 +291,13 @@ export default function HomePage() {
             textDecoration: 'none', fontSize: 13, fontWeight: 700,
             whiteSpace: 'nowrap',
           }}>
-            ⬛ Download on App Store
+            Download on App Store
           </a>
         </div>
 
         {/* Footer */}
-        <div style={{ borderTop: '1px solid var(--border)', marginTop: 24, paddingTop: 20, textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
+        <div style={{ borderTop: '1px solid var(--border-subtle)', marginTop: 24, paddingTop: 20, textAlign: 'center' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>
             All draws verified · Every night at 9pm · Free postal entry available
           </p>
         </div>

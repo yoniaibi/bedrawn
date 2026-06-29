@@ -5,16 +5,27 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import CountdownTimer from '@/components/CountdownTimer';
-import { draws } from '@/lib/mockData';
+import { draws, type Draw } from '@/lib/mockData';
 
 interface Particle { id: number; x: number; color: string; delay: number; duration: number }
 
 function SuccessContent({ id }: { id: string }) {
   const searchParams = useSearchParams();
-  const draw = draws.find(d => d.id === id);
+  const mockDraw = draws.find(d => d.id === id) ?? null;
   const qty = parseInt(searchParams.get('qty') ?? '1');
   const total = parseInt(searchParams.get('total') ?? '0');
+  const [draw, setDraw] = useState<Draw | null>(mockDraw);
   const [particles, setParticles] = useState<Particle[]>([]);
+
+  useEffect(() => {
+    if (mockDraw) return;
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) return;
+    fetch(`${url}/draws/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
+      .catch(() => {});
+  }, [id, mockDraw]);
 
   useEffect(() => {
     const colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'];

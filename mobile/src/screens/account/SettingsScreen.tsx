@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   toggleLabel: { color: C.TEXT, fontSize: 15 },
   toggleDesc: { color: C.GREY, fontSize: 12, marginTop: 2 },
   deleteBtn: {
-    backgroundColor: 'rgba(239,68,68,0.1)',
+    backgroundColor: 'rgba(248,113,113,0.10)',
     borderWidth: 1,
     borderColor: C.RED,
     borderRadius: 10,

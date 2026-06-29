@@ -100,7 +100,7 @@ export function LiveScreen() {
     });
   };
 
-  const WHEEL_COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#A78BFA', '#F97316'];
+  const WHEEL_COLORS = ['#C4B5FD', '#F472B6', '#FCD34D', '#4ADE80', '#3B82F6', '#F87171', '#A78BFA', '#F97316'];
   const SEGMENTS = ['@sarah_j', '@sneaker_d', '@luxe_fan', '@yoniaibi', '@watch_n', '@stylerae', '@hype_co', '@vintagev'];
 
   return (

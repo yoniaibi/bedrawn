@@ -15,25 +15,25 @@ const CATEGORIES = [
   {
     label: 'Bags',
     description: 'Chanel, LV, Prada, Bottega & more',
-    accent: '#EC4899',
+    accent: '#F472B6',
     drawCount: 24,
   },
   {
     label: 'Watches',
     description: 'Rolex, AP, Omega, Cartier',
-    accent: '#F59E0B',
+    accent: '#FCD34D',
     drawCount: 11,
   },
   {
     label: 'Trainers',
     description: 'Nike, Jordan, Adidas, New Balance',
-    accent: '#8B5CF6',
+    accent: '#C4B5FD',
     drawCount: 31,
   },
   {
     label: 'Fashion',
     description: 'Designer clothing & accessories',
-    accent: '#EC4899',
+    accent: '#F472B6',
     drawCount: 18,
   },
   {
@@ -45,7 +45,7 @@ const CATEGORIES = [
   {
     label: 'Luxury',
     description: 'Ultra-premium, high-value items',
-    accent: '#F59E0B',
+    accent: '#FCD34D',
     drawCount: 7,
   },
   {

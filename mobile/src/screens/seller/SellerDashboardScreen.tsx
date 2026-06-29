@@ -33,12 +33,12 @@ interface SellerStats {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  open: { label: 'Live', color: C.PINK, bg: 'rgba(236,72,153,0.1)' },
-  live: { label: 'Live', color: C.PINK, bg: 'rgba(236,72,153,0.1)' },
-  resolved: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(16,185,129,0.1)' },
-  completed: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(16,185,129,0.1)' },
+  open: { label: 'Live', color: C.PINK, bg: 'rgba(244,114,182,0.10)' },
+  live: { label: 'Live', color: C.PINK, bg: 'rgba(244,114,182,0.10)' },
+  resolved: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(74,222,128,0.10)' },
+  completed: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(74,222,128,0.10)' },
   cancelled: { label: 'Cancelled', color: C.MUTED, bg: C.CARD2 },
-  pending: { label: 'Pending', color: C.GOLD, bg: 'rgba(245,158,11,0.1)' },
+  pending: { label: 'Pending', color: C.GOLD, bg: 'rgba(252,211,77,0.10)' },
 };
 
 export function SellerDashboardScreen() {

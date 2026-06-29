@@ -36,9 +36,9 @@ function notifBody(n: Notification): string {
 }
 
 const TYPE_CONFIG = {
-  win: { icon: '★', color: C.GOLD, bg: 'rgba(245,158,11,0.1)', border: C.GOLD },
-  reminder: { icon: '!', color: C.PURPLE, bg: 'rgba(139,92,246,0.1)', border: C.PURPLE },
-  promo: { icon: '%', color: C.GREEN, bg: 'rgba(16,185,129,0.1)', border: C.GREEN },
+  win: { icon: '★', color: C.GOLD, bg: 'rgba(252,211,77,0.10)', border: C.GOLD },
+  reminder: { icon: '!', color: C.PURPLE, bg: 'rgba(196,181,253,0.10)', border: C.PURPLE },
+  promo: { icon: '%', color: C.GREEN, bg: 'rgba(74,222,128,0.10)', border: C.GREEN },
 };
 
 export function NotificationsScreen() {

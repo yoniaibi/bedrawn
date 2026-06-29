@@ -55,7 +55,7 @@ test.describe('Draw detail — authenticated', () => {
 
   test('shows progress bar or ticket count', async ({ page }) => {
     await expect(
-      page.locator('text=tickets').or(page.locator('text=sold')).first()
+      page.locator('text=tickets sold').or(page.locator('text=% sold')).first()
     ).toBeVisible({ timeout: 5000 });
   });
 

@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     left: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(236,72,153,0.2)',
+    backgroundColor: 'rgba(244,114,182,0.20)',
     borderWidth: 1,
     borderColor: C.PINK,
     borderRadius: 999,

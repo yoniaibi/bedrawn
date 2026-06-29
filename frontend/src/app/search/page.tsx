@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import AppShell from '@/components/AppShell';
 import DrawCard from '@/components/DrawCard';
-import { draws } from '@/lib/mockData';
+import type { Draw } from '@/lib/mockData';
 
 const trending = ['Chanel', 'Rolex', 'Jordan 1', 'Supreme', 'Bottega', 'MacBook'];
 const filterChips = ['All', 'Tonight', 'Bundles', 'High Value', 'Just Listed'];
@@ -21,26 +20,42 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
   const [recent, setRecent] = useState<string[]>(['Cartier', 'Jordan 1']);
+  const [results, setResults] = useState<Draw[]>([]);
+  const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  const results = draws.filter(d => {
-    const q = query.toLowerCase();
-    const matchesQuery = !q || d.title.toLowerCase().includes(q) || d.seller.toLowerCase().includes(q) || d.description.toLowerCase().includes(q);
-    if (!matchesQuery) return false;
-    if (filter === 'Tonight') return d.isClosingTonight;
-    if (filter === 'Bundles') return d.isBundle;
-    if (filter === 'High Value') return d.retailValue >= 1000;
-    return true;
-  });
+  const fetchResults = useCallback(async (q: string) => {
+    if (!q.trim()) { setResults([]); return; }
+    setSearching(true);
+    try {
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/draws?q=${encodeURIComponent(q)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data.draws ?? []);
+      }
+    } catch {}
+    finally { setSearching(false); }
+  }, []);
 
   const handleSearch = (q: string) => {
     setQuery(q);
     if (q.trim() && !recent.includes(q.trim())) {
       setRecent(r => [q.trim(), ...r].slice(0, 5));
     }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchResults(q), 350);
   };
+
+  const filtered = results.filter(d => {
+    if (filter === 'Tonight') return d.isClosingTonight;
+    if (filter === 'Bundles') return d.isBundle;
+    if (filter === 'High Value') return d.retailValue >= 1000;
+    return true;
+  });
 
   return (
     <AppShell>
@@ -135,7 +150,9 @@ export default function SearchPage() {
               </div>
             </div>
           </div>
-        ) : results.length === 0 ? (
+        ) : searching ? (
+          <div style={{ textAlign: 'center', padding: '48px 32px', color: 'var(--muted)', fontSize: 14 }}>Searching…</div>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 32px' }}>
             <p style={{ fontSize: 32, margin: '0 0 8px' }}>🔍</p>
             <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--white)', margin: '0 0 4px' }}>No draws matched &quot;{query}&quot;</p>
@@ -143,7 +160,7 @@ export default function SearchPage() {
           </div>
         ) : (
           <div style={{ padding: '16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {results.map(d => <DrawCard key={d.id} draw={d} />)}
+            {filtered.map(d => <DrawCard key={d.id} draw={d} />)}
           </div>
         )}
       </div>

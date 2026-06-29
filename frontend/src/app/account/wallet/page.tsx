@@ -1,7 +1,7 @@
 'use client';
 
 import '@/lib/amplify';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -13,12 +13,12 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PK!);
 const topUps = [500, 1000, 2000, 5000];
 
 const stripeAppearance = {
-  theme: 'stripe' as const,
+  theme: 'night' as const,
   variables: {
-    colorPrimary: '#7C3AED',
-    colorBackground: '#FFFFFF',
-    colorText: '#111111',
-    colorDanger: '#DC2626',
+    colorPrimary: '#8B5CF6',
+    colorBackground: '#1E1A2E',
+    colorText: '#F5F3FF',
+    colorDanger: '#EF4444',
     borderRadius: '10px',
     fontFamily: 'system-ui, sans-serif',
   },
@@ -107,6 +107,22 @@ export default function WalletPage() {
   const [success, setSuccess] = useState<number | null>(null);
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [balancePence, setBalancePence] = useState<number | null>(null);
+
+  const fetchBalance = useCallback(async () => {
+    try {
+      const token = await getAuthToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallet/balance`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBalancePence(data.balancePence ?? 0);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => { fetchBalance(); }, [fetchBalance]);
 
   const startTopUp = useCallback(async (amount: number) => {
     setLoadingAmount(amount);
@@ -136,6 +152,9 @@ export default function WalletPage() {
     setSuccess(amount);
     setClientSecret(null);
     setSelectedAmount(null);
+    // Poll for balance update — payment webhook may take a moment
+    setTimeout(() => fetchBalance(), 2000);
+    setTimeout(() => fetchBalance(), 6000);
   };
 
   const handleCancel = () => {
@@ -152,10 +171,11 @@ export default function WalletPage() {
         </div>
 
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Balance placeholder — live balance will come from API once tickets are purchased */}
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <p style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Available balance</p>
-            <p className="serif" style={{ margin: 0, fontSize: 52, color: 'var(--text)', fontWeight: 700 }}>—</p>
+            <p className="serif" style={{ margin: 0, fontSize: 52, color: 'var(--text)', fontWeight: 700 }}>
+              {balancePence === null ? '—' : `£${(balancePence / 100).toFixed(2)}`}
+            </p>
             <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>Balance updates after payment confirms</p>
           </div>
 

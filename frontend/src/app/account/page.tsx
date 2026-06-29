@@ -1,11 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import { useAuth } from '@/lib/auth';
 import { currentUser } from '@/lib/mockData';
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+interface Stats {
+  activeDraws: number;
+  totalTickets: number;
+  wins: number;
+  totalDrawsEntered: number;
+}
 
 const badges = [
   { label: 'Founding Member', unlocked: true, note: null },
@@ -17,6 +25,7 @@ const badges = [
 ];
 
 const menuItems = [
+  { label: 'Edit Profile',     href: '/account/profile' },
   { label: 'My Wallet',        href: '/account/wallet' },
   { label: 'My Orders',        href: '/account/orders' },
   { label: 'Saved Draws',      href: '/account/saved' },
@@ -33,6 +42,21 @@ export default function AccountPage() {
   const { logout } = useAuth();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [stats, setStats] = useState<Stats | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.accessToken?.toString();
+        if (!token) return;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) setStats(await res.json());
+      } catch {}
+    })();
+  }, []);
 
   const handleLogout = () => { logout(); router.push('/'); };
   const handleCopy = () => {
@@ -47,7 +71,7 @@ export default function AccountPage() {
 
         {/* Profile header */}
         <div style={{
-          background: 'var(--white)',
+          background: 'var(--card)',
           border: '1px solid var(--border)',
           borderRadius: 20,
           padding: '28px 24px',
@@ -89,7 +113,7 @@ export default function AccountPage() {
 
         {/* Stats */}
         <div style={{
-          background: 'var(--white)',
+          background: 'var(--card)',
           border: '1px solid var(--border)',
           borderRadius: 16,
           padding: '20px 0',
@@ -97,10 +121,10 @@ export default function AccountPage() {
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
         }}>
           {[
-            { label: 'Active draws', value: '3' },
-            { label: 'Tickets bought', value: '47' },
-            { label: 'Wins', value: '2' },
-            { label: 'Value won', value: '£620' },
+            { label: 'Active draws', value: stats ? String(stats.activeDraws) : '—' },
+            { label: 'Tickets bought', value: stats ? String(stats.totalTickets) : '—' },
+            { label: 'Wins', value: stats ? String(stats.wins) : '—' },
+            { label: 'Draws entered', value: stats ? String(stats.totalDrawsEntered) : '—' },
           ].map((stat, i) => (
             <div key={stat.label} style={{
               textAlign: 'center',
@@ -114,7 +138,7 @@ export default function AccountPage() {
         </div>
 
         {/* Achievements */}
-        <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px', marginBottom: 20 }}>
           <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Achievements</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
             {badges.map(badge => (
@@ -134,7 +158,7 @@ export default function AccountPage() {
         </div>
 
         {/* Referral */}
-        <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px', marginBottom: 20 }}>
           <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Refer a friend</p>
           <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--grey)' }}>Earn £1 credit for every friend who enters a draw</p>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -156,7 +180,7 @@ export default function AccountPage() {
         </div>
 
         {/* Menu */}
-        <div style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 20 }}>
           {menuItems.map((item, i) => (
             <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
               <div style={{

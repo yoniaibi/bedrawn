@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '800', color: C.TEXT, marginBottom: S.sm },
   subtitle: { fontSize: 14, color: C.GREY, marginBottom: S.xxl },
   errorBanner: {
-    backgroundColor: 'rgba(239,68,68,0.15)',
+    backgroundColor: 'rgba(248,113,113,0.15)',
     borderWidth: 1,
     borderColor: C.RED,
     borderRadius: 8,

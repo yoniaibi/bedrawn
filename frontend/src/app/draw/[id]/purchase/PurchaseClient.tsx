@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
 import ActivityTicker from '@/components/ActivityTicker';
-import { draws } from '@/lib/mockData';
+import { draws, type Draw } from '@/lib/mockData';
 
 const qtyPills = [1, 5, 10, 25];
 const activity = [
@@ -24,12 +24,25 @@ async function getAuthToken(): Promise<string> {
 }
 
 export default function PurchaseClient({ id }: { id: string }) {
-  const draw = draws.find(d => d.id === id);
+  const mockDraw = draws.find(d => d.id === id) ?? null;
   const router = useRouter();
+  const [draw, setDraw] = useState<Draw | null>(mockDraw);
+  const [drawLoading, setDrawLoading] = useState(!mockDraw);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balancePence, setBalancePence] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (mockDraw) return;
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) { setDrawLoading(false); return; }
+    fetch(`${url}/draws/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
+      .catch(() => {})
+      .finally(() => setDrawLoading(false));
+  }, [id, mockDraw]);
 
   useEffect(() => {
     getAuthToken()
@@ -40,6 +53,14 @@ export default function PurchaseClient({ id }: { id: string }) {
       .then(data => setBalancePence(data.balancePence ?? 0))
       .catch(() => setBalancePence(0));
   }, []);
+
+  if (drawLoading) {
+    return (
+      <AppShell>
+        <div style={{ textAlign: 'center', padding: '60px 32px', color: 'var(--grey)' }}>Loading…</div>
+      </AppShell>
+    );
+  }
 
   if (!draw) return null;
 

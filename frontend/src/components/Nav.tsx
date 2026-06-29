@@ -16,10 +16,10 @@ export function TopNav() {
     <>
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-        background: 'rgba(253,250,255,0.97)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(124,58,237,0.1)',
-        boxShadow: '0 1px 12px rgba(124,58,237,0.06)',
+        background: 'rgba(10,10,11,0.88)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--border-subtle)',
         height: 60,
         display: 'flex', alignItems: 'center',
       }}>
@@ -77,10 +77,11 @@ export function TopNav() {
             </Link>
             <Link href="/account/wallet" className="desktop-flex" style={{
               display: 'none', alignItems: 'center',
-              background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)',
+              background: 'rgba(196,181,253,0.10)',
+              border: '1px solid var(--border-accent)',
               borderRadius: 999, padding: '6px 14px',
-              textDecoration: 'none', color: 'var(--purple)',
-              fontSize: 13, fontWeight: 700,
+              textDecoration: 'none', color: 'var(--accent-lilac)',
+              fontSize: 13, fontWeight: 600,
               transition: 'background 0.15s',
             }}>
               Wallet
@@ -111,8 +112,10 @@ export function BottomNav() {
   return (
     <nav className="mobile-only" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: 'var(--white)',
-      borderTop: '1px solid var(--border)',
+      background: 'rgba(10,10,11,0.88)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderTop: '1px solid var(--border-subtle)',
       display: 'flex', zIndex: 200,
       paddingBottom: 'env(safe-area-inset-bottom)',
     }}>

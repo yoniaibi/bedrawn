@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: S.xs,
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(236,72,153,0.2)',
+    backgroundColor: 'rgba(244,114,182,0.20)',
     borderWidth: 1,
     borderColor: C.PINK,
     borderRadius: 999,

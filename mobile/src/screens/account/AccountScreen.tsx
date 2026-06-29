@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   handle: { fontSize: 18, fontWeight: '800', color: C.TEXT, marginBottom: S.md },
   badgeRow: { flexDirection: 'row', gap: S.sm, flexWrap: 'wrap', justifyContent: 'center', marginBottom: S.md },
   foundingBadge: {
-    backgroundColor: 'rgba(245,158,11,0.15)',
+    backgroundColor: 'rgba(252,211,77,0.15)',
     borderWidth: 1,
     borderColor: C.GOLD,
     borderRadius: 999,

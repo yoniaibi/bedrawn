@@ -1,23 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import DrawCard from '@/components/DrawCard';
-import { draws } from '@/lib/mockData';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import type { Draw } from '@/lib/mockData';
 
 export default function SavedPage() {
-  const [saved] = useState(draws.filter(d => d.id === '1' || d.id === '6' || d.id === '10'));
+  const [saved, setSaved] = useState<Draw[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.accessToken?.toString();
+        if (!token) return;
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/saved`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSaved(data.draws ?? []);
+        }
+      } catch {}
+      finally { setLoading(false); }
+    })();
+  }, []);
 
   return (
     <AppShell>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/account" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
-          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>Saved Draws ({saved.length})</p>
+          <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--white)' }}>
+            Saved Draws {!loading && `(${saved.length})`}
+          </p>
         </div>
 
-        {saved.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 32px', color: 'var(--muted)', fontSize: 14 }}>Loading…</div>
+        ) : saved.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 32px' }}>
             <p style={{ fontSize: 48, margin: '0 0 16px' }}>🔖</p>
             <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--white)', margin: '0 0 8px' }}>No saved draws yet</p>

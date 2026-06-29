@@ -13,6 +13,25 @@ interface SellerStatus {
   onboardingUrl: string | null;
 }
 
+interface DrawStat {
+  id: string;
+  title: string;
+  status: string;
+  soldTickets: number;
+  totalTickets: number;
+  ticketPricePence: number;
+  retailValuePence: number;
+  sellerRevenuePence: number;
+  closingDate: string;
+}
+
+interface SellerStats {
+  draws: DrawStat[];
+  totalEarningsPence: number;
+  pendingPayoutPence: number;
+  stripeConnected: boolean;
+}
+
 async function getAuthToken(): Promise<string> {
   const session = await fetchAuthSession();
   const token = session.tokens?.accessToken?.toString();
@@ -43,6 +62,7 @@ function StatusBadge({ enabled, label }: { enabled: boolean; label: string }) {
 
 export default function SellerDashboardPage() {
   const [status, setStatus] = useState<SellerStatus | null>(null);
+  const [sellerStats, setSellerStats] = useState<SellerStats | null>(null);
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +93,12 @@ export default function SellerDashboardPage() {
           payoutsEnabled: data.payoutsEnabled ?? false,
           onboardingUrl: data.onboardingUrl ?? null,
         });
+
+        // Fetch seller earnings stats in parallel
+        const statsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/seller/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (statsRes.ok) setSellerStats(await statsRes.json());
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to load seller status');
       } finally {
@@ -158,11 +184,15 @@ export default function SellerDashboardPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
                       <p style={{ margin: '0 0 4px', fontSize: 11, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Total earned</p>
-                      <p className="serif" style={{ margin: 0, fontSize: 28, color: 'var(--gold)', fontWeight: 700 }}>—</p>
+                      <p className="serif" style={{ margin: 0, fontSize: 28, color: 'var(--gold)', fontWeight: 700 }}>
+                        {sellerStats ? `£${(sellerStats.totalEarningsPence / 100).toFixed(2)}` : '—'}
+                      </p>
                     </div>
                     <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
                       <p style={{ margin: '0 0 4px', fontSize: 11, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Pending</p>
-                      <p className="serif" style={{ margin: 0, fontSize: 28, color: 'var(--green)', fontWeight: 700 }}>—</p>
+                      <p className="serif" style={{ margin: 0, fontSize: 28, color: 'var(--green)', fontWeight: 700 }}>
+                        {sellerStats ? `£${(sellerStats.pendingPayoutPence / 100).toFixed(2)}` : '—'}
+                      </p>
                     </div>
                   </div>
 
@@ -177,7 +207,32 @@ export default function SellerDashboardPage() {
 
                   <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16 }}>
                     <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Your draws</p>
-                    <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>No draws yet — list your first item to get started.</p>
+                    {sellerStats && sellerStats.draws.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {sellerStats.draws.map(d => (
+                          <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                            <div>
+                              <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{d.title}</p>
+                              <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>
+                                {d.soldTickets}/{d.totalTickets} tickets · closes {d.closingDate}
+                              </p>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: 'var(--green)' }}>
+                                £{(d.sellerRevenuePence / 100).toFixed(2)}
+                              </p>
+                              <span style={{
+                                fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 999,
+                                background: d.status === 'open' ? 'rgba(139,92,246,0.15)' : 'rgba(75,85,99,0.2)',
+                                color: d.status === 'open' ? 'var(--purple)' : 'var(--grey)',
+                              }}>{d.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>No draws yet — list your first item to get started.</p>
+                    )}
                   </div>
                 </>
               )}

@@ -31,10 +31,39 @@ export default function ListItemPage() {
   const [retailValue, setRetailValue] = useState('');
   const [ticketPrice, setTicketPrice] = useState('');
   const [totalTickets, setTotalTickets] = useState('');
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  const handlePhotoUpload = async (file: File, slot: number) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.accessToken?.toString();
+      if (!token) return;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ filename: file.name, contentType: file.type }),
+      });
+      if (!res.ok) return;
+      const { uploadUrl, publicUrl } = await res.json();
+      await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+      setPhotoUrls(prev => {
+        const next = [...prev];
+        next[slot] = publicUrl;
+        return next;
+      });
+    } catch {
+      // silent — user can retry
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const earnings = retailValue && ticketPrice
     ? parseFloat(retailValue) * 0.88
@@ -109,17 +138,33 @@ export default function ListItemPage() {
             <div>
               <p style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Add photos</p>
               <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>Up to 6 photos. First photo is your hero image.</p>
+              {uploading && <p style={{ fontSize: 12, color: 'var(--purple)', marginBottom: 12 }}>Uploading…</p>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                 {Array.from({ length: 6 }, (_, i) => (
-                  <div key={i} style={{
-                    aspectRatio: '1', borderRadius: 10,
-                    background: i === 0 ? 'rgba(124,58,237,0.06)' : 'var(--card)',
-                    border: `2px dashed ${i === 0 ? 'var(--purple)' : 'var(--border)'}`,
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer',
-                  }}>
-                    <span style={{ fontSize: 22, color: 'var(--muted)' }}>+</span>
-                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>{i === 0 ? 'Hero' : `Photo ${i + 1}`}</span>
-                  </div>
+                  <label key={i} style={{ cursor: 'pointer' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f, i); }}
+                    />
+                    <div style={{
+                      aspectRatio: '1', borderRadius: 10, overflow: 'hidden',
+                      background: photoUrls[i] ? 'transparent' : i === 0 ? 'rgba(124,58,237,0.06)' : 'var(--card)',
+                      border: `2px dashed ${photoUrls[i] ? 'var(--green)' : i === 0 ? 'var(--purple)' : 'var(--border)'}`,
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      position: 'relative',
+                    }}>
+                      {photoUrls[i] ? (
+                        <img src={photoUrls[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                      ) : (
+                        <>
+                          <span style={{ fontSize: 22, color: 'var(--muted)' }}>+</span>
+                          <span style={{ fontSize: 10, color: 'var(--muted)' }}>{i === 0 ? 'Hero' : `Photo ${i + 1}`}</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
                 ))}
               </div>
             </div>
@@ -267,7 +312,7 @@ export default function ListItemPage() {
                     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice, totalTickets, retailValue }),
+                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice, totalTickets, retailValue, imageUrls: photoUrls.filter(Boolean) }),
                     });
                     if (!res.ok) {
                       const body = await res.json().catch(() => ({}));
