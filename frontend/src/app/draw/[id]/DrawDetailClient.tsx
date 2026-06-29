@@ -74,15 +74,15 @@ export default function DrawDetailClient({ id }: { id: string }) {
           <img src={draw.imageUrl} alt={draw.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(13,11,20,0.6))' }} />
           {draw.isClosingTonight && (
-            <div style={{ position: 'absolute', top: 16, left: 16 }}>
-              <span style={{ background: 'rgba(236,72,153,0.2)', border: '1px solid var(--pink)', color: 'var(--pink)', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <LiveDot size={6} /> CLOSING TONIGHT
+            <div style={{ position: 'absolute', top: 12, left: 12 }}>
+              <span style={{ background: 'rgba(244,114,182,0.15)', border: '1px solid rgba(244,114,182,0.35)', color: '#F472B6', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(8px)' }}>
+                <LiveDot size={5} /> Closing Tonight
               </span>
             </div>
           )}
-          <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 8 }}>
-            <span style={{ background: 'rgba(0,0,0,0.5)', color: 'var(--white)', fontSize: 11, padding: '4px 10px', borderRadius: 999 }}>{draw.condition}</span>
-            {draw.isVerified && <span style={{ background: 'rgba(139,92,246,0.3)', border: '1px solid var(--purple)', color: 'var(--purple)', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>✓ Verified</span>}
+          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6 }}>
+            <span style={{ background: 'rgba(0,0,0,0.45)', color: 'rgba(255,255,255,0.80)', fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 6, backdropFilter: 'blur(8px)', letterSpacing: '0.04em' }}>{draw.condition}</span>
+            {draw.isVerified && <span style={{ background: 'rgba(196,181,253,0.12)', border: '1px solid rgba(196,181,253,0.25)', color: '#C4B5FD', fontSize: 10, fontWeight: 600, padding: '3px 8px', borderRadius: 6, backdropFilter: 'blur(8px)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Verified</span>}
           </div>
         </div>
 
@@ -93,9 +93,10 @@ export default function DrawDetailClient({ id }: { id: string }) {
             <span style={{ fontSize: 14, color: 'var(--grey)' }}>{draw.seller}</span>
             {draw.isVerified && <span style={{ color: 'var(--purple)', fontSize: 12 }}>✓</span>}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-            <span style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid var(--purple)', color: 'var(--purple)', fontSize: 14, fontWeight: 700, padding: '6px 16px', borderRadius: 999 }}>{price}</span>
-            <span style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid var(--gold)', color: 'var(--gold)', fontSize: 14, fontWeight: 700, padding: '6px 16px', borderRadius: 999 }}>£{draw.retailValue.toLocaleString()} retail</span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
+            <span className="serif" style={{ fontSize: 32, fontWeight: 700, color: 'var(--accent-pink)' }}>{price}</span>
+            <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>→</span>
+            <span style={{ fontSize: 16, fontWeight: 500, color: 'rgba(255,255,255,0.65)' }}>£{draw.retailValue.toLocaleString()} retail</span>
           </div>
           <ProgressBar percent={pct} height={6} />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, marginBottom: 16 }}>
@@ -159,7 +160,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
             <>
               {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600 }}>⏰ Closing tonight at 9pm</p>}
               <Link href={`/draw/${draw.id}/purchase`} style={{ textDecoration: 'none' }}>
-                <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, var(--purple), var(--pink))', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
+                <button className="btn-purchase" style={{ width: '100%', fontSize: 16, fontWeight: 700, borderRadius: 10 }}>
                   Enter draw · {price}
                 </button>
               </Link>

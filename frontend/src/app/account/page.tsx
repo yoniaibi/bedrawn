@@ -91,17 +91,17 @@ export default function AccountPage() {
           <div style={{ flex: 1 }}>
             <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>{currentUser.handle}</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ background: 'var(--gold-light)', border: '1px solid rgba(217,119,6,0.25)', color: 'var(--gold)', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>
+              <span style={{ background: 'rgba(196,181,253,0.12)', border: '1px solid rgba(196,181,253,0.25)', color: 'var(--accent-lilac)', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Founding Member
               </span>
-              <span style={{ background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--purple)', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>
+              <span style={{ background: 'rgba(196,181,253,0.08)', border: '1px solid rgba(196,181,253,0.15)', color: 'var(--accent-lilac)', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, letterSpacing: '0.06em' }}>
                 {currentUser.streak} day streak
               </span>
             </div>
           </div>
           <Link href="/account/wallet" style={{
-            textDecoration: 'none', background: 'var(--purple)',
-            borderRadius: 999, padding: '10px 20px',
+            textDecoration: 'none', background: 'var(--accent-violet)',
+            borderRadius: 12, padding: '10px 20px',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginBottom: 1 }}>Balance</span>
@@ -143,13 +143,13 @@ export default function AccountPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
             {badges.map(badge => (
               <div key={badge.label} style={{
-                background: badge.unlocked ? 'var(--purple-light)' : 'var(--card)',
-                border: `1px solid ${badge.unlocked ? 'rgba(124,58,237,0.25)' : 'var(--border)'}`,
+                background: badge.unlocked ? 'rgba(124,58,237,0.18)' : 'var(--bg-elevated)',
+                border: `1px solid ${badge.unlocked ? 'rgba(124,58,237,0.35)' : 'var(--border-subtle)'}`,
                 borderRadius: 12, padding: '14px 10px', textAlign: 'center',
-                opacity: badge.unlocked ? 1 : 0.55,
+                opacity: badge.unlocked ? 1 : 0.45,
               }}>
-                <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: badge.unlocked ? 'var(--purple)' : 'var(--grey)' }}>{badge.label}</p>
-                <p style={{ margin: 0, fontSize: 10, color: badge.unlocked ? 'var(--purple-dark)' : 'var(--muted)' }}>
+                <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: badge.unlocked ? 'var(--accent-lilac)' : 'var(--text-tertiary)' }}>{badge.label}</p>
+                <p style={{ margin: 0, fontSize: 10, color: badge.unlocked ? 'rgba(196,181,253,0.75)' : 'var(--text-tertiary)' }}>
                   {badge.unlocked ? (badge.note ?? 'Unlocked') : badge.note ?? 'Locked'}
                 </p>
               </div>
@@ -169,9 +169,9 @@ export default function AccountPage() {
               onClick={handleCopy}
               style={{
                 padding: '10px 20px', borderRadius: 10,
-                border: '1px solid var(--purple)',
-                background: copied ? 'var(--green)' : 'var(--purple-light)',
-                color: copied ? 'var(--white)' : 'var(--purple)',
+                border: '1px solid var(--border-accent)',
+                background: copied ? 'var(--accent-violet)' : 'rgba(196,181,253,0.10)',
+                color: copied ? 'var(--white)' : 'var(--accent-lilac)',
                 fontWeight: 700, fontSize: 13,
                 transition: 'all 0.2s',
               }}
