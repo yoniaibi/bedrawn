@@ -1,6 +1,7 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -70,15 +71,26 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           <Text style={styles.title}>{draw.title}</Text>
 
           {/* Seller row */}
-          <View style={styles.sellerRow}>
-            <View style={styles.sellerAvatar}>
-              <Text style={styles.sellerInitial}>{draw.seller.charAt(0).toUpperCase()}</Text>
-            </View>
+          <TouchableOpacity
+            style={styles.sellerRow}
+            onPress={() => draw.sellerId && navigation.navigate('SellerProfile', { sellerId: draw.sellerId })}
+            activeOpacity={draw.sellerId ? 0.7 : 1}
+            disabled={!draw.sellerId}
+          >
+            {draw.sellerAvatarUrl ? (
+              <Image source={{ uri: draw.sellerAvatarUrl }} style={styles.sellerAvatar} />
+            ) : (
+              <View style={styles.sellerAvatar}>
+                <Text style={styles.sellerInitial}>{(draw.sellerName || draw.seller || '?').charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
             <View>
-              <Text style={styles.sellerName}>{draw.seller}</Text>
-              <Text style={styles.sellerLabel}>Verified seller</Text>
+              <Text style={styles.sellerName}>{draw.sellerName || draw.seller}</Text>
+              <Text style={styles.sellerLabel}>
+                {draw.sellerId ? 'Tap to view profile →' : 'Verified seller'}
+              </Text>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Price pills */}
           <View style={styles.priceRow}>

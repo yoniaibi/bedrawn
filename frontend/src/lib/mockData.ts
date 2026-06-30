@@ -1,7 +1,10 @@
 export interface Draw {
   id: string;
   title: string;
-  seller: string;
+  seller: string;       // handle (display)
+  sellerId?: string;    // Cognito sub — used to link to /sellers/[id]
+  sellerName?: string;  // display name if set
+  sellerAvatarUrl?: string;
   sellerEmoji: string;
   ticketPrice: number; // pence
   retailValue: number; // pounds

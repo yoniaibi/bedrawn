@@ -23,6 +23,7 @@ import { LiveScreen } from '../screens/live/LiveScreen';
 import { BecomeSellerScreen } from '../screens/seller/BecomeSellerScreen';
 import { ListItemScreen } from '../screens/seller/ListItemScreen';
 import { SellerDashboardScreen } from '../screens/seller/SellerDashboardScreen';
+import { SellerProfileScreen } from '../screens/seller/SellerProfileScreen';
 import { TicketsScreen } from '../screens/tickets/TicketsScreen';
 import { C } from '../theme/colors';
 
@@ -30,6 +31,7 @@ export type DrawStackParamList = {
   DrawDetail: { draw: Draw };
   Purchase: { draw: Draw };
   PurchaseSuccess: { draw: Draw; ticketCount: number; totalPence: number };
+  SellerProfile: { sellerId: string };
 };
 
 // Home stack
@@ -92,6 +94,7 @@ function HomeStackNav() {
       <HomeStack.Screen name="DrawDetail" component={DrawDetailScreen} />
       <HomeStack.Screen name="Purchase" component={PurchaseScreen} />
       <HomeStack.Screen name="PurchaseSuccess" component={PurchaseSuccessScreen} />
+      <HomeStack.Screen name="SellerProfile" component={SellerProfileScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -103,6 +106,7 @@ function LiveStackNav() {
       <LiveStack.Screen name="DrawDetail" component={DrawDetailScreen} />
       <LiveStack.Screen name="Purchase" component={PurchaseScreen} />
       <LiveStack.Screen name="PurchaseSuccess" component={PurchaseSuccessScreen} />
+      <LiveStack.Screen name="SellerProfile" component={SellerProfileScreen} />
     </LiveStack.Navigator>
   );
 }
@@ -114,6 +118,7 @@ function TicketsStackNav() {
       <TicketsStack.Screen name="DrawDetail" component={DrawDetailScreen} />
       <TicketsStack.Screen name="Purchase" component={PurchaseScreen} />
       <TicketsStack.Screen name="PurchaseSuccess" component={PurchaseSuccessScreen} />
+      <TicketsStack.Screen name="SellerProfile" component={SellerProfileScreen} />
     </TicketsStack.Navigator>
   );
 }
@@ -144,6 +149,7 @@ function AccountStackNav() {
       <AccountStack.Screen name="DrawDetail" component={DrawDetailScreen} />
       <AccountStack.Screen name="Purchase" component={PurchaseScreen} />
       <AccountStack.Screen name="PurchaseSuccess" component={PurchaseSuccessScreen} />
+      <AccountStack.Screen name="SellerProfile" component={SellerProfileScreen} />
     </AccountStack.Navigator>
   );
 }

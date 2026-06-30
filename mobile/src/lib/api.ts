@@ -9,6 +9,15 @@ export async function getAuthToken(): Promise<string> {
   return token;
 }
 
+export async function apiGetPublic<T>(path: string): Promise<T> {
+  const res = await fetch(`${API}${path}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as any).error ?? `Error ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const token = await getAuthToken();
   const res = await fetch(`${API}${path}`, {

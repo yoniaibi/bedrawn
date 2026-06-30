@@ -90,8 +90,35 @@ export default function DrawDetailClient({ id }: { id: string }) {
         <div style={{ padding: '20px 16px' }}>
           <p className="serif" style={{ fontSize: 24, color: 'var(--text)', margin: '0 0 8px', lineHeight: 1.2 }}>{draw.title}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 14, color: 'var(--grey)' }}>{draw.seller}</span>
-            {draw.isVerified && <span style={{ color: 'var(--purple)', fontSize: 12 }}>✓</span>}
+            {draw.sellerId ? (
+              <Link href={`/sellers/${draw.sellerId}`} style={{
+                display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none',
+              }}>
+                {draw.sellerAvatarUrl ? (
+                  <img src={draw.sellerAvatarUrl} alt={draw.seller}
+                    style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{
+                    width: 26, height: 26, borderRadius: '50%',
+                    background: 'var(--accent-coral)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>
+                      {(draw.sellerName || draw.seller || '?').charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 500 }}>
+                  {draw.sellerName || `@${draw.seller}`}
+                </span>
+                {draw.isVerified && <span style={{ color: 'var(--accent-lilac)', fontSize: 12 }}>✓</span>}
+              </Link>
+            ) : (
+              <>
+                <span style={{ fontSize: 14, color: 'var(--grey)' }}>{draw.seller}</span>
+                {draw.isVerified && <span style={{ color: 'var(--purple)', fontSize: 12 }}>✓</span>}
+              </>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
             <span className="serif" style={{ fontSize: 32, fontWeight: 700, color: 'var(--accent-pink)' }}>{price}</span>

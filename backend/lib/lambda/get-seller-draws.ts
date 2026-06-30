@@ -7,12 +7,12 @@ const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.TABLE_NAME!;
 const GSI = process.env.GSI_NAME ?? 'GSI1';
 
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=600&fit=crop&q=80';
+
 function ukDateToday(): string {
   return new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London' })
     .split('/').reverse().join('-');
 }
-
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=600&fit=crop&q=80';
 
 function toDrawShape(item: Record<string, any>) {
   const today = ukDateToday();
@@ -21,8 +21,8 @@ function toDrawShape(item: Record<string, any>) {
     title: item.title ?? '',
     seller: item.sellerHandle ?? item.sellerId?.slice(0, 8) ?? 'seller',
     sellerId: item.sellerId ?? '',
-    sellerAvatarUrl: item.sellerAvatarUrl ?? '',
     sellerName: item.sellerName ?? '',
+    sellerAvatarUrl: item.sellerAvatarUrl ?? '',
     sellerEmoji: '',
     ticketPrice: item.ticketPricePence ?? 0,
     retailValue: (item.retailValuePence ?? 0) / 100,
@@ -43,48 +43,41 @@ function toDrawShape(item: Record<string, any>) {
 }
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+  const sellerId = event.pathParameters?.id;
+  if (!sellerId) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Missing seller id' }) };
+
+  let items: Record<string, any>[] = [];
+
   try {
-    const q = event.queryStringParameters?.q?.toLowerCase().trim() ?? '';
-
-    let items: Record<string, any>[] = [];
-
+    // Query open draws via GSI, filter by sellerId
+    const result = await db.send(new QueryCommand({
+      TableName: TABLE,
+      IndexName: GSI,
+      KeyConditionExpression: '#s = :open',
+      FilterExpression: 'sellerId = :sid',
+      ExpressionAttributeNames: { '#s': 'status' },
+      ExpressionAttributeValues: { ':open': 'open', ':sid': sellerId },
+      Limit: 100,
+    }));
+    items = (result.Items ?? []) as Record<string, any>[];
+  } catch {
+    // Fallback: scan for this seller's draws
     try {
-      const result = await db.send(new QueryCommand({
+      const result = await db.send(new ScanCommand({
         TableName: TABLE,
-        IndexName: GSI,
-        KeyConditionExpression: '#s = :open',
+        FilterExpression: 'begins_with(PK, :prefix) AND SK = :meta AND sellerId = :sid AND #s = :open',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':open': 'open' },
-        ScanIndexForward: true,
-        Limit: 200,
+        ExpressionAttributeValues: { ':prefix': 'DRAW#', ':meta': 'META', ':sid': sellerId, ':open': 'open' },
       }));
       items = (result.Items ?? []) as Record<string, any>[];
     } catch {
-      const result = await db.send(new ScanCommand({
-        TableName: TABLE,
-        FilterExpression: 'begins_with(PK, :prefix) AND SK = :meta AND #s = :open',
-        ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':prefix': 'DRAW#', ':meta': 'META', ':open': 'open' },
-      }));
-      items = (result.Items ?? []) as Record<string, any>[];
+      // Return empty rather than error
     }
-
-    if (q) {
-      items = items.filter(item =>
-        (item.title as string ?? '').toLowerCase().includes(q) ||
-        (item.category as string ?? '').toLowerCase().includes(q) ||
-        (item.sellerHandle as string ?? '').toLowerCase().includes(q) ||
-        (item.description as string ?? '').toLowerCase().includes(q)
-      );
-    }
-
-    return {
-      statusCode: 200,
-      headers: cors,
-      body: JSON.stringify({ draws: items.map(toDrawShape) }),
-    };
-  } catch (err) {
-    console.error('get-draws error', err);
-    return { statusCode: 500, headers: cors, body: JSON.stringify({ error: 'Failed to fetch draws' }) };
   }
+
+  return {
+    statusCode: 200,
+    headers: cors,
+    body: JSON.stringify({ draws: items.map(toDrawShape) }),
+  };
 };

@@ -315,6 +315,20 @@ export class BackendStack extends cdk.Stack {
     table.grantReadWriteData(storePushTokenFn);
     api.addRoutes({ path: '/notifications/token', methods: [HttpMethod.POST, HttpMethod.DELETE], integration: new HttpLambdaIntegration('StorePushTokenInt', storePushTokenFn), authorizer });
 
+    // Public seller profile + draws (no auth — anyone can view a seller page)
+    const getSellerProfileFn = new nodejs.NodejsFunction(this, 'GetSellerProfile', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-seller-profile.ts'),
+    });
+    const getSellerDrawsFn = new nodejs.NodejsFunction(this, 'GetSellerDraws', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-seller-draws.ts'),
+    });
+    table.grantReadData(getSellerProfileFn);
+    table.grantReadData(getSellerDrawsFn);
+    api.addRoutes({ path: '/sellers/{id}', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSellerProfileInt', getSellerProfileFn) });
+    api.addRoutes({ path: '/sellers/{id}/draws', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSellerDrawsInt', getSellerDrawsFn) });
+
     // Admin — manual draw resolution for testing
     const adminResolveDrawFn = new nodejs.NodejsFunction(this, 'AdminResolveDraw', {
       ...commonProps,

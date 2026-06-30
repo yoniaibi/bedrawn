@@ -253,7 +253,7 @@ export function HomeScreen() {
             >
               {womenswear.map(draw => (
                 <View key={draw.id} style={styles.horizontalCardWrapper}>
-                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
                 </View>
               ))}
             </ScrollView>
@@ -274,7 +274,7 @@ export function HomeScreen() {
             >
               {menswear.map(draw => (
                 <View key={draw.id} style={styles.horizontalCardWrapper}>
-                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
                 </View>
               ))}
             </ScrollView>
@@ -295,7 +295,7 @@ export function HomeScreen() {
             >
               {unisex.map(draw => (
                 <View key={draw.id} style={styles.horizontalCardWrapper}>
-                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} fullWidth />
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
                 </View>
               ))}
             </ScrollView>
@@ -308,7 +308,7 @@ export function HomeScreen() {
             <Text style={styles.rowTitle}>All draws</Text>
             <View style={styles.grid}>
               {allDraws.map(draw => (
-                <DrawCard key={draw.id} draw={draw} onPress={() => goToDetail(draw)} />
+                <DrawCard key={draw.id} draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} />
               ))}
             </View>
           </View>

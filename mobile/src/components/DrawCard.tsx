@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { Draw } from '../data/mockData';
 import { C } from '../theme/colors';
 import { S } from '../theme/spacing';
@@ -9,13 +9,16 @@ import { ProgressBar } from './ProgressBar';
 type Props = {
   draw: Draw;
   onPress: () => void;
+  onSellerPress?: () => void;
   fullWidth?: boolean;
 };
 
-export function DrawCard({ draw, onPress, fullWidth }: Props) {
+export function DrawCard({ draw, onPress, onSellerPress, fullWidth }: Props) {
   const percent = Math.round((draw.soldTickets / draw.totalTickets) * 100);
   const priceLabel = `${draw.ticketPrice}p → £${draw.retailValue.toLocaleString()}`;
   const watching = Math.floor(Math.random() * 80) + 20;
+  const sellerInitial = (draw.sellerName || draw.seller || '?').charAt(0).toUpperCase();
+  const sellerDisplay = draw.sellerName ? draw.sellerName.split(' ')[0] : `@${draw.seller}`;
 
   return (
     <TouchableOpacity
@@ -56,9 +59,23 @@ export function DrawCard({ draw, onPress, fullWidth }: Props) {
       {/* Content */}
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>{draw.title}</Text>
-        <Text style={styles.seller} numberOfLines={1}>
-          {draw.seller}
-        </Text>
+
+        {/* Seller row — tappable if sellerId present */}
+        <TouchableOpacity
+          style={styles.sellerRow}
+          onPress={e => { if (onSellerPress && draw.sellerId) { e.stopPropagation?.(); onSellerPress(); } }}
+          activeOpacity={draw.sellerId && onSellerPress ? 0.7 : 1}
+          disabled={!draw.sellerId || !onSellerPress}
+        >
+          {draw.sellerAvatarUrl ? (
+            <Image source={{ uri: draw.sellerAvatarUrl }} style={styles.sellerAvatar} />
+          ) : (
+            <View style={styles.sellerAvatarFallback}>
+              <Text style={styles.sellerInitial}>{sellerInitial}</Text>
+            </View>
+          )}
+          <Text style={styles.sellerName} numberOfLines={1}>{sellerDisplay}</Text>
+        </TouchableOpacity>
 
         {/* Price pill */}
         <View style={styles.pricePill}>
@@ -169,7 +186,31 @@ const styles = StyleSheet.create({
     color: C.TEXT,
     lineHeight: 18,
   },
-  seller: {
+  sellerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  sellerAvatar: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  sellerAvatarFallback: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: C.CORAL,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sellerInitial: {
+    fontSize: 8,
+    fontWeight: '700',
+    color: C.WHITE,
+    lineHeight: 10,
+  },
+  sellerName: {
     fontSize: 11,
     color: C.GREY,
   },

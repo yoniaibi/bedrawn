@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Draw } from '@/lib/mockData';
 
 interface DrawCardProps {
@@ -9,6 +10,7 @@ interface DrawCardProps {
 }
 
 export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
+  const router = useRouter();
   const pct = Math.round((draw.soldTickets / draw.totalTickets) * 100);
   const remaining = draw.totalTickets - draw.soldTickets;
   const scarce = remaining < 500;
@@ -17,6 +19,8 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
     : `${draw.ticketPrice}p`;
 
   const imageHeight = fullWidth ? 220 : 180;
+  const sellerInitial = (draw.sellerName || draw.seller || '?').charAt(0).toUpperCase();
+  const sellerDisplayName = draw.sellerName ? draw.sellerName.split(' ')[0] : `@${draw.seller}`;
 
   return (
     <Link href={`/draw/${draw.id}`} style={{ textDecoration: 'none', display: 'block', width: fullWidth ? '100%' : undefined }}>
@@ -146,18 +150,55 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
             }} />
           </div>
           {/* Meta row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 11, color: '#A8A29E' }}>@{draw.seller}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            {/* Seller pill — navigates to seller profile */}
+            <button
+              onClick={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (draw.sellerId) router.push(`/sellers/${draw.sellerId}`);
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'none', border: 'none', cursor: draw.sellerId ? 'pointer' : 'default',
+                padding: 0, minWidth: 0, flexShrink: 1,
+              }}
+            >
+              {/* Mini avatar */}
+              {draw.sellerAvatarUrl ? (
+                <img
+                  src={draw.sellerAvatarUrl}
+                  alt={sellerDisplayName}
+                  style={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                />
+              ) : (
+                <div style={{
+                  width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
+                  background: 'var(--accent-coral)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{sellerInitial}</span>
+                </div>
+              )}
+              <span style={{
+                fontSize: 11, color: draw.sellerId ? 'var(--text-secondary)' : '#A8A29E',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                maxWidth: 100,
+              }}>
+                {sellerDisplayName}
+              </span>
+            </button>
+
             {draw.closingDate ? (
               <span style={{
-                fontSize: 11,
+                fontSize: 11, flexShrink: 0,
                 color: draw.isClosingTonight ? '#FF2356' : '#A8A29E',
                 fontWeight: draw.isClosingTonight ? 600 : 400,
               }}>
                 {draw.isClosingTonight ? 'Tonight 9pm' : `Closes ${new Date(draw.closingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
               </span>
             ) : (
-              <span style={{ fontSize: 11, color: '#A8A29E' }}>{pct}% sold</span>
+              <span style={{ fontSize: 11, color: '#A8A29E', flexShrink: 0 }}>{pct}% sold</span>
             )}
           </div>
         </div>

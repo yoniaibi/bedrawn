@@ -2,6 +2,9 @@ export type Draw = {
   id: string;
   title: string;
   seller: string;
+  sellerId?: string;
+  sellerName?: string;
+  sellerAvatarUrl?: string;
   sellerEmoji: string;
   ticketPrice: number; // pence
   retailValue: number; // pounds
