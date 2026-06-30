@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 import ProgressBar from '@/components/ProgressBar';
-import { currentUser, grandDraw } from '@/lib/mockData';
+import { grandDraw } from '@/lib/mockData';
 
 const today = new Date();
 const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -19,8 +19,8 @@ const loginDays = [1, 2, 3, 4, 7, 8, 9, 10, 14, 15, 16, 17, 21, 22, 23, todayDat
 
 export default function GrandDrawPage() {
   const [claimed, setClaimed] = useState(false);
-  const entries = currentUser.grandDrawEntries;
-  const odds = Math.round(grandDraw.totalEntries / entries);
+  const entries = 0; // real entries fetched in future; starts at 0 for new users
+  const odds = entries > 0 ? Math.round(grandDraw.totalEntries / entries) : grandDraw.totalEntries;
   const entriesPct = Math.min(100, (entries / 30) * 100);
 
   return (
@@ -120,7 +120,7 @@ export default function GrandDrawPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontSize: 40, margin: 0 }}>🔥</p>
-                <p className="serif" style={{ fontSize: 32, color: 'var(--white)', margin: 0, fontWeight: 700 }}>{currentUser.streak}</p>
+                <p className="serif" style={{ fontSize: 32, color: 'var(--white)', margin: 0, fontWeight: 700 }}>0</p>
               </div>
               <div>
                 <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Day streak</p>
@@ -128,7 +128,7 @@ export default function GrandDrawPage() {
                 <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>All-time earned: 23 tickets</p>
               </div>
             </div>
-            {currentUser.streak >= 7 && (
+            {false && (
               <div style={{
                 background: 'rgba(245,158,11,0.1)', border: '1px solid var(--gold)',
                 borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,

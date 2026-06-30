@@ -8,7 +8,7 @@ import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 
-import { draws as mockDraws, currentUser, activityMessages, recentWinners } from '@/lib/mockData';
+import { draws as mockDraws, activityMessages, recentWinners } from '@/lib/mockData';
 import type { Draw } from '@/lib/mockData';
 
 const categories = [

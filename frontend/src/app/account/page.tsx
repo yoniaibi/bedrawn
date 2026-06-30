@@ -5,8 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import { useAuth } from '@/lib/auth';
-import { currentUser } from '@/lib/mockData';
 import { fetchAuthSession } from 'aws-amplify/auth';
+
+interface Profile {
+  handle: string;
+  name: string;
+  createdAt: string | null;
+}
 
 interface Stats {
   activeDraws: number;
@@ -14,15 +19,6 @@ interface Stats {
   wins: number;
   totalDrawsEntered: number;
 }
-
-const badges = [
-  { label: 'Founding Member', unlocked: true, note: null },
-  { label: 'First Entry',     unlocked: true, note: null },
-  { label: '3-Day Streak',    unlocked: true, note: null },
-  { label: 'First Win',       unlocked: true, note: null },
-  { label: '25 Tickets',      unlocked: true, note: '47 bought' },
-  { label: 'First Sale',      unlocked: false, note: '0 sales' },
-];
 
 const menuItems = [
   { label: 'Edit Profile',     href: '/account/profile' },
@@ -38,10 +34,27 @@ const menuItems = [
   { label: 'Terms of Service', href: '/legal/terms' },
 ];
 
+function referralCode(handle: string): string {
+  const clean = handle.replace(/^@/, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return clean.slice(0, 6).padEnd(4, 'X');
+}
+
+function avatarInitials(handle: string, name: string): string {
+  if (name) {
+    const parts = name.trim().split(' ');
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].slice(0, 2).toUpperCase();
+  }
+  return handle.replace(/^@/, '').slice(0, 2).toUpperCase();
+}
+
 export default function AccountPage() {
   const { logout } = useAuth();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [balancePence, setBalancePence] = useState<number | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
@@ -50,17 +63,33 @@ export default function AccountPage() {
         const session = await fetchAuthSession();
         const token = session.tokens?.accessToken?.toString();
         if (!token) return;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) setStats(await res.json());
+        const API = process.env.NEXT_PUBLIC_API_URL ?? '';
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [profileRes, balanceRes, statsRes] = await Promise.all([
+          fetch(`${API}/profile`,    { headers }),
+          fetch(`${API}/wallet/balance`, { headers }),
+          fetch(`${API}/me/stats`,   { headers }),
+        ]);
+
+        if (profileRes.ok) setProfile(await profileRes.json());
+        if (balanceRes.ok) {
+          const b = await balanceRes.json();
+          setBalancePence(b.balancePence ?? b.balance ?? 0);
+        }
+        if (statsRes.ok) setStats(await statsRes.json());
       } catch {}
     })();
   }, []);
 
   const handleLogout = () => { logout(); router.push('/'); };
+
+  const displayHandle = profile ? (profile.handle.startsWith('@') ? profile.handle : `@${profile.handle}`) : '…';
+  const initials = profile ? avatarInitials(profile.handle, profile.name) : '··';
+  const refCode = profile ? referralCode(profile.handle) : '——';
+
   const handleCopy = () => {
-    navigator.clipboard.writeText('YONI42');
+    navigator.clipboard.writeText(refCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -80,24 +109,22 @@ export default function AccountPage() {
         }}>
           <div style={{
             width: 72, height: 72, borderRadius: '50%', flexShrink: 0,
-            background: 'var(--purple-light)',
-            border: '2px solid var(--purple)',
+            background: 'rgba(255,35,86,0.10)',
+            border: '2px solid var(--accent-coral)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, fontWeight: 700, color: 'var(--purple)',
+            fontSize: 13, fontWeight: 700, color: 'var(--accent-coral)',
             letterSpacing: 1,
           }}>
-            {currentUser.handle.slice(1, 3).toUpperCase()}
+            {initials}
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>{currentUser.handle}</p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ background: 'rgba(196,181,253,0.12)', border: '1px solid rgba(196,181,253,0.25)', color: 'var(--accent-lilac)', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                Founding Member
-              </span>
-              <span style={{ background: 'rgba(196,181,253,0.08)', border: '1px solid rgba(196,181,253,0.15)', color: 'var(--accent-lilac)', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, letterSpacing: '0.06em' }}>
-                {currentUser.streak} day streak
-              </span>
-            </div>
+            <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>{displayHandle}</p>
+            {profile?.name && (
+              <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--text-secondary)' }}>{profile.name}</p>
+            )}
+            <span style={{ background: 'rgba(196,181,253,0.12)', border: '1px solid rgba(196,181,253,0.25)', color: 'var(--accent-lilac)', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Founding Member
+            </span>
           </div>
           <Link href="/account/wallet" style={{
             textDecoration: 'none', background: 'var(--accent-coral)',
@@ -106,7 +133,7 @@ export default function AccountPage() {
           }}>
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginBottom: 1 }}>Balance</span>
             <span className="serif" style={{ fontSize: 20, color: 'var(--white)', fontWeight: 700 }}>
-              £{(currentUser.balancePence / 100).toFixed(2)}
+              {balancePence !== null ? `£${(balancePence / 100).toFixed(2)}` : '—'}
             </span>
           </Link>
         </div>
@@ -121,10 +148,10 @@ export default function AccountPage() {
           display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
         }}>
           {[
-            { label: 'Active draws', value: stats ? String(stats.activeDraws) : '—' },
-            { label: 'Tickets bought', value: stats ? String(stats.totalTickets) : '—' },
-            { label: 'Wins', value: stats ? String(stats.wins) : '—' },
-            { label: 'Draws entered', value: stats ? String(stats.totalDrawsEntered) : '—' },
+            { label: 'Active draws',   value: stats ? String(stats.activeDraws)       : '—' },
+            { label: 'Tickets bought', value: stats ? String(stats.totalTickets)       : '—' },
+            { label: 'Wins',           value: stats ? String(stats.wins)              : '—' },
+            { label: 'Draws entered',  value: stats ? String(stats.totalDrawsEntered) : '—' },
           ].map((stat, i) => (
             <div key={stat.label} style={{
               textAlign: 'center',
@@ -141,16 +168,23 @@ export default function AccountPage() {
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '20px', marginBottom: 20 }}>
           <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Achievements</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-            {badges.map(badge => (
+            {[
+              { label: 'Founding Member', unlocked: true,                           note: null },
+              { label: 'First Entry',     unlocked: (stats?.totalDrawsEntered ?? 0) > 0, note: null },
+              { label: 'First Win',       unlocked: (stats?.wins ?? 0) > 0,         note: null },
+              { label: '25 Tickets',      unlocked: (stats?.totalTickets ?? 0) >= 25, note: stats ? `${stats.totalTickets} bought` : null },
+              { label: 'First Sale',      unlocked: false,                           note: '0 sales' },
+              { label: 'Night Owl',       unlocked: false,                           note: 'Enter at 9pm' },
+            ].map(badge => (
               <div key={badge.label} style={{
-                background: badge.unlocked ? 'rgba(124,58,237,0.18)' : 'var(--bg-elevated)',
-                border: `1px solid ${badge.unlocked ? 'rgba(124,58,237,0.35)' : 'var(--border-subtle)'}`,
+                background: badge.unlocked ? 'rgba(139,92,246,0.10)' : 'var(--bg-base)',
+                border: `1px solid ${badge.unlocked ? 'rgba(139,92,246,0.25)' : 'var(--border-subtle)'}`,
                 borderRadius: 12, padding: '14px 10px', textAlign: 'center',
                 opacity: badge.unlocked ? 1 : 0.45,
               }}>
                 <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: badge.unlocked ? 'var(--accent-lilac)' : 'var(--text-tertiary)' }}>{badge.label}</p>
                 <p style={{ margin: 0, fontSize: 10, color: badge.unlocked ? 'rgba(196,181,253,0.75)' : 'var(--text-tertiary)' }}>
-                  {badge.unlocked ? (badge.note ?? 'Unlocked') : badge.note ?? 'Locked'}
+                  {badge.unlocked ? (badge.note ?? 'Unlocked') : (badge.note ?? 'Locked')}
                 </p>
               </div>
             ))}
@@ -162,8 +196,8 @@ export default function AccountPage() {
           <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Refer a friend</p>
           <p style={{ margin: '0 0 14px', fontSize: 13, color: 'var(--grey)' }}>Earn £1 credit for every friend who enters a draw</p>
           <div style={{ display: 'flex', gap: 10 }}>
-            <div style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 16px', display: 'flex', alignItems: 'center' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: 3 }}>YONI42</span>
+            <div style={{ flex: 1, background: 'var(--bg-base)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 16px', display: 'flex', alignItems: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: 3 }}>{refCode}</span>
             </div>
             <button
               onClick={handleCopy}
@@ -173,7 +207,7 @@ export default function AccountPage() {
                 background: copied ? 'var(--accent-coral)' : 'rgba(255,35,86,0.08)',
                 color: copied ? 'var(--white)' : 'var(--accent-coral)',
                 fontWeight: 700, fontSize: 13,
-                transition: 'all 0.2s',
+                transition: 'all 0.2s', cursor: 'pointer',
               }}
             >{copied ? 'Copied!' : 'Copy'}</button>
           </div>
@@ -186,11 +220,7 @@ export default function AccountPage() {
               <div style={{
                 padding: '15px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 borderBottom: i < menuItems.length - 1 ? '1px solid var(--border)' : 'none',
-                transition: 'background 0.15s',
-              }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--card)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
+              }}>
                 <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500 }}>{item.label}</span>
                 <span style={{ color: 'var(--muted)', fontSize: 16 }}>›</span>
               </div>

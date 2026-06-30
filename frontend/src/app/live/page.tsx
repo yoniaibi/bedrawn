@@ -6,7 +6,7 @@ import AppShell from '@/components/AppShell';
 import LiveDot from '@/components/LiveDot';
 import CountdownTimer from '@/components/CountdownTimer';
 import ProgressBar from '@/components/ProgressBar';
-import { chatMessages, draws, currentUser } from '@/lib/mockData';
+import { chatMessages, draws } from '@/lib/mockData';
 
 const wheelColors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#A78BFA', '#F472B6'];
 const wheelHandles = ['@sarah_j', '@yoniaibi', '@collector', '@luxe_fan', '@hypekid', '@watchman', '@fashionista', '@streetwear_g'];
@@ -40,7 +40,7 @@ export default function LivePage() {
     if (!input.trim()) return;
     setMessages(prev => [...prev, {
       id: String(Date.now()),
-      handle: currentUser.handle,
+      handle: 'you',
       color: '#8B5CF6',
       message: input.trim(),
       time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
