@@ -156,7 +156,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
               onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (draw.sellerId) router.push(`/sellers/${draw.sellerId}`);
+                if (draw.sellerId) router.push(`/sellers?id=${draw.sellerId}`);
               }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 5,

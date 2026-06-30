@@ -91,7 +91,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
           <p className="serif" style={{ fontSize: 24, color: 'var(--text)', margin: '0 0 8px', lineHeight: 1.2 }}>{draw.title}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             {draw.sellerId ? (
-              <Link href={`/sellers/${draw.sellerId}`} style={{
+              <Link href={`/sellers?id=${draw.sellerId}`} style={{
                 display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none',
               }}>
                 {draw.sellerAvatarUrl ? (

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import DrawCard from '@/components/DrawCard';
@@ -50,7 +51,21 @@ function formatMemberSince(iso: string | null): string {
   return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 }
 
-export default function SellerProfileClient({ id }: { id: string }) {
+function SellerProfileInner() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') ?? '';
+  return <SellerProfileContent id={id} />;
+}
+
+export default function SellerProfileClient() {
+  return (
+    <Suspense fallback={<AppShell><div style={{ textAlign: 'center', padding: '80px 32px', color: 'var(--text-secondary)' }}>Loading…</div></AppShell>}>
+      <SellerProfileInner />
+    </Suspense>
+  );
+}
+
+function SellerProfileContent({ id }: { id: string }) {
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [draws, setDraws] = useState<Draw[]>([]);
   const [loading, setLoading] = useState(true);
