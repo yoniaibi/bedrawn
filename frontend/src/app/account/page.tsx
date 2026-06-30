@@ -100,7 +100,7 @@ export default function AccountPage() {
             </div>
           </div>
           <Link href="/account/wallet" style={{
-            textDecoration: 'none', background: 'var(--accent-violet)',
+            textDecoration: 'none', background: 'var(--accent-coral)',
             borderRadius: 12, padding: '10px 20px',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
@@ -170,8 +170,8 @@ export default function AccountPage() {
               style={{
                 padding: '10px 20px', borderRadius: 10,
                 border: '1px solid var(--border-accent)',
-                background: copied ? 'var(--accent-violet)' : 'rgba(196,181,253,0.10)',
-                color: copied ? 'var(--white)' : 'var(--accent-lilac)',
+                background: copied ? 'var(--accent-coral)' : 'rgba(255,35,86,0.08)',
+                color: copied ? 'var(--white)' : 'var(--accent-coral)',
                 fontWeight: 700, fontSize: 13,
                 transition: 'all 0.2s',
               }}

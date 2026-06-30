@@ -115,7 +115,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
           style={{
             padding: compact ? '12px 20px' : '14px 0',
             borderRadius: 999, border: 'none',
-            background: status === 'loading' ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+            background: status === 'loading' ? 'var(--muted)' : 'var(--accent-coral)',
             color: 'var(--white)', fontSize: 15, fontWeight: 700,
             cursor: status === 'loading' ? 'not-allowed' : 'pointer',
             whiteSpace: 'nowrap',
@@ -184,9 +184,9 @@ export default function LandingPage() {
       {/* ─── NAV ─── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(253,250,255,0.97)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(124,58,237,0.1)',
-        boxShadow: '0 1px 12px rgba(124,58,237,0.06)',
+        background: 'rgba(250,250,248,0.95)', backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(0,0,0,0.08)',
       }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -200,7 +200,7 @@ export default function LandingPage() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <Link href="/login" style={{ color: 'var(--grey)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>Log in</Link>
             <a href="#waitlist" style={{
-              background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: 'var(--accent-coral)',
               color: 'var(--white)', fontSize: 14, fontWeight: 700,
               padding: '10px 20px', borderRadius: 999, textDecoration: 'none',
             }}>Join waitlist</a>
@@ -330,14 +330,14 @@ export default function LandingPage() {
               return (
                 <a key={d.id} href="#waitlist" style={{ textDecoration: 'none' }}>
                   <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', transition: 'box-shadow 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(124,58,237,0.15)')}
+                    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,35,86,0.12)')}
                     onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
                     <div style={{ position: 'relative', height: 140 }}>
                       <img src={d.imageUrl} alt={d.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       {pct >= 70 && (
                         <span style={{ position: 'absolute', top: 8, left: 8, background: 'var(--pink)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999 }}>{pct}% sold</span>
                       )}
-                      <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'var(--purple)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>{priceLabel}</span>
+                      <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'var(--accent-coral)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>{priceLabel}</span>
                     </div>
                     <div style={{ padding: '10px 12px 14px' }}>
                       <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{d.title}</p>
@@ -362,10 +362,10 @@ export default function LandingPage() {
           </p>
           <div className="landing-steps-grid">
             {[
-              { num: '01', color: 'var(--purple)', title: 'List',  desc: 'Snap your bag, trainers, or watch. Set a ticket price and quantity. Ship it to us — it goes live with a Verified badge.' },
-              { num: '02', color: 'var(--pink)',   title: 'Enter', desc: 'Buyers grab tickets from 10p. Up to 25% of any draw. A free postal entry route is always available.' },
-              { num: '03', color: 'var(--gold)',   title: 'Watch', desc: 'At 9pm the whole draw resolves live. The wheel spins, names land, and the crowd reacts in real time.' },
-              { num: '04', color: 'var(--green)',  title: 'Win',   desc: 'The winner gets it shipped free. The seller gets paid within 24 hours. The item finds a new home.' },
+              { num: '01', color: 'var(--accent-lilac)', title: 'List',  desc: 'Snap your bag, trainers, or watch. Set a ticket price and quantity. Ship it to us — it goes live with a Verified badge.' },
+              { num: '02', color: 'var(--accent-coral)', title: 'Enter', desc: 'Buyers grab tickets from 10p. Up to 25% of any draw. A free postal entry route is always available.' },
+              { num: '03', color: 'var(--accent-coral)', title: 'Watch', desc: 'At 9pm the whole draw resolves live. The wheel spins, names land, and the crowd reacts in real time.' },
+              { num: '04', color: 'var(--accent-gold)',  title: 'Win',   desc: 'The winner gets it shipped free. The seller gets paid within 24 hours. The item finds a new home.' },
             ].map(step => (
               <div key={step.title} style={{ padding: '28px 24px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, borderTop: `4px solid ${step.color}` }}>
                 <p className="serif" style={{ margin: '0 0 16px', fontSize: 48, fontWeight: 700, color: step.color, lineHeight: 1 }}>{step.num}</p>
@@ -623,7 +623,7 @@ export default function LandingPage() {
             </div>
             <a href="#waitlist" style={{
               display: 'inline-block', padding: '14px 32px', borderRadius: 999,
-              background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: 'var(--accent-coral)',
               color: 'var(--white)', fontSize: 15, fontWeight: 700, textDecoration: 'none',
             }}>Apply to sell →</a>
           </div>
@@ -634,8 +634,8 @@ export default function LandingPage() {
       <div style={{ padding: '72px 0', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
           <div style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(236,72,153,0.08))',
-            border: '1px solid rgba(124,58,237,0.2)',
+            background: 'linear-gradient(135deg, rgba(255,35,86,0.05), rgba(245,158,11,0.04))',
+            border: '1px solid rgba(255,35,86,0.12)',
             borderRadius: 24, padding: '48px 52px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             gap: 32, flexWrap: 'wrap',
@@ -669,8 +669,8 @@ export default function LandingPage() {
                 </a>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)',
-                  borderRadius: 12, padding: '12px 22px', color: 'var(--purple)', fontSize: 13,
+                  background: 'rgba(255,35,86,0.06)', border: '1px solid rgba(255,35,86,0.15)',
+                  borderRadius: 12, padding: '12px 22px', color: 'var(--accent-coral)', fontSize: 13,
                 }}>
                   <span>📱</span>
                   <span style={{ fontWeight: 600 }}>Coming soon on Android</span>
@@ -679,7 +679,7 @@ export default function LandingPage() {
             </div>
             <div style={{
               flex: '0 0 180px', height: 180,
-              background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: 'var(--accent-coral)',
               borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 80,
             }}>

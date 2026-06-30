@@ -1,65 +1,50 @@
 export const C = {
-  // Backgrounds — near-neutral dark (not purple-tinted)
-  BG:           '#0A0A0B',   // --bg-base
-  CARD:         '#141416',   // --bg-raised
-  CARD2:        '#1C1C1F',   // --bg-elevated
-  OVERLAY:      '#242428',   // --bg-overlay
+  // Backgrounds — warm light
+  BG:           '#FAFAF8',   // warm off-white base
+  CARD:         '#FFFFFF',   // pure white cards
+  CARD2:        '#F5F2ED',   // elevated panels
+  OVERLAY:      '#EDE8E1',   // modals / overlays
 
   // Text
-  TEXT:         '#F4F4F5',   // --text-primary (warm white, not pure white)
-  GREY:         '#A1A1AA',   // --text-secondary
-  MUTED:        '#52525B',   // --text-tertiary
-  INVERSE:      '#09090B',   // --text-inverse (for light backgrounds)
+  TEXT:         '#1C1917',   // warm near-black
+  GREY:         '#78716C',   // secondary text
+  MUTED:        '#A8A29E',   // tertiary / placeholders
+  INVERSE:      '#FFFFFF',   // text on dark/coral surfaces
 
-  // Brand accents — used sparingly
-  LILAC:        '#C4B5FD',   // --accent-lilac (softer, readable on dark)
-  PINK:         '#F472B6',   // --accent-pink (live states, urgency, CTA only)
-  GOLD:         '#FCD34D',   // --accent-gold (winner states ONLY)
-  VIOLET:       '#7C3AED',   // --accent-violet (primary action buttons)
-  ROSE:         '#FB7185',   // --accent-rose (secondary accents)
+  // Brand accents
+  CORAL:        '#FF2356',   // PRIMARY — all CTAs, active states
+  PINK:         '#FF2356',   // alias for CORAL (backward compat)
+  LILAC:        '#8B5CF6',   // verified / trust badges only
+  GOLD:         '#F59E0B',   // winner states ONLY — never for CTAs or retail values
+  VIOLET:       '#7C3AED',   // minimal secondary accent
 
   // Semantic
-  GREEN:        '#4ADE80',
-  GREEN_BG:     'rgba(74,222,128,0.10)',
-  RED:          '#F87171',
-  RED_BG:       'rgba(248,113,113,0.10)',
-  WARNING:      '#FCD34D',
-  WARNING_BG:   'rgba(252,211,77,0.10)',
+  GREEN:        '#059669',
+  GREEN_BG:     'rgba(5,150,105,0.08)',
+  RED:          '#DC2626',
+  RED_BG:       'rgba(220,38,38,0.08)',
+  WARNING:      '#F59E0B',
+  WARNING_BG:   'rgba(245,158,11,0.10)',
 
-  // Borders — always rgba
-  BORDER_SUBTLE:  'rgba(255,255,255,0.06)',
-  BORDER_DEFAULT: 'rgba(255,255,255,0.10)',
-  BORDER_STRONG:  'rgba(255,255,255,0.18)',
-  BORDER_ACCENT:  'rgba(196,181,253,0.35)',
-
-  // Keep these aliases for backward compat with existing components
-  WHITE:        '#FFFFFF',
-  PURPLE:       '#C4B5FD',   // alias → LILAC (softer, not deep violet)
-  PURPLE_DARK:  '#7C3AED',   // alias → VIOLET
-  PURPLE_LIGHT: 'rgba(196,181,253,0.12)',
-  GOLD_LIGHT:   'rgba(252,211,77,0.12)',
-  GREEN_LIGHT:  'rgba(74,222,128,0.10)',
-  RED_LIGHT:    'rgba(248,113,113,0.10)',
-  BORDER:       'rgba(255,255,255,0.10)',  // alias → BORDER_DEFAULT
-};
-
-// Light mode tokens (applied when user toggles in Settings)
-export const LIGHT = {
-  BG:           '#FAFAFA',
-  CARD:         '#FFFFFF',
-  CARD2:        '#F4F4F5',
-  OVERLAY:      '#E4E4E7',
-  TEXT:         '#09090B',
-  GREY:         '#52525B',
-  MUTED:        '#A1A1AA',
-  INVERSE:      '#F4F4F5',
-  LILAC:        '#7C3AED',
-  PINK:         '#EC4899',
-  GOLD:         '#D97706',
-  VIOLET:       '#6D28D9',
-  ROSE:         '#E11D48',
+  // Borders — light mode (rgba dark on white)
   BORDER_SUBTLE:  'rgba(0,0,0,0.06)',
   BORDER_DEFAULT: 'rgba(0,0,0,0.10)',
   BORDER_STRONG:  'rgba(0,0,0,0.18)',
-  BORDER_ACCENT:  'rgba(124,58,237,0.35)',
+  BORDER_ACCENT:  'rgba(255,35,86,0.30)',  // coral accent border
+
+  // Shadows — used instead of borders for depth on cards
+  SHADOW_XS: '0 1px 2px rgba(0,0,0,0.04)',
+  SHADOW_SM: '0 2px 8px rgba(0,0,0,0.07)',
+  SHADOW_MD: '0 4px 16px rgba(0,0,0,0.09)',
+  SHADOW_LG: '0 8px 32px rgba(0,0,0,0.11)',
+
+  // Backward-compat aliases for existing components
+  WHITE:        '#FFFFFF',
+  PURPLE:       '#FF2356',              // alias → CORAL (was primary, now coral is primary)
+  PURPLE_DARK:  '#7C3AED',             // alias → VIOLET
+  PURPLE_LIGHT: 'rgba(255,35,86,0.08)', // alias → coral tint (active element bg)
+  GOLD_LIGHT:   'rgba(245,158,11,0.12)',
+  GREEN_LIGHT:  'rgba(5,150,105,0.08)',
+  RED_LIGHT:    'rgba(220,38,38,0.08)',
+  BORDER:       'rgba(0,0,0,0.10)',  // alias → BORDER_DEFAULT
 };

@@ -22,7 +22,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div style={{
             width: 24, height: 24,
             border: '2.5px solid var(--border)',
-            borderTopColor: 'var(--purple)',
+            borderTopColor: 'var(--accent-coral)',
             borderRadius: '50%',
             margin: '20px auto 0',
             animation: 'spin-slow 0.8s linear infinite',

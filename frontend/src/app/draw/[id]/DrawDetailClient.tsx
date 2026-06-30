@@ -96,7 +96,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
             <span className="serif" style={{ fontSize: 32, fontWeight: 700, color: 'var(--accent-pink)' }}>{price}</span>
             <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>→</span>
-            <span style={{ fontSize: 16, fontWeight: 500, color: 'rgba(255,255,255,0.65)' }}>£{draw.retailValue.toLocaleString()} retail</span>
+            <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)' }}>£{draw.retailValue.toLocaleString()} retail</span>
           </div>
           <ProgressBar percent={pct} height={6} />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, marginBottom: 16 }}>

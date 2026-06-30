@@ -97,9 +97,9 @@ export default function HomePage() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{
-                    background: 'rgba(244,114,182,0.15)',
-                    border: '1px solid rgba(244,114,182,0.35)',
-                    color: '#F472B6', fontSize: 10, fontWeight: 600,
+                    background: 'rgba(255,35,86,0.18)',
+                    border: '1px solid rgba(255,35,86,0.40)',
+                    color: '#FFFFFF', fontSize: 10, fontWeight: 600,
                     padding: '3px 10px', borderRadius: 6,
                     display: 'flex', alignItems: 'center', gap: 5,
                     letterSpacing: '0.08em', textTransform: 'uppercase' as const,
@@ -157,11 +157,11 @@ export default function HomePage() {
             </p>
           </div>
           <Link href="/live" style={{
-            color: 'var(--accent-lilac)', fontSize: 13, fontWeight: 600,
+            color: 'var(--accent-coral)', fontSize: 13, fontWeight: 600,
             textDecoration: 'none',
-            padding: '7px 16px', border: '1px solid var(--border-accent)',
+            padding: '7px 16px', border: '1px solid rgba(255,35,86,0.30)',
             borderRadius: 10, whiteSpace: 'nowrap',
-            background: 'rgba(196,181,253,0.08)',
+            background: 'rgba(255,35,86,0.06)',
           }}>
             Watch live →
           </Link>

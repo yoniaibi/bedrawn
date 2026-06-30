@@ -1,40 +1,50 @@
 @import "tailwindcss";
 
-/* ─── v3 Design Tokens — near-neutral dark, photography-led ─── */
+/* ─── Option A — Warm Light Design System ─── */
 
 :root {
-  /* Backgrounds — near-neutral near-black, no purple cast */
-  --bg-base:       #0A0A0B;
-  --bg-raised:     #141416;
-  --bg-elevated:   #1C1C1F;
-  --bg-overlay:    #242428;
+  /* Backgrounds — warm off-white progression */
+  --bg-base:      #FAFAF8;
+  --bg-raised:    #FFFFFF;
+  --bg-elevated:  #F5F2ED;
+  --bg-overlay:   #EDE8E1;
 
-  /* Text */
-  --text-primary:   #F4F4F5;
-  --text-secondary: #A1A1AA;
-  --text-tertiary:  #52525B;
-  --text-inverse:   #09090B;
+  /* Text — warm neutrals, never cold grey */
+  --text-primary:   #1C1917;
+  --text-secondary: #78716C;
+  --text-tertiary:  #A8A29E;
+  --text-inverse:   #FFFFFF;
 
-  /* Brand accents — used sparingly, never as large backgrounds */
-  --accent-lilac:   #C4B5FD;
-  --accent-pink:    #F472B6;
-  --accent-gold:    #FCD34D;
-  --accent-violet:  #7C3AED;
-  --accent-rose:    #FB7185;
+  /* Accents */
+  --accent-coral:  #FF2356;   /* PRIMARY — all CTAs, active states, enter draw */
+  --accent-pink:   #FF2356;   /* alias for coral */
+  --accent-gold:   #F59E0B;   /* winners ONLY */
+  --accent-amber:  #FCD34D;   /* secondary gold */
+  --accent-rose:   #FB7185;   /* closing tonight / live urgency */
+  --accent-lilac:  #8B5CF6;   /* verified / trust badges only */
+  --accent-violet: #7C3AED;   /* minimal use */
+  --accent-green:  #059669;
+  --accent-red:    #DC2626;
 
   /* Semantic */
-  --success:        #4ADE80;
-  --success-bg:     rgba(74,222,128,0.10);
-  --danger:         #F87171;
-  --danger-bg:      rgba(248,113,113,0.10);
-  --warning:        #FCD34D;
-  --warning-bg:     rgba(252,211,77,0.10);
+  --success:        #059669;
+  --success-bg:     rgba(5,150,105,0.08);
+  --danger:         #DC2626;
+  --danger-bg:      rgba(220,38,38,0.08);
+  --warning:        #F59E0B;
+  --warning-bg:     rgba(245,158,11,0.10);
 
-  /* Borders — always rgba */
-  --border-subtle:  rgba(255,255,255,0.06);
-  --border-default: rgba(255,255,255,0.10);
-  --border-strong:  rgba(255,255,255,0.18);
-  --border-accent:  rgba(196,181,253,0.35);
+  /* Borders — rgba(0,0,0,x) for light backgrounds */
+  --border-subtle:  rgba(0,0,0,0.06);
+  --border-default: rgba(0,0,0,0.10);
+  --border-strong:  rgba(0,0,0,0.18);
+  --border-accent:  rgba(255,35,86,0.30);
+
+  /* Shadows — essential for light mode depth */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
 
   /* Radius */
   --radius-xs:   6px;
@@ -55,61 +65,27 @@
   --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring:     cubic-bezier(0.08, 0.82, 0.17, 1.0);
 
-  /* ── Backward-compat aliases for existing components ── */
+  /* ── Backward-compat aliases ── */
   --bg:          var(--bg-base);
   --card:        var(--bg-raised);
   --card2:       var(--bg-elevated);
   --border:      var(--border-default);
   --purple:      var(--accent-lilac);
-  --purple-light:rgba(196,181,253,0.12);
+  --purple-light:rgba(139,92,246,0.08);
   --purple-dark: var(--accent-violet);
-  --pink:        var(--accent-pink);
+  --pink:        var(--accent-coral);
   --rose:        var(--accent-rose);
   --gold:        var(--accent-gold);
-  --gold-light:  rgba(252,211,77,0.12);
+  --gold-light:  rgba(245,158,11,0.12);
   --text:        var(--text-primary);
   --grey:        var(--text-secondary);
   --muted:       var(--text-tertiary);
   --white:       #FFFFFF;
+  --black:       #1C1917;
   --green:       var(--success);
   --green-light: var(--success-bg);
   --red:         var(--danger);
   --red-light:   var(--danger-bg);
-}
-
-/* ── Light mode — toggled via .light class on <html> ── */
-.light {
-  --bg-base:        #FAFAFA;
-  --bg-raised:      #FFFFFF;
-  --bg-elevated:    #F4F4F5;
-  --bg-overlay:     #E4E4E7;
-  --text-primary:   #09090B;
-  --text-secondary: #52525B;
-  --text-tertiary:  #A1A1AA;
-  --text-inverse:   #F4F4F5;
-  --accent-lilac:   #7C3AED;
-  --accent-pink:    #EC4899;
-  --accent-gold:    #D97706;
-  --accent-violet:  #6D28D9;
-  --accent-rose:    #E11D48;
-  --border-subtle:  rgba(0,0,0,0.06);
-  --border-default: rgba(0,0,0,0.10);
-  --border-strong:  rgba(0,0,0,0.18);
-  --border-accent:  rgba(124,58,237,0.35);
-
-  /* Aliases */
-  --bg:          var(--bg-base);
-  --card:        var(--bg-raised);
-  --card2:       var(--bg-elevated);
-  --border:      var(--border-default);
-  --purple:      var(--accent-lilac);
-  --purple-light:rgba(124,58,237,0.10);
-  --purple-dark: var(--accent-violet);
-  --pink:        var(--accent-pink);
-  --gold:        var(--accent-gold);
-  --text:        var(--text-primary);
-  --grey:        var(--text-secondary);
-  --muted:       var(--text-tertiary);
 }
 
 @theme inline {
@@ -119,7 +95,7 @@
   --color-border: var(--border-default);
   --color-purple: var(--accent-lilac);
   --color-purple-dark: var(--accent-violet);
-  --color-pink: var(--accent-pink);
+  --color-pink: var(--accent-coral);
   --color-gold: var(--accent-gold);
   --color-drawn-white: #FFFFFF;
   --color-grey: var(--text-secondary);
@@ -141,7 +117,7 @@ html, body {
 
 input, textarea {
   background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-default);
   color: var(--text-primary);
   border-radius: var(--radius-sm);
   padding: 0 16px;
@@ -155,21 +131,21 @@ input, textarea {
 textarea { height: auto; padding: 14px 16px; }
 
 input:focus, textarea:focus {
-  border-color: var(--accent-lilac);
-  box-shadow: 0 0 0 3px rgba(196,181,253,0.12);
+  border-color: var(--accent-coral);
+  box-shadow: 0 0 0 3px rgba(255,35,86,0.10);
 }
 
 input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
 
 input.error, textarea.error {
   border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(248,113,113,0.10);
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
 }
 
 button { cursor: pointer; font-family: inherit; }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-raised); }
+::-webkit-scrollbar-track { background: var(--bg-elevated); }
 ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
 
 /* ─── Typography ─── */
@@ -198,13 +174,9 @@ button { cursor: pointer; font-family: inherit; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 50%, transparent 100%);
   animation: shimmer 1.6s ease-in-out infinite;
   transform: translateX(-100%);
-}
-
-.light .skeleton::after {
-  background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 50%, transparent 100%);
 }
 
 /* ─── Buttons ─── */
@@ -217,10 +189,10 @@ button { cursor: pointer; font-family: inherit; }
   height: 52px;
   border-radius: var(--radius-sm);
   border: none;
-  background: var(--accent-violet);
+  background: var(--accent-coral);
   color: #FFFFFF;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   font-family: inherit;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -228,7 +200,7 @@ button { cursor: pointer; font-family: inherit; }
   width: 100%;
 }
 
-.btn-primary:hover:not(:disabled) { opacity: 0.90; }
+.btn-primary:hover:not(:disabled) { opacity: 0.88; }
 .btn-primary:active:not(:disabled) { transform: scale(0.98); }
 .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; pointer-events: none; }
 
@@ -239,7 +211,7 @@ button { cursor: pointer; font-family: inherit; }
   height: 56px;
   border-radius: var(--radius-sm);
   border: none;
-  background: var(--accent-pink);
+  background: var(--accent-coral);
   color: #FFFFFF;
   font-size: 16px;
   font-weight: 700;
@@ -247,9 +219,10 @@ button { cursor: pointer; font-family: inherit; }
   letter-spacing: 0.01em;
   cursor: pointer;
   width: 100%;
-  transition: opacity var(--duration-fast) ease-out;
+  transition: opacity var(--duration-fast) ease-out, transform var(--duration-fast) ease-out;
 }
-.btn-purchase:hover:not(:disabled) { opacity: 0.90; }
+.btn-purchase:hover:not(:disabled) { opacity: 0.88; }
+.btn-purchase:active:not(:disabled) { transform: scale(0.98); }
 .btn-purchase:disabled { opacity: 0.38; pointer-events: none; }
 
 .btn-secondary {
@@ -259,11 +232,11 @@ button { cursor: pointer; font-family: inherit; }
   height: 52px;
   padding: 0 24px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border-default);
+  border: 1.5px solid var(--border-default);
   background: transparent;
   color: var(--text-primary);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   transition: border-color var(--duration-fast) ease-out, background var(--duration-fast) ease-out;
@@ -271,7 +244,7 @@ button { cursor: pointer; font-family: inherit; }
 }
 .btn-secondary:hover:not(:disabled) {
   border-color: var(--border-strong);
-  background: var(--bg-overlay);
+  background: var(--bg-elevated);
 }
 .btn-secondary:disabled { opacity: 0.38; pointer-events: none; }
 
@@ -296,8 +269,8 @@ button { cursor: pointer; font-family: inherit; }
   height: 34px;
   padding: 0 14px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--border-default);
-  background: transparent;
+  border: 1.5px solid var(--border-default);
+  background: var(--bg-raised);
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
@@ -310,18 +283,20 @@ button { cursor: pointer; font-family: inherit; }
 .chip:hover {
   border-color: var(--border-strong);
   color: var(--text-primary);
+  background: var(--bg-elevated);
 }
 
 .chip.active {
-  background: rgba(196,181,253,0.12);
-  border-color: var(--border-accent);
-  color: var(--accent-lilac);
+  background: rgba(255,35,86,0.08);
+  border-color: rgba(255,35,86,0.30);
+  color: var(--accent-coral);
+  font-weight: 600;
 }
 
-/* ─── Pill button (filter chips in older components) ─── */
+/* ─── Pill button (compat) ─── */
 
 .pill-btn { transition: background var(--duration-fast) ease-out, border-color var(--duration-fast) ease-out, color var(--duration-fast) ease-out; }
-.pill-btn:hover { border-color: var(--accent-lilac); background: rgba(196,181,253,0.12); color: var(--accent-lilac); }
+.pill-btn:hover { border-color: var(--accent-coral); background: rgba(255,35,86,0.06); color: var(--accent-coral); }
 
 /* ─── Layout helpers ─── */
 
@@ -338,7 +313,6 @@ button { cursor: pointer; font-family: inherit; }
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  padding: 0;
 }
 
 @media (min-width: 640px) { .draw-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
@@ -390,12 +364,16 @@ button { cursor: pointer; font-family: inherit; }
 /* ─── Draw card ─── */
 
 .draw-card {
-  transition: transform var(--duration-normal) ease-out, border-color var(--duration-normal) ease-out;
+  transition: transform var(--duration-normal) ease-out, box-shadow var(--duration-normal) ease-out;
   border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-.draw-card:hover { transform: translateY(-2px); }
+.draw-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
 .draw-card:hover .card-image-img { transform: scale(1.04); }
 
 .card-image-img {
@@ -407,48 +385,48 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .landing-draw-card {
-  transition: transform var(--duration-normal) ease-out;
+  transition: transform var(--duration-normal) ease-out, box-shadow var(--duration-normal) ease-out;
   border-radius: var(--radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-xs);
 }
-.landing-draw-card:hover { transform: translateY(-2px); }
+.landing-draw-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 
 .hero-draw {
   transition: transform var(--duration-normal) ease-out;
+  box-shadow: var(--shadow-lg);
 }
 .hero-draw:hover { transform: translateY(-2px); }
 
 /* Card interactions */
 .ticket-card {
-  transition: border-color var(--duration-fast) ease-out;
+  transition: box-shadow var(--duration-fast) ease-out;
 }
-.ticket-card:hover {
-  border-color: var(--border-strong);
-}
+.ticket-card:hover { box-shadow: var(--shadow-sm); }
 
 .list-row {
   transition: background var(--duration-fast) ease-out;
   border-radius: var(--radius-sm);
 }
-.list-row:hover { background: var(--bg-overlay); }
+.list-row:hover { background: var(--bg-elevated); }
 
 .save-btn {
   transition: transform var(--duration-fast) ease-out, color var(--duration-fast) ease-out;
 }
-.save-btn:hover { transform: scale(1.2); color: var(--accent-pink) !important; }
+.save-btn:hover { transform: scale(1.2); color: var(--accent-coral) !important; }
 
 .tonight-row {
-  transition: border-color var(--duration-fast) ease-out;
+  transition: background var(--duration-fast) ease-out;
 }
-.tonight-row:hover { border-color: var(--border-strong); }
+.tonight-row:hover { background: var(--bg-elevated); }
 
 /* Nav */
 .nav-link {
   transition: background var(--duration-fast) ease-out, color var(--duration-fast) ease-out;
   border-radius: var(--radius-sm);
 }
-.nav-link:hover { background: rgba(196,181,253,0.08); color: var(--accent-lilac); }
-.nav-link.active { color: var(--accent-lilac); font-weight: 700; }
+.nav-link:hover { background: rgba(255,35,86,0.06); color: var(--accent-coral); }
+.nav-link.active { color: var(--accent-coral); font-weight: 700; }
 
 .top-nav-link {
   position: relative;
@@ -460,14 +438,14 @@ button { cursor: pointer; font-family: inherit; }
   transition: color var(--duration-fast) ease-out;
 }
 .top-nav-link:hover { color: var(--text-primary); }
-.top-nav-link.active { color: var(--accent-lilac); font-weight: 600; }
+.top-nav-link.active { color: var(--accent-coral); font-weight: 600; }
 .top-nav-link.active::after {
   content: '';
   position: absolute;
   bottom: -4px;
   left: 0; right: 0;
   height: 2px;
-  background: var(--accent-lilac);
+  background: var(--accent-coral);
   border-radius: 1px;
 }
 
@@ -483,7 +461,7 @@ button { cursor: pointer; font-family: inherit; }
 .progress-fill {
   height: 100%;
   border-radius: 99px;
-  background: var(--accent-lilac);
+  background: var(--accent-coral);
   transition: width 500ms ease-out;
 }
 
@@ -494,7 +472,7 @@ button { cursor: pointer; font-family: inherit; }
 
 .live-dot {
   border-radius: 50%;
-  background: var(--accent-pink);
+  background: var(--accent-coral);
   animation: livepulse 1.5s ease-in-out infinite;
 }
 
@@ -506,8 +484,8 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 @keyframes scarcity-pulse {
-  0%, 100% { border-color: rgba(248,113,113,0.30); }
-  50%       { border-color: rgba(248,113,113,0.08); }
+  0%, 100% { border-color: rgba(220,38,38,0.35); }
+  50%       { border-color: rgba(220,38,38,0.10); }
 }
 
 @keyframes shimmer {
@@ -589,13 +567,13 @@ button { cursor: pointer; font-family: inherit; }
 .animate-screen-enter { animation: screenEnter 200ms ease-out; }
 .animate-streak-pulse { animation: streakPulse 2.2s ease-in-out infinite; }
 
-/* ─── Gradient helpers (kept for landing page) ─── */
+/* ─── Gradient helpers ─── */
 
-.gradient-purple { background: linear-gradient(135deg, var(--accent-violet), var(--accent-pink)); }
+.gradient-coral  { background: linear-gradient(135deg, var(--accent-coral), #FF6B35); }
 .gradient-gold   { background: linear-gradient(135deg, var(--accent-gold), #B45309); }
 
-.text-gradient-purple {
-  background: linear-gradient(135deg, var(--accent-lilac), var(--accent-pink));
+.text-gradient-coral {
+  background: linear-gradient(135deg, #FF2356, #FF6B35);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

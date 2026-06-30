@@ -33,8 +33,8 @@ interface SellerStats {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  open: { label: 'Live', color: C.PINK, bg: 'rgba(244,114,182,0.10)' },
-  live: { label: 'Live', color: C.PINK, bg: 'rgba(244,114,182,0.10)' },
+  open: { label: 'Live', color: C.PINK, bg: 'rgba(255,35,86,0.08)' },
+  live: { label: 'Live', color: C.PINK, bg: 'rgba(255,35,86,0.08)' },
   resolved: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(74,222,128,0.10)' },
   completed: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(74,222,128,0.10)' },
   cancelled: { label: 'Cancelled', color: C.MUTED, bg: C.CARD2 },
