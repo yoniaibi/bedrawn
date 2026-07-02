@@ -60,9 +60,10 @@ export default function TermsPage() {
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 32, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-            For questions, contact legal@bedrawn.app
-          </p>
+          <div style={{ marginTop: 32, borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>For questions, contact legal@bedrawn.app</p>
+            <Link href="/legal/privacy" style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy →</Link>
+          </div>
         </div>
       </div>
     </div>

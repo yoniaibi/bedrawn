@@ -59,9 +59,13 @@ test.describe('Draw detail — authenticated', () => {
     ).toBeVisible({ timeout: 5000 });
   });
 
-  test('CTA links to purchase page', async ({ page }) => {
-    const purchaseLink = page.locator('a[href*="/purchase"]').or(page.locator('a[href*="purchase"]'));
-    await expect(purchaseLink.first()).toBeVisible({ timeout: 5000 });
+  test('CTA navigates to purchase page', async ({ page }) => {
+    // CTA is now a button that router.push()es — look for the Enter draw button
+    const cta = page.locator('button:has-text("Enter draw")').or(page.locator('a[href*="/purchase"]'));
+    await expect(cta.first()).toBeVisible({ timeout: 5000 });
+    await cta.first().click();
+    await page.waitForTimeout(1000);
+    expect(page.url()).toContain('purchase');
   });
 });
 

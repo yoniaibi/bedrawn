@@ -56,9 +56,10 @@ export default function PrivacyPage() {
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 32, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-            DRAWN · privacy@bedrawn.app · London, UK
-          </p>
+          <div style={{ marginTop: 32, borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>DRAWN · privacy@bedrawn.app · London, UK</p>
+            <Link href="/legal/terms" style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>Terms of Service →</Link>
+          </div>
         </div>
       </div>
     </div>

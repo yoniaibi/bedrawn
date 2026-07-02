@@ -534,7 +534,7 @@ export default function LandingPage() {
             </div>
             <div style={{ background: 'rgba(236,72,153,0.07)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: 12, padding: '18px', textAlign: 'center' }}>
               <p style={{ margin: '0 0 4px', fontSize: 32, fontWeight: 800, color: 'var(--pink)' }}>98%</p>
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>say it&apos;s addictive</p>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>would enter another draw</p>
             </div>
           </div>
         </div>

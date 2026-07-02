@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
@@ -15,12 +16,18 @@ const socialProof = [
   '@hypekid just bought 10 tickets — 6 mins ago',
 ];
 
+function getSavedDraws(): string[] {
+  if (typeof window === 'undefined') return [];
+  try { return JSON.parse(localStorage.getItem('saved_draws') ?? '[]'); } catch { return []; }
+}
+
 export default function DrawDetailClient({ id }: { id: string }) {
   const mockDraw = draws.find(d => d.id === id) ?? null;
+  const router = useRouter();
   const [draw, setDraw] = useState<Draw | null>(mockDraw);
   const [loading, setLoading] = useState(!mockDraw);
   const [expanded, setExpanded] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(() => getSavedDraws().includes(id));
 
   useEffect(() => {
     if (mockDraw) return;
@@ -32,6 +39,15 @@ export default function DrawDetailClient({ id }: { id: string }) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [id, mockDraw]);
+
+  const handleSave = () => {
+    setSaved(prev => {
+      const arr = getSavedDraws();
+      const next = prev ? arr.filter(x => x !== id) : [...arr, id];
+      localStorage.setItem('saved_draws', JSON.stringify(next));
+      return !prev;
+    });
+  };
 
   if (loading) {
     return (
@@ -55,6 +71,8 @@ export default function DrawDetailClient({ id }: { id: string }) {
   const pct = Math.round((draw.soldTickets / draw.totalTickets) * 100);
   const remaining = draw.totalTickets - draw.soldTickets;
   const price = draw.ticketPrice >= 100 ? `£${(draw.ticketPrice / 100).toFixed(2)}` : `${draw.ticketPrice}p`;
+  const reservePct = draw.reserveTickets ? Math.round((draw.reserveTickets / draw.totalTickets) * 100) : null;
+  const reserveHit = reservePct !== null && pct >= reservePct;
 
   return (
     <AppShell>
@@ -63,7 +81,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/home" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
           <div style={{ flex: 1 }} />
-          <button onClick={() => setSaved(s => !s)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: saved ? 'var(--pink)' : 'var(--grey)' }}>
+          <button onClick={handleSave} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: saved ? 'var(--pink)' : 'var(--grey)' }}>
             {saved ? '♥' : '♡'}
           </button>
           <button style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--grey)' }}>⤴</button>
@@ -125,7 +143,31 @@ export default function DrawDetailClient({ id }: { id: string }) {
             <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>→</span>
             <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)' }}>£{draw.retailValue.toLocaleString()} retail</span>
           </div>
-          <ProgressBar percent={pct} height={6} />
+
+          {/* Progress bar with reserve marker */}
+          <div style={{ position: 'relative', marginBottom: reservePct !== null ? 6 : 0 }}>
+            <ProgressBar percent={pct} height={6} />
+            {reservePct !== null && (
+              <div style={{
+                position: 'absolute',
+                left: `${reservePct}%`,
+                top: -4,
+                width: 2, height: 14,
+                background: reserveHit ? 'var(--green)' : 'var(--gold)',
+                borderRadius: 1,
+                transform: 'translateX(-50%)',
+              }} />
+            )}
+          </div>
+          {reservePct !== null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 1, background: reserveHit ? 'var(--green)' : 'var(--gold)', flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: reserveHit ? 'var(--green)' : 'var(--gold)', fontWeight: 500 }}>
+                Reserve {reservePct}%{reserveHit ? ' — reached, draw confirmed!' : ' needed to confirm draw'}
+              </span>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, marginBottom: 16 }}>
             <span style={{ fontSize: 12, color: 'var(--grey)' }}>{pct}% of {draw.totalTickets.toLocaleString()} tickets sold</span>
             <span style={{ fontSize: 12, color: remaining < 500 ? 'var(--red)' : 'var(--grey)' }}>{remaining.toLocaleString()} remaining</span>
@@ -146,10 +188,18 @@ export default function DrawDetailClient({ id }: { id: string }) {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
             {draw.tags.map(tag => <span key={tag} style={{ background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--grey)', fontSize: 12, padding: '4px 10px', borderRadius: 999 }}>{tag}</span>)}
           </div>
+
+          {/* Free postal entry info */}
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Free postal entry</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
+              Write your name, email, and this draw&apos;s title on a postcard and post to:<br />
+              <strong style={{ color: 'var(--text)' }}>Bedrawn, PO Box 1000, London EC1A 1BB</strong><br />
+              One postcard = one entry, equal odds to paid tickets.
+            </p>
+          </div>
+
           <ActivityTicker messages={socialProof} />
-          <p style={{ fontSize: 11, color: 'var(--muted)', textAlign: 'center', marginTop: 16, lineHeight: 1.5 }}>
-            Free postal entry available. All draws verified by DRAWN.
-          </p>
         </div>
 
         {/* Winner banner — shown when draw is resolved */}
@@ -186,11 +236,13 @@ export default function DrawDetailClient({ id }: { id: string }) {
           ) : (
             <>
               {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600 }}>⏰ Closing tonight at 9pm</p>}
-              <Link href={`/draw/${draw.id}/purchase`} style={{ textDecoration: 'none' }}>
-                <button className="btn-purchase" style={{ width: '100%', fontSize: 16, fontWeight: 700, borderRadius: 10 }}>
-                  Enter draw · {price}
-                </button>
-              </Link>
+              <button
+                className="btn-purchase"
+                onClick={() => router.push(`/draw/${draw.id}/purchase`)}
+                style={{ width: '100%', fontSize: 16, fontWeight: 700, borderRadius: 10 }}
+              >
+                Enter draw · {price}
+              </button>
             </>
           )}
         </div>

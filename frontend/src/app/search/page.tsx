@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import AppShell from '@/components/AppShell';
 import DrawCard from '@/components/DrawCard';
+import { draws as mockDraws } from '@/lib/mockData';
 import type { Draw } from '@/lib/mockData';
 
 const trending = ['Chanel', 'Rolex', 'Jordan 1', 'Supreme', 'Bottega', 'MacBook'];
@@ -35,10 +36,24 @@ export default function SearchPage() {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        setResults(data.draws ?? []);
+        if (data.draws?.length) {
+          setResults(data.draws as Draw[]);
+          setSearching(false);
+          return;
+        }
       }
     } catch {}
-    finally { setSearching(false); }
+    // Fall back to searching mock data locally
+    const lower = q.trim().toLowerCase();
+    const local = mockDraws.filter(d =>
+      d.title.toLowerCase().includes(lower) ||
+      d.seller.toLowerCase().includes(lower) ||
+      (d.sellerName ?? '').toLowerCase().includes(lower) ||
+      d.tags.some(t => t.toLowerCase().includes(lower)) ||
+      d.category.toLowerCase().includes(lower)
+    );
+    setResults(local);
+    setSearching(false);
   }, []);
 
   const handleSearch = (q: string) => {

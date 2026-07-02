@@ -37,6 +37,7 @@ export default function ListItemPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [stepError, setStepError] = useState('');
 
   const handlePhotoUpload = async (file: File, slot: number) => {
     if (!file) return;
@@ -337,20 +338,45 @@ export default function ListItemPage() {
 
           {/* Nav buttons */}
           {step < 4 && (
-            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-              {step > 0 && (
-                <button onClick={() => setStep(s => s - 1)} style={{
-                  flex: 1, padding: 14, borderRadius: 999, background: 'var(--card)',
-                  border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 600, cursor: 'pointer',
-                }}>Back</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
+              {stepError && (
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 8, padding: '10px 14px' }}>
+                  <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{stepError}</p>
+                </div>
               )}
-              <button onClick={() => setStep(s => s + 1)} style={{
-                flex: 2, padding: 14, borderRadius: 999,
-                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-                border: 'none', color: 'var(--white)', fontWeight: 700, cursor: 'pointer', fontSize: 15,
-              }}>
-                {step === 3 ? 'Review listing' : 'Next'}
-              </button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {step > 0 && (
+                  <button onClick={() => { setStep(s => s - 1); setStepError(''); }} style={{
+                    flex: 1, padding: 14, borderRadius: 999, background: 'var(--card)',
+                    border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 600, cursor: 'pointer',
+                  }}>Back</button>
+                )}
+                <button
+                  onClick={() => {
+                    setStepError('');
+                    if (step === 0 && !type) { setStepError('Please select a draw type to continue.'); return; }
+                    if (step === 1 && !photoUrls[0]) { setStepError('Please upload at least one photo — the hero image is required.'); return; }
+                    if (step === 2) {
+                      if (!title.trim()) { setStepError('Please enter a title for your listing.'); return; }
+                      if (!condition) { setStepError('Please select the condition of your item.'); return; }
+                      if (!category) { setStepError('Please select a category.'); return; }
+                    }
+                    if (step === 3) {
+                      if (!retailValue) { setStepError('Please enter the retail value.'); return; }
+                      if (!ticketPrice) { setStepError('Please select a ticket price.'); return; }
+                      if (!totalTickets) { setStepError('Please enter the total number of tickets.'); return; }
+                    }
+                    setStep(s => s + 1);
+                  }}
+                  style={{
+                    flex: 2, padding: 14, borderRadius: 999,
+                    background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                    border: 'none', color: 'var(--white)', fontWeight: 700, cursor: 'pointer', fontSize: 15,
+                  }}
+                >
+                  {step === 3 ? 'Review listing' : 'Next'}
+                </button>
+              </div>
             </div>
           )}
         </div>

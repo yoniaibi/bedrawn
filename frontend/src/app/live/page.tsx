@@ -9,7 +9,7 @@ import ProgressBar from '@/components/ProgressBar';
 import { chatMessages, draws } from '@/lib/mockData';
 
 const wheelColors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#A78BFA', '#F472B6'];
-const wheelHandles = ['@sarah_j', '@yoniaibi', '@collector', '@luxe_fan', '@hypekid', '@watchman', '@fashionista', '@streetwear_g'];
+const wheelHandles = ['@sarah_j', '@marcus_t', '@collector', '@luxe_fan', '@hypekid', '@watchman99', '@fashionista', '@streetwear_g'];
 
 const emojis = ['🔥', '❤️', '😍', '🏆', '💜', '🎉'];
 

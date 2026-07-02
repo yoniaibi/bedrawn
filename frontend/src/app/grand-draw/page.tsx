@@ -50,7 +50,13 @@ export default function GrandDrawPage() {
                 <LiveDot size={6} /> GRAND DRAW
               </span>
             </div>
-            <p style={{ fontSize: 48, margin: '0 0 8px' }}>{grandDraw.emoji}</p>
+            {grandDraw.imageUrl ? (
+              <div style={{ width: '100%', height: 160, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
+                <img src={grandDraw.imageUrl} alt={grandDraw.prize} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            ) : (
+              <p style={{ fontSize: 48, margin: '0 0 8px' }}>{grandDraw.emoji}</p>
+            )}
             <p className="serif" style={{ fontSize: 28, color: 'var(--text)', margin: '0 0 4px' }}>{grandDraw.prize}</p>
             <p style={{ fontSize: 13, color: 'var(--grey)', margin: '0 0 16px' }}>This month&apos;s Grand Draw prize</p>
             <span style={{
