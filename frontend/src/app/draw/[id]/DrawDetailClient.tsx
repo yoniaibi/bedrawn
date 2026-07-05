@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
@@ -29,6 +30,14 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(() => getSavedDraws().includes(getRealId(idProp)));
 
+  // Purchase modal state
+  const [showModal, setShowModal] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [walletPence, setWalletPence] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [purchaseError, setPurchaseError] = useState('');
+  const [purchased, setPurchased] = useState(false);
+
   useEffect(() => {
     const id = getRealId(idProp);
     const url = process.env.NEXT_PUBLIC_API_URL;
@@ -40,6 +49,53 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const openModal = async () => {
+    setQty(1);
+    setPurchaseError('');
+    setPurchased(false);
+    setShowModal(true);
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) return;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallet/balance`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWalletPence(data.balancePence ?? 0);
+      }
+    } catch {}
+  };
+
+  const handlePurchase = async () => {
+    if (!draw) return;
+    setSubmitting(true);
+    setPurchaseError('');
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) { router.push('/login'); return; }
+      const id = getRealId(idProp);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/enter`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketCount: qty }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPurchaseError(data.error ?? 'Something went wrong');
+      } else {
+        setPurchased(true);
+        setWalletPence(prev => prev !== null ? prev - qty * draw.ticketPrice : null);
+      }
+    } catch {
+      setPurchaseError('Network error — please try again');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSave = () => {
     const id = getRealId(idProp);
@@ -237,7 +293,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
               {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600 }}>⏰ Closing tonight at 9pm</p>}
               <button
                 className="btn-purchase"
-                onClick={() => router.push(`/draw/${draw.id}/purchase`)}
+                onClick={openModal}
                 style={{ width: '100%', fontSize: 16, fontWeight: 700, borderRadius: 10 }}
               >
                 Enter draw · {price}
@@ -246,6 +302,98 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
           )}
         </div>
       </div>
+
+      {/* Purchase modal */}
+      {showModal && draw && (
+        <div
+          onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+        >
+          <div style={{ background: 'var(--card)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, padding: 24, paddingBottom: 40 }}>
+
+            {purchased ? (
+              /* Success state */
+              <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
+                <p style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>You're in!</p>
+                <p style={{ fontSize: 14, color: 'var(--grey)', margin: '0 0 4px' }}>{qty} ticket{qty > 1 ? 's' : ''} · {qty * draw.ticketPrice >= 100 ? `£${(qty * draw.ticketPrice / 100).toFixed(2)}` : `${qty * draw.ticketPrice}p`} spent</p>
+                {walletPence !== null && (
+                  <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 24px' }}>Wallet balance: {walletPence >= 100 ? `£${(walletPence / 100).toFixed(2)}` : `${walletPence}p`}</p>
+                )}
+                <button onClick={() => setShowModal(false)} style={{ padding: '12px 32px', borderRadius: 999, background: 'var(--purple)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text)' }}>Enter draw</p>
+                  <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: 22, color: 'var(--grey)', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+                </div>
+
+                {/* Draw title */}
+                <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{draw.title}</p>
+
+                {/* Wallet balance */}
+                <div style={{ background: 'var(--bg)', borderRadius: 10, padding: '10px 14px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, color: 'var(--grey)' }}>Wallet balance</span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: walletPence !== null && walletPence < qty * draw.ticketPrice ? 'var(--red)' : 'var(--gold)' }}>
+                    {walletPence === null ? '…' : walletPence >= 100 ? `£${(walletPence / 100).toFixed(2)}` : `${walletPence}p`}
+                  </span>
+                </div>
+
+                {/* Quantity selector */}
+                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--grey)', fontWeight: 600 }}>Number of tickets</p>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                  {[1, 5, 10, 25].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setQty(n)}
+                      style={{
+                        flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+                        background: qty === n ? 'var(--purple)' : 'var(--bg)',
+                        border: `2px solid ${qty === n ? 'var(--purple)' : 'var(--border)'}`,
+                        color: qty === n ? '#fff' : 'var(--text)',
+                      }}
+                    >{n}</button>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <span style={{ fontSize: 14, color: 'var(--grey)' }}>Total</span>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
+                    {qty * draw.ticketPrice >= 100 ? `£${(qty * draw.ticketPrice / 100).toFixed(2)}` : `${qty * draw.ticketPrice}p`}
+                  </span>
+                </div>
+
+                {purchaseError && (
+                  <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--red)', textAlign: 'center' }}>{purchaseError}</p>
+                )}
+
+                {/* Insufficient funds */}
+                {walletPence !== null && walletPence < qty * draw.ticketPrice ? (
+                  <div>
+                    <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--red)', textAlign: 'center' }}>Insufficient wallet balance</p>
+                    <button onClick={() => { setShowModal(false); router.push('/account/wallet'); }} style={{ width: '100%', padding: 16, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+                      Top up wallet →
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handlePurchase}
+                    disabled={submitting}
+                    style={{ width: '100%', padding: 16, borderRadius: 999, background: submitting ? 'var(--border)' : 'var(--purple)', border: 'none', color: '#fff', fontSize: 16, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer' }}
+                  >
+                    {submitting ? 'Confirming…' : `Confirm · ${qty * draw.ticketPrice >= 100 ? `£${(qty * draw.ticketPrice / 100).toFixed(2)}` : `${qty * draw.ticketPrice}p`}`}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
