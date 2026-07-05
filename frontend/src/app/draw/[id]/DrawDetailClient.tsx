@@ -345,7 +345,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
 
                 {/* Quantity selector */}
                 <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--grey)', fontWeight: 600 }}>Number of tickets</p>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                   {[1, 5, 10, 25].map(n => (
                     <button
                       key={n}
@@ -358,6 +358,21 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                       }}
                     >{n}</button>
                   ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--border)', color: 'var(--text)', fontSize: 20, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>−</button>
+                  <input
+                    type="number"
+                    min={1}
+                    max={draw.totalTickets - draw.soldTickets}
+                    value={qty}
+                    onChange={e => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v) && v >= 1) setQty(Math.min(v, draw.totalTickets - draw.soldTickets));
+                    }}
+                    style={{ flex: 1, textAlign: 'center', padding: '8px', borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--purple)', color: 'var(--text)', fontSize: 18, fontWeight: 700, outline: 'none' }}
+                  />
+                  <button onClick={() => setQty(q => Math.min(q + 1, draw.totalTickets - draw.soldTickets))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--border)', color: 'var(--text)', fontSize: 20, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>+</button>
                 </div>
 
                 {/* Total */}
