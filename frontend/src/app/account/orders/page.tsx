@@ -40,7 +40,7 @@ export default function OrdersPage() {
     (async () => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
+        const token = session.tokens?.idToken?.toString();
         if (!token) return;
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/entries`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -105,9 +105,13 @@ export default function OrdersPage() {
               return (
                 <Link key={entry.drawId} href={`/draw/${entry.drawId}`} style={{ textDecoration: 'none' }}>
                   <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
-                    {entry.drawImageUrl && (
-                      <img src={entry.drawImageUrl} alt="" style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-                    )}
+                    <div style={{ width: 48, height: 48, borderRadius: 8, flexShrink: 0, overflow: 'hidden', background: 'var(--card2)' }}>
+                      {entry.drawImageUrl ? (
+                        <img src={entry.drawImageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🎟</div>
+                      )}
+                    </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text)', flex: 1, paddingRight: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.drawTitle}</p>

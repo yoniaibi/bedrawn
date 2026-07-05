@@ -1,9 +1,11 @@
 'use client';
 
+import '@/lib/amplify';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const interests = [
   { id: 'fashion',     label: 'Fashion' },
@@ -20,15 +22,33 @@ const interests = [
 
 export default function InterestsPage() {
   const [selected, setSelected] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
   const toggle = (id: string) =>
     setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
-  const handleContinue = () => {
-    login();
-    router.push('/home');
+  const handleContinue = async () => {
+    setSaving(true);
+    try {
+      if (selected.length > 0) {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+        const url = process.env.NEXT_PUBLIC_API_URL;
+        if (token && url) {
+          await fetch(`${url}/profile`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ interests: selected }),
+          }).catch(() => {});
+        }
+      }
+    } finally {
+      setSaving(false);
+      login();
+      router.push('/home');
+    }
   };
 
   return (
@@ -68,17 +88,20 @@ export default function InterestsPage() {
 
         <button
           onClick={handleContinue}
+          disabled={saving}
           style={{
             width: '100%', padding: 16, borderRadius: 999,
             background: 'linear-gradient(135deg, var(--purple), var(--pink))',
             border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
-            marginBottom: 12, cursor: 'pointer',
+            marginBottom: 12, cursor: saving ? 'default' : 'pointer',
+            opacity: saving ? 0.7 : 1,
           }}
         >
-          {selected.length > 0 ? `Continue with ${selected.length} interest${selected.length !== 1 ? 's' : ''}` : 'Continue'}
+          {saving ? 'Saving…' : selected.length > 0 ? `Continue with ${selected.length} interest${selected.length !== 1 ? 's' : ''}` : 'Continue'}
         </button>
         <button
           onClick={handleContinue}
+          disabled={saving}
           style={{ width: '100%', padding: 12, borderRadius: 999, background: 'transparent', border: 'none', color: 'var(--grey)', fontSize: 14, cursor: 'pointer' }}
         >
           Skip for now

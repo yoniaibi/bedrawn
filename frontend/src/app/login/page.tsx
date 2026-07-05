@@ -29,7 +29,6 @@ function LoginContent() {
       if (nextStep.signInStep === 'CONFIRM_SIGN_UP') {
         // Account exists but email not verified
         sessionStorage.setItem('drawn_pending_email', email);
-        sessionStorage.setItem('drawn_pending_pw', password);
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         return;
       }

@@ -41,7 +41,6 @@ export default function SignupPage() {
         options: { userAttributes: { email, name } },
       });
       sessionStorage.setItem('drawn_pending_email', email);
-      sessionStorage.setItem('drawn_pending_pw', password);
       sessionStorage.setItem('drawn_pending_handle', handle);
       sessionStorage.setItem('drawn_pending_name', name);
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);

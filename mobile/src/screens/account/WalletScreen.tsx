@@ -23,7 +23,8 @@ interface Transaction {
 
 const TX_ICONS: Record<string, string> = {
   topup: '+',
-  spend: '-',
+  purchase: '-',
+  spend: '-',   // legacy alias
   win: '★',
   refund: '↩',
 };
@@ -74,7 +75,7 @@ export function WalletScreen() {
           <View style={styles.topUpNotice}>
             <Text style={styles.topUpNoticeText}>
               To top up your wallet, visit{'\n'}
-              <Text style={styles.topUpLink}>bedrawn.co.uk/account/wallet</Text>
+              <Text style={styles.topUpLink}>bedrawn.app/account/wallet</Text>
               {'\n'}on your browser.
             </Text>
           </View>

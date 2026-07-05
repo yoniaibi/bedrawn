@@ -1,7 +1,7 @@
 'use client';
 
 import '@/lib/amplify';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { fetchAuthSession } from 'aws-amplify/auth';
@@ -20,6 +20,12 @@ const CATEGORIES = ['Bags', 'Trainers', 'Watches', 'Jewellery', 'Streetwear', 'F
 const STYLES = ['Womenswear', 'Menswear', 'Unisex'];
 const TICKET_PRICES = ['10p', '25p', '50p', '£1', 'Custom'];
 
+function parseTicketPricePence(price: string): number {
+  if (price === 'Custom') return 0;
+  if (price.startsWith('£')) return Math.round(parseFloat(price.slice(1)) * 100);
+  return parseInt(price.replace('p', ''), 10);
+}
+
 export default function ListItemPage() {
   const [step, setStep] = useState(0);
   const [type, setType] = useState('');
@@ -30,6 +36,7 @@ export default function ListItemPage() {
   const [desc, setDesc] = useState('');
   const [retailValue, setRetailValue] = useState('');
   const [ticketPrice, setTicketPrice] = useState('');
+  const [customPrice, setCustomPrice] = useState('');
   const [totalTickets, setTotalTickets] = useState('');
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -38,13 +45,37 @@ export default function ListItemPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [stepError, setStepError] = useState('');
+  const [kycStatus, setKycStatus] = useState<'loading' | 'ok' | 'required'>('loading');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+        if (!token) { setKycStatus('required'); return; }
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/seller/account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ statusCheck: true }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setKycStatus(data.chargesEnabled && data.payoutsEnabled ? 'ok' : 'required');
+        } else {
+          setKycStatus('required');
+        }
+      } catch {
+        setKycStatus('required');
+      }
+    })();
+  }, []);
 
   const handlePhotoUpload = async (file: File, slot: number) => {
     if (!file) return;
     setUploading(true);
     try {
       const session = await fetchAuthSession();
-      const token = session.tokens?.accessToken?.toString();
+      const token = session.tokens?.idToken?.toString();
       if (!token) return;
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload-url`, {
         method: 'POST',
@@ -66,9 +97,38 @@ export default function ListItemPage() {
     }
   };
 
-  const earnings = retailValue && ticketPrice
-    ? parseFloat(retailValue) * 0.88
+  const resolvedTicketPricePence = ticketPrice === 'Custom' ? parseFloat(customPrice || '0') : parseTicketPricePence(ticketPrice);
+  const earnings = retailValue && ticketPrice && totalTickets && resolvedTicketPricePence > 0
+    ? (resolvedTicketPricePence / 100) * parseInt(totalTickets, 10) * 0.88
     : null;
+
+  if (kycStatus === 'loading') {
+    return (
+      <AppShell>
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--grey)' }}>Checking your seller status…</div>
+      </AppShell>
+    );
+  }
+
+  if (kycStatus === 'required') {
+    return (
+      <AppShell>
+        <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center', padding: '60px 24px' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
+          <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)', margin: '0 0 10px' }}>Verify your identity first</p>
+          <p style={{ fontSize: 14, color: 'var(--grey)', margin: '0 0 24px', lineHeight: 1.6 }}>
+            You need to complete Stripe identity verification before listing items.
+            This protects buyers and ensures you can receive payouts.
+          </p>
+          <Link href="/seller/dashboard" style={{ textDecoration: 'none' }}>
+            <button style={{ padding: '13px 28px', borderRadius: 999, background: 'linear-gradient(135deg, var(--purple), var(--pink))', border: 'none', color: 'var(--white)', fontSize: 15, fontWeight: 700 }}>
+              Complete verification →
+            </button>
+          </Link>
+        </div>
+      </AppShell>
+    );
+  }
 
   if (submitted) {
     return (
@@ -243,6 +303,12 @@ export default function ListItemPage() {
                     }}>{p}</button>
                   ))}
                 </div>
+                {ticketPrice === 'Custom' && (
+                  <div style={{ marginTop: 10 }}>
+                    <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Custom price (pence, e.g. 15 for 15p)</label>
+                    <input type="number" min="1" value={customPrice} onChange={e => setCustomPrice(e.target.value)} placeholder="e.g. 15" style={{ maxWidth: 160 }} />
+                  </div>
+                )}
               </div>
               <div>
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Total tickets available</label>
@@ -254,7 +320,12 @@ export default function ListItemPage() {
                     At full sell-out you earn{' '}
                     <strong style={{ color: 'var(--green)', fontSize: 16 }}>£{earnings.toFixed(2)}</strong>
                   </p>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--grey)' }}>88% of total ticket revenue</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--grey)' }}>
+                    88% of {totalTickets} tickets × {ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice} = £{((resolvedTicketPricePence / 100) * parseInt(totalTickets, 10)).toFixed(2)} revenue
+                  </p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
+                    Draw needs {Math.ceil(parseInt(totalTickets, 10) * 0.25)} tickets sold (25% minimum) or it cancels and buyers are refunded
+                  </p>
                 </div>
               )}
             </div>
@@ -308,12 +379,12 @@ export default function ListItemPage() {
                   setSubmitError('');
                   try {
                     const session = await fetchAuthSession();
-                    const token = session.tokens?.accessToken?.toString();
+                    const token = session.tokens?.idToken?.toString();
                     if (!token) throw new Error('Please log in to list an item');
                     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice, totalTickets, retailValue, imageUrls: photoUrls.filter(Boolean) }),
+                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice: ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice, totalTickets, retailValue, imageUrls: photoUrls.filter(Boolean) }),
                     });
                     if (!res.ok) {
                       const body = await res.json().catch(() => ({}));
@@ -364,6 +435,7 @@ export default function ListItemPage() {
                     if (step === 3) {
                       if (!retailValue) { setStepError('Please enter the retail value.'); return; }
                       if (!ticketPrice) { setStepError('Please select a ticket price.'); return; }
+                      if (ticketPrice === 'Custom' && (!customPrice || parseFloat(customPrice) <= 0)) { setStepError('Please enter your custom ticket price in pence (e.g. 15 for 15p).'); return; }
                       if (!totalTickets) { setStepError('Please enter the total number of tickets.'); return; }
                     }
                     setStep(s => s + 1);

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import '@/lib/amplify';
 
 interface Draw {
   id: string;
@@ -20,6 +22,10 @@ interface Draw {
 export default function WinnerClient({ id }: { id: string }) {
   const [draw, setDraw] = useState<Draw | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [payoutDone, setPayoutDone] = useState(false);
+  const [payoutError, setPayoutError] = useState('');
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_API_URL;
@@ -29,7 +35,38 @@ export default function WinnerClient({ id }: { id: string }) {
       .then(d => { if (d?.draw) setDraw(d.draw); })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    // Get current user's sub so we can check if they're the winner
+    fetchAuthSession()
+      .then(session => {
+        const sub = (session.tokens?.idToken?.payload as any)?.sub as string | undefined;
+        if (sub) setCurrentUserId(sub);
+      })
+      .catch(() => {});
   }, [id]);
+
+  const handleConfirmDelivery = async () => {
+    setConfirming(true);
+    setPayoutError('');
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/payout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).error ?? 'Failed to confirm delivery');
+      }
+      setPayoutDone(true);
+    } catch (err: unknown) {
+      setPayoutError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -164,6 +201,38 @@ export default function WinnerClient({ id }: { id: string }) {
               <p style={{ margin: '0 0 24px', fontSize: 12, color: 'var(--muted)' }}>
                 Drawn on {resolvedDate}
               </p>
+            )}
+
+            {/* Confirm delivery — only shown to the winner */}
+            {currentUserId && draw.winnerHandle && (
+              <div style={{ marginBottom: 20 }}>
+                {payoutDone ? (
+                  <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid var(--green)', borderRadius: 12, padding: '14px 20px' }}>
+                    <p style={{ margin: 0, color: 'var(--green)', fontWeight: 700, fontSize: 14 }}>Delivery confirmed — seller payout initiated</p>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleConfirmDelivery}
+                      disabled={confirming}
+                      style={{
+                        width: '100%', padding: '14px 24px', borderRadius: 999,
+                        background: confirming ? 'var(--muted)' : 'linear-gradient(135deg, var(--gold), #d97706)',
+                        border: 'none', color: '#000', fontWeight: 800, fontSize: 15,
+                        cursor: confirming ? 'not-allowed' : 'pointer', marginBottom: 8,
+                      }}
+                    >
+                      {confirming ? 'Confirming…' : 'Confirm delivery received'}
+                    </button>
+                    <p style={{ margin: 0, fontSize: 11, color: 'var(--muted)' }}>
+                      Only press once you&apos;ve received the item. This releases payment to the seller.
+                    </p>
+                    {payoutError && (
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--red)' }}>{payoutError}</p>
+                    )}
+                  </>
+                )}
+              </div>
             )}
 
             <Link href="/home" style={{

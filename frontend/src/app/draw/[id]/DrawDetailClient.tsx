@@ -6,15 +6,7 @@ import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
-import ActivityTicker from '@/components/ActivityTicker';
-import { draws } from '@/lib/mockData';
 import type { Draw } from '@/lib/mockData';
-
-const socialProof = [
-  '@emily just bought 5 tickets — 2 mins ago',
-  '@collector99 entered — 4 mins ago',
-  '@hypekid just bought 10 tickets — 6 mins ago',
-];
 
 function getSavedDraws(): string[] {
   if (typeof window === 'undefined') return [];
@@ -22,15 +14,13 @@ function getSavedDraws(): string[] {
 }
 
 export default function DrawDetailClient({ id }: { id: string }) {
-  const mockDraw = draws.find(d => d.id === id) ?? null;
   const router = useRouter();
-  const [draw, setDraw] = useState<Draw | null>(mockDraw);
-  const [loading, setLoading] = useState(!mockDraw);
+  const [draw, setDraw] = useState<Draw | null>(null);
+  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(() => getSavedDraws().includes(id));
 
   useEffect(() => {
-    if (mockDraw) return;
     const url = process.env.NEXT_PUBLIC_API_URL;
     if (!url) { setLoading(false); return; }
     fetch(`${url}/draws/${id}`)
@@ -38,7 +28,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
       .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [id, mockDraw]);
+  }, [id]);
 
   const handleSave = () => {
     setSaved(prev => {
@@ -173,8 +163,7 @@ export default function DrawDetailClient({ id }: { id: string }) {
             <span style={{ fontSize: 12, color: remaining < 500 ? 'var(--red)' : 'var(--grey)' }}>{remaining.toLocaleString()} remaining</span>
           </div>
           <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-            <span style={{ fontSize: 12, color: 'var(--grey)' }}>247 watching</span>
-            <span style={{ fontSize: 12, color: 'var(--grey)' }}>12 postal entries</span>
+            <span style={{ fontSize: 12, color: 'var(--grey)' }}>{draw.soldTickets.toLocaleString()} entries</span>
           </div>
           <div style={{ marginBottom: 16 }}>
             <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>About this item</p>
@@ -193,13 +182,11 @@ export default function DrawDetailClient({ id }: { id: string }) {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
             <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Free postal entry</p>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
-              Write your name, email, and this draw&apos;s title on a postcard and post to:<br />
-              <strong style={{ color: 'var(--text)' }}>Bedrawn, PO Box 1000, London EC1A 1BB</strong><br />
-              One postcard = one entry, equal odds to paid tickets.
+              One postcard = one entry, equal odds to paid tickets. Write your name, email, and this draw&apos;s title on a postcard and send to our postal address.<br />
+              <strong style={{ color: 'var(--gold)' }}>Postal address coming soon — will be published before launch.</strong>
             </p>
           </div>
 
-          <ActivityTicker messages={socialProof} />
         </div>
 
         {/* Winner banner — shown when draw is resolved */}

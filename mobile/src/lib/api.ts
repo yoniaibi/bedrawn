@@ -4,7 +4,7 @@ const API = process.env.EXPO_PUBLIC_API_URL!;
 
 export async function getAuthToken(): Promise<string> {
   const session = await fetchAuthSession();
-  const token = session.tokens?.accessToken?.toString();
+  const token = session.tokens?.idToken?.toString();
   if (!token) throw new Error('Not authenticated');
   return token;
 }

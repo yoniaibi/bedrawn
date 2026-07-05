@@ -5,13 +5,12 @@ import { cors } from './stripe-client';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.TABLE_NAME!;
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
+
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const claims = (event.requestContext as any).authorizer?.jwt?.claims;
-  // API GW passes cognito:groups as "[admin]" (no quotes inside) — not valid JSON
-  const raw = String(claims?.['cognito:groups'] ?? '');
-  const groups = raw.replace(/^\[|\]$/g, '').split(',').map(g => g.trim()).filter(Boolean);
-
-  if (!groups.includes('admin')) {
+  const email = claims?.email as string | undefined;
+  if (!email || !ADMIN_EMAILS.includes(email)) {
     return { statusCode: 403, headers: cors, body: JSON.stringify({ error: 'Forbidden' }) };
   }
 

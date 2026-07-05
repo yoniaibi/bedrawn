@@ -61,7 +61,7 @@ export default function AccountPage() {
     (async () => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
+        const token = session.tokens?.idToken?.toString();
         if (!token) return;
         const API = process.env.NEXT_PUBLIC_API_URL ?? '';
         const headers = { Authorization: `Bearer ${token}` };

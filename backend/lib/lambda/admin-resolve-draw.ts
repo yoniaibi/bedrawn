@@ -1,7 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand, PutCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { cors } from './stripe-client';
+import { randomInt } from 'crypto';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.TABLE_NAME!;
@@ -9,12 +10,86 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim
 
 function pickWeightedWinner(entries: { userId: string; ticketCount: number }[]): string {
   const total = entries.reduce((sum, e) => sum + e.ticketCount, 0);
-  let roll = Math.floor(Math.random() * total);
+  let roll = randomInt(0, total);
   for (const entry of entries) {
     roll -= entry.ticketCount;
     if (roll < 0) return entry.userId;
   }
   return entries[entries.length - 1].userId;
+}
+
+async function refundEntrant(
+  drawId: string,
+  drawTitle: string,
+  userId: string,
+  ticketCount: number,
+  ticketPricePence: number,
+): Promise<boolean> {
+  const refundPence = ticketCount * ticketPricePence;
+  const now = new Date().toISOString();
+  try {
+    await db.send(new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `DEDUP#REFUND#${drawId}`,
+              SK: `USER#${userId}`,
+              refundedAt: now,
+              ttl: Math.floor(Date.now() / 1000) + 90 * 24 * 3600,
+            },
+            ConditionExpression: 'attribute_not_exists(PK)',
+          },
+        },
+        {
+          Update: {
+            TableName: TABLE,
+            Key: { PK: `USER#${userId}`, SK: 'WALLET' },
+            UpdateExpression: 'ADD balancePence :refund',
+            ExpressionAttributeValues: { ':refund': refundPence },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `TX#${now}-REFUND-${drawId}`,
+              type: 'refund',
+              description: `Refund: ${drawTitle} (draw cancelled)`,
+              amountPence: refundPence,
+              drawId,
+              createdAt: now,
+            },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `NOTIF#${now}-REFUND-${drawId}`,
+              type: 'draw_cancelled',
+              title: 'Draw cancelled — refund issued',
+              body: `The draw "${drawTitle}" was cancelled. £${(refundPence / 100).toFixed(2)} has been returned to your wallet.`,
+              drawId,
+              drawTitle,
+              read: false,
+              createdAt: now,
+            },
+          },
+        },
+      ],
+    }));
+    return true;
+  } catch (err: any) {
+    if (err.name === 'TransactionCanceledException') {
+      const reasons = err.CancellationReasons ?? [];
+      if (reasons[0]?.Code === 'ConditionalCheckFailed') return false;
+    }
+    throw err;
+  }
 }
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -50,59 +125,103 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   }));
 
   const soldTickets = entries.reduce((s, e) => s + e.ticketCount, 0);
+  const minTickets = (draw.minTickets as number) ?? 0;
+  const ticketPricePence = (draw.ticketPricePence as number) ?? 0;
+  const drawTitle = draw.title as string;
   const now = new Date().toISOString();
 
-  if (entries.length === 0) {
-    await db.send(new UpdateCommand({
-      TableName: TABLE,
-      Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-      UpdateExpression: 'SET #st = :cancelled, resolvedAt = :d, cancelReason = :r',
-      ExpressionAttributeNames: { '#st': 'status' },
-      ExpressionAttributeValues: { ':cancelled': 'cancelled', ':d': now, ':r': 'no entries (admin triggered)' },
-    }));
-    return { statusCode: 200, headers: cors, body: JSON.stringify({ result: 'cancelled', reason: 'no entries' }) };
+  if (entries.length === 0 || soldTickets < minTickets) {
+    const reason = entries.length === 0
+      ? 'no entries (admin triggered)'
+      : `below minimum (${soldTickets}/${minTickets}) (admin triggered)`;
+
+    // Refund all entrants BEFORE flipping status, matching nightly cron behaviour.
+    let refunded = 0;
+    for (const e of entries) {
+      const applied = await refundEntrant(drawId, drawTitle, e.userId, e.ticketCount, ticketPricePence);
+      if (applied) refunded++;
+    }
+
+    try {
+      await db.send(new UpdateCommand({
+        TableName: TABLE,
+        Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+        UpdateExpression: 'SET #st = :cancelled, resolvedAt = :d, cancelReason = :r',
+        ConditionExpression: '#st = :open',
+        ExpressionAttributeNames: { '#st': 'status' },
+        ExpressionAttributeValues: { ':cancelled': 'cancelled', ':open': 'open', ':d': now, ':r': reason },
+      }));
+    } catch (err: any) {
+      if (err.name === 'ConditionalCheckFailedException') {
+        return { statusCode: 409, headers: cors, body: JSON.stringify({ error: 'Draw was already resolved or cancelled by a concurrent operation' }) };
+      }
+      throw err;
+    }
+
+    return { statusCode: 200, headers: cors, body: JSON.stringify({ result: 'cancelled', reason, refunded }) };
   }
 
   const winnerId = pickWeightedWinner(entries);
+  const isPostalWinner = winnerId.startsWith('POSTAL_');
 
-  await db.send(new UpdateCommand({
-    TableName: TABLE,
-    Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-    UpdateExpression: 'SET #st = :resolved, winnerId = :winner, resolvedAt = :d',
-    ConditionExpression: '#st = :open',
-    ExpressionAttributeNames: { '#st': 'status' },
-    ExpressionAttributeValues: {
-      ':resolved': 'resolved',
-      ':open': 'open',
-      ':winner': winnerId,
-      ':d': now,
+  const transactItems: any[] = [
+    {
+      Update: {
+        TableName: TABLE,
+        Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+        UpdateExpression: 'SET #st = :resolved, winnerId = :winner, resolvedAt = :d',
+        ConditionExpression: '#st = :open',
+        ExpressionAttributeNames: { '#st': 'status' },
+        ExpressionAttributeValues: {
+          ':resolved': 'resolved',
+          ':open': 'open',
+          ':winner': winnerId,
+          ':d': now,
+        },
+      },
     },
-  }));
+  ];
 
-  await db.send(new PutCommand({
-    TableName: TABLE,
-    Item: {
-      PK: `USER#${winnerId}`,
-      SK: `NOTIF#${now}`,
-      type: 'draw_won',
-      title: '🎉 You won!',
-      body: `You won the draw for: ${draw.title as string}`,
-      drawId,
-      drawTitle: draw.title as string,
-      read: false,
-      createdAt: now,
-    },
-  }));
+  if (!isPostalWinner) {
+    transactItems.push({
+      Put: {
+        TableName: TABLE,
+        Item: {
+          PK: `USER#${winnerId}`,
+          SK: `NOTIF#${now}`,
+          type: 'draw_won',
+          title: '🎉 You won!',
+          body: `You won the draw for: ${drawTitle}`,
+          drawId,
+          drawTitle,
+          read: false,
+          createdAt: now,
+        },
+      },
+    });
+  }
+
+  try {
+    await db.send(new TransactWriteCommand({ TransactItems: transactItems }));
+  } catch (err: any) {
+    if (err.name === 'TransactionCanceledException') {
+      const reasons = err.CancellationReasons ?? [];
+      if (reasons[0]?.Code === 'ConditionalCheckFailed') {
+        return { statusCode: 409, headers: cors, body: JSON.stringify({ error: 'Draw was already resolved or cancelled by a concurrent operation' }) };
+      }
+    }
+    throw err;
+  }
 
   return {
     statusCode: 200,
     headers: cors,
     body: JSON.stringify({
       result: 'resolved',
-      winnerId,
-      drawTitle: draw.title,
+      drawTitle,
       soldTickets,
       entries: entries.length,
+      ...(isPostalWinner ? { postalWinner: winnerId, note: 'Postal winner — retrieve USER#POSTAL_.../PROFILE and contact manually' } : {}),
     }),
   };
 };

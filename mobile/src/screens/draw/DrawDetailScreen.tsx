@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LiveDot } from '../../components/LiveDot';
@@ -25,7 +26,10 @@ export function DrawDetailScreen({ route, navigation }: Props) {
   const [descExpanded, setDescExpanded] = useState(false);
 
   const percent = Math.round((draw.soldTickets / draw.totalTickets) * 100);
-  const watching = 247;
+  const heroImageUrl: string | undefined = draw.imageUrls?.[0] ?? draw.imageUrl;
+  const priceLabel = draw.ticketPrice >= 100
+    ? `£${(draw.ticketPrice / 100).toFixed(2)}`
+    : `${draw.ticketPrice}p`;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -36,7 +40,11 @@ export function DrawDetailScreen({ route, navigation }: Props) {
         </TouchableOpacity>
 
         {/* Hero image */}
-        <View style={[styles.heroImage, { backgroundColor: draw.imageColor }]}>
+        <ImageBackground
+          source={heroImageUrl ? { uri: heroImageUrl } : undefined}
+          style={[styles.heroImage, !heroImageUrl && { backgroundColor: draw.imageColor ?? C.CARD2 }]}
+          imageStyle={{ resizeMode: 'cover' }}
+        >
           {draw.isClosingTonight && (
             <View style={styles.closingBadge}>
               <LiveDot />
@@ -48,7 +56,7 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               <Text style={styles.bundleText}>BUNDLE</Text>
             </View>
           )}
-        </View>
+        </ImageBackground>
 
         {/* Content */}
         <View style={styles.content}>
@@ -96,7 +104,7 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           <View style={styles.priceRow}>
             <View style={styles.ticketPricePill}>
               <Text style={styles.ticketPriceLabel}>Per ticket</Text>
-              <Text style={styles.ticketPriceValue}>{draw.ticketPrice}p</Text>
+              <Text style={styles.ticketPriceValue}>{priceLabel}</Text>
             </View>
             <View style={styles.retailPill}>
               <Text style={styles.retailLabel}>RRP</Text>
@@ -117,7 +125,6 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               <Text style={styles.ticketStatText}>
                 {draw.soldTickets.toLocaleString()} / {draw.totalTickets.toLocaleString()} tickets sold
               </Text>
-              <Text style={styles.watchingText}>{watching} watching</Text>
             </View>
           </View>
 
@@ -125,7 +132,7 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           <View style={styles.postalNote}>
             <Text style={styles.postalIcon}>✉</Text>
             <Text style={styles.postalText}>
-              Free postal entry available. See our T&Cs for details.
+              Free postal entry available — one postcard = one entry, equal odds. Postal address coming soon, published before launch.
             </Text>
           </View>
 
@@ -145,19 +152,6 @@ export function DrawDetailScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           </View>
 
-          {/* Social proof */}
-          <View style={styles.socialProof}>
-            <Text style={styles.socialText}>
-              <Text style={styles.socialHandle}>@emily</Text> just bought 5 tickets · 2 mins ago
-            </Text>
-          </View>
-
-          <View style={styles.socialProof}>
-            <Text style={styles.socialText}>
-              {draw.soldTickets} people have already entered this draw
-            </Text>
-          </View>
-
           {/* Style & condition details */}
           <View style={styles.detailsCard}>
             <Text style={styles.detailsTitle}>Item details</Text>
@@ -165,9 +159,9 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               { label: 'Category', value: draw.category },
               { label: 'Style', value: draw.style },
               { label: 'Condition', value: draw.condition },
-              { label: 'Ticket price', value: `${draw.ticketPrice}p` },
+              { label: 'Ticket price', value: priceLabel },
               { label: 'Total tickets', value: draw.totalTickets.toLocaleString() },
-              { label: 'Draw closes', value: draw.isClosingTonight ? 'Tonight at 9pm' : 'Tomorrow at 9pm' },
+              { label: 'Draw closes', value: draw.closingDate ? `${draw.closingDate} at 9pm UK` : 'Tonight at 9pm UK' },
             ].map(item => (
               <View key={item.label} style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{item.label}</Text>
@@ -188,7 +182,7 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           onPress={() => navigation.navigate('Purchase', { draw })}
           activeOpacity={0.85}
         >
-          <Text style={styles.enterBtnText}>Enter draw · {draw.ticketPrice}p per ticket</Text>
+          <Text style={styles.enterBtnText}>Enter draw · {priceLabel} per ticket</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

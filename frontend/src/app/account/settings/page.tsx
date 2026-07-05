@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
 
 function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -24,9 +26,36 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 }
 
 export default function SettingsPage() {
-  const [handle, setHandle] = useState('yoniaibi');
+  const router = useRouter();
   const [notifs, setNotifs] = useState({ reminders: true, wins: true, listings: false, grandDraw: true });
   const [showDelete, setShowDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) throw new Error('Not signed in');
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Failed to delete account');
+      }
+
+      await signOut();
+      router.push('/');
+    } catch (err: any) {
+      setDeleteError(err.message ?? 'Something went wrong');
+      setDeleting(false);
+    }
+  };
 
   return (
     <AppShell>
@@ -37,30 +66,6 @@ export default function SettingsPage() {
         </div>
 
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Account details */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Account</p>
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
-                <label style={{ fontSize: 11, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Handle</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <span style={{ color: 'var(--muted)', fontSize: 15, lineHeight: '36px' }}>@</span>
-                  <input value={handle} onChange={e => setHandle(e.target.value)} style={{ flex: 1, padding: '6px 10px', fontSize: 15 }} />
-                </div>
-              </div>
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
-                <label style={{ fontSize: 11, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Email</label>
-                <input defaultValue="yoni@example.com" type="email" style={{ padding: '6px 10px', fontSize: 15 }} />
-              </div>
-              <div style={{ padding: '14px 16px' }}>
-                <label style={{ fontSize: 11, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Password</label>
-                <button style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--white)', fontSize: 13, cursor: 'pointer' }}>
-                  Change password
-                </button>
-              </div>
-            </div>
-          </div>
-
           {/* Notifications */}
           <div>
             <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Notifications</p>
@@ -85,32 +90,61 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Save button */}
-          <button style={{
-            width: '100%', padding: 14, borderRadius: 999,
-            background: 'linear-gradient(135deg, var(--purple), var(--pink))',
-            border: 'none', color: 'var(--white)', fontSize: 15, fontWeight: 700,
-          }}>Save changes</button>
+          {/* Legal links */}
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+            {[
+              { label: 'Privacy Policy',   href: '/legal/privacy' },
+              { label: 'Terms of Service', href: '/legal/terms' },
+            ].map((item, i) => (
+              <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
+                <div style={{
+                  padding: '15px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  borderBottom: i === 0 ? '1px solid var(--border)' : 'none',
+                }}>
+                  <span style={{ fontSize: 14, color: 'var(--text)' }}>{item.label}</span>
+                  <span style={{ color: 'var(--muted)', fontSize: 16 }}>›</span>
+                </div>
+              </Link>
+            ))}
+          </div>
 
-          {/* Danger zone */}
+          {/* Danger zone — GDPR account deletion */}
           <div>
             <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--red)', textTransform: 'uppercase', letterSpacing: 1 }}>Danger zone</p>
             {!showDelete ? (
               <button
                 onClick={() => setShowDelete(true)}
                 style={{ padding: '12px 20px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', color: 'var(--red)', fontSize: 14, cursor: 'pointer' }}
-              >Delete account</button>
+              >Delete my account</button>
             ) : (
-              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 12, padding: 16 }}>
-                <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>Are you sure?</p>
-                <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>This permanently deletes your account and all data. This cannot be undone.</p>
+              <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid var(--red)', borderRadius: 12, padding: 16 }}>
+                <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--text)', fontWeight: 700 }}>Permanently delete account?</p>
+                <p style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.5 }}>
+                  This will delete your profile, wallet, transaction history, and notification data. Your ticket entries remain on draws for integrity but are anonymised.
+                </p>
+                <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>This cannot be undone.</p>
+                {deleteError && (
+                  <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--red)' }}>{deleteError}</p>
+                )}
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => setShowDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--white)', cursor: 'pointer' }}>Cancel</button>
-                  <button style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--red)', border: 'none', color: 'var(--white)', fontWeight: 700, cursor: 'pointer' }}>Delete</button>
+                  <button
+                    onClick={() => { setShowDelete(false); setDeleteError(''); }}
+                    disabled={deleting}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--white)', cursor: 'pointer' }}
+                  >Cancel</button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleting}
+                    style={{ flex: 1, padding: '10px', borderRadius: 8, background: 'var(--red)', border: 'none', color: 'var(--white)', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.6 : 1 }}
+                  >{deleting ? 'Deleting…' : 'Yes, delete'}</button>
                 </div>
               </div>
             )}
           </div>
+
+          <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--muted)', margin: 0 }}>
+            Right to erasure under UK GDPR. Your data is deleted within 24 hours.
+          </p>
         </div>
       </div>
     </AppShell>

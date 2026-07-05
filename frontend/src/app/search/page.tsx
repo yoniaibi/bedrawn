@@ -43,16 +43,20 @@ export default function SearchPage() {
         }
       }
     } catch {}
-    // Fall back to searching mock data locally
-    const lower = q.trim().toLowerCase();
-    const local = mockDraws.filter(d =>
-      d.title.toLowerCase().includes(lower) ||
-      d.seller.toLowerCase().includes(lower) ||
-      (d.sellerName ?? '').toLowerCase().includes(lower) ||
-      d.tags.some(t => t.toLowerCase().includes(lower)) ||
-      d.category.toLowerCase().includes(lower)
-    );
-    setResults(local);
+    // In development only: fall back to mock data so the search UI is usable without an API
+    if (process.env.NODE_ENV !== 'production') {
+      const lower = q.trim().toLowerCase();
+      const local = mockDraws.filter(d =>
+        d.title.toLowerCase().includes(lower) ||
+        d.seller.toLowerCase().includes(lower) ||
+        (d.sellerName ?? '').toLowerCase().includes(lower) ||
+        d.tags.some(t => t.toLowerCase().includes(lower)) ||
+        d.category.toLowerCase().includes(lower)
+      );
+      setResults(local);
+    } else {
+      setResults([]);
+    }
     setSearching(false);
   }, []);
 

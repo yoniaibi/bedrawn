@@ -26,7 +26,7 @@ const SECTIONS = [
   },
   {
     heading: '4. Postal Entries',
-    body: 'In accordance with UK competition law, free postal entries are available for any draw. To submit a postal entry, send a postcard with your name, email address, and the draw title to: DRAWN Entries, PO Box 12345, London, EC1A 1AA. Postal entries are subject to the same odds as purchased ticket entries. One postal entry per draw per entrant.',
+    body: 'In accordance with UK competition law, free postal entries are available for any draw. To submit a postal entry, send a postcard with your name, email address, and the draw title to our postal address (published before launch — check bedrawn.app for the current address). Postal entries are subject to the same odds as purchased ticket entries. One postal entry per draw per entrant.',
   },
   {
     heading: '5. Payments and Wallet',

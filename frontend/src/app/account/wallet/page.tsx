@@ -12,6 +12,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PK!);
 
 const topUps = [500, 1000, 2000, 5000];
 
+const topUpLabel = (pence: number) => `£${(pence / 100).toFixed(0)} to spend on tickets`;
+
 const stripeAppearance = {
   theme: 'night' as const,
   variables: {
@@ -26,7 +28,7 @@ const stripeAppearance = {
 
 async function getAuthToken(): Promise<string> {
   const session = await fetchAuthSession();
-  const token = session.tokens?.accessToken?.toString();
+  const token = session.tokens?.idToken?.toString();
   if (!token) throw new Error('Not authenticated');
   return token;
 }
@@ -101,6 +103,8 @@ function CheckoutForm({ amountPence, onSuccess, onCancel }: {
   );
 }
 
+type Transaction = { SK: string; type: string; description: string; amountPence: number; createdAt: string };
+
 export default function WalletPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
@@ -108,16 +112,22 @@ export default function WalletPage() {
   const [loadingAmount, setLoadingAmount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [balancePence, setBalancePence] = useState<number | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const fetchBalance = useCallback(async () => {
     try {
       const token = await getAuthToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallet/balance`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const [balRes, txRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallet/balance`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/wallet/transactions`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      if (balRes.ok) {
+        const data = await balRes.json();
         setBalancePence(data.balancePence ?? 0);
+      }
+      if (txRes.ok) {
+        const data = await txRes.json();
+        setTransactions((data.transactions ?? []) as Transaction[]);
       }
     } catch {}
   }, []);
@@ -229,7 +239,7 @@ export default function WalletPage() {
                       £{amount / 100}
                     </p>
                     <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>
-                      {loadingAmount === amount ? 'Loading…' : `${amount} tickets at 1p`}
+                      {loadingAmount === amount ? 'Loading…' : topUpLabel(amount)}
                     </p>
                   </button>
                 ))}
@@ -237,6 +247,26 @@ export default function WalletPage() {
               <p style={{ margin: '12px 0 0', fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>
                 Minimum top-up £5 · Powered by Stripe
               </p>
+            </div>
+          )}
+
+          {/* Transaction history */}
+          {transactions.length > 0 && (
+            <div>
+              <p style={{ margin: '8px 0 12px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Transaction history</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {transactions.map(tx => (
+                  <div key={tx.SK} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{tx.description}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--muted)' }}>{new Date(tx.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: tx.amountPence >= 0 ? 'var(--green)' : 'var(--text)' }}>
+                      {tx.amountPence >= 0 ? '+' : ''}£{(Math.abs(tx.amountPence) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

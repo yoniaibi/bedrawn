@@ -2,21 +2,38 @@
 
 import { useEffect, useState } from 'react';
 
-function getSecondsTo9pm() {
-  const now = new Date();
-  const target = new Date();
-  target.setHours(21, 0, 0, 0);
-  if (target <= now) target.setDate(target.getDate() + 1);
-  return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
+/**
+ * closingDate: YYYY-MM-DD (UK date). Counts down to 21:00 UTC on that date.
+ * When not provided, falls back to the next 21:00 UTC.
+ */
+function getSecondsUntilClose(closingDate?: string): number {
+  const now = Date.now();
+  let target: Date;
+  if (closingDate) {
+    target = new Date(`${closingDate}T21:00:00Z`);
+  } else {
+    target = new Date();
+    target.setUTCHours(21, 0, 0, 0);
+    if (target.getTime() <= now) target.setUTCDate(target.getUTCDate() + 1);
+  }
+  return Math.max(0, Math.floor((target.getTime() - now) / 1000));
 }
 
-export default function CountdownTimer({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
-  const [secs, setSecs] = useState(getSecondsTo9pm);
+export default function CountdownTimer({
+  closingDate,
+  className = '',
+  style,
+}: {
+  closingDate?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const [secs, setSecs] = useState(() => getSecondsUntilClose(closingDate));
 
   useEffect(() => {
-    const id = setInterval(() => setSecs(getSecondsTo9pm()), 1000);
+    const id = setInterval(() => setSecs(getSecondsUntilClose(closingDate)), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [closingDate]);
 
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);

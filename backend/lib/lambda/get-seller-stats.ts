@@ -33,7 +33,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   const drawList = draws.map(d => {
     const revenue = (d.totalRevenuePence as number) ?? 0;
     const sellerRevenue = Math.round(revenue * (1 - PLATFORM_FEE));
-    if (d.status === 'resolved' && !d.payoutConfirmed) pendingPayoutPence += sellerRevenue;
+    if (d.status === 'resolved' && d.payoutStatus !== 'paid') pendingPayoutPence += sellerRevenue;
     if (d.status === 'resolved') totalEarningsPence += sellerRevenue;
     return {
       id: d.PK.replace('DRAW#', ''),
@@ -45,7 +45,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       retailValuePence: d.retailValuePence ?? 0,
       sellerRevenuePence: sellerRevenue,
       closingDate: d.closingDate,
-      payoutConfirmed: d.payoutConfirmed ?? false,
+      payoutStatus: d.payoutStatus ?? 'pending',
     };
   });
 

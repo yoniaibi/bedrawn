@@ -46,7 +46,7 @@ export default function NotificationsPage() {
     const load = async () => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
+        const token = session.tokens?.idToken?.toString();
         if (!token) { setLoading(false); return; }
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
           headers: { Authorization: `Bearer ${token}` },

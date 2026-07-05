@@ -45,29 +45,26 @@ export default function AdminPage() {
   const [authToken, setAuthToken] = useState('');
   const [resolving, setResolving] = useState<string | null>(null);
   const [resolveResult, setResolveResult] = useState<Record<string, string>>({});
+  const [postalForm, setPostalForm] = useState<Record<string, { name: string; email: string }>>({});
+  const [postalAdding, setPostalAdding] = useState<string | null>(null);
+  const [postalResult, setPostalResult] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const load = async () => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
+        const token = session.tokens?.idToken?.toString();
         if (!token) { setError('Not authenticated'); setLoading(false); return; }
 
-        // Get email + groups from token
         const payload = JSON.parse(atob(token.split('.')[1]));
         setEmail(payload.email ?? payload.username ?? '');
         setAuthToken(token);
-        const raw = String(payload['cognito:groups'] ?? '');
-        const groups = raw.replace(/^\[|\]$/g, '').split(',').map((g: string) => g.trim()).filter(Boolean);
-        if (!groups.includes('admin')) {
-          setError('Access denied — admin only');
-          setLoading(false);
-          return;
-        }
 
+        // Auth is enforced by the API — a 403 response means not an admin.
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/draws`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (res.status === 403) { setError('Access denied — admin only'); setLoading(false); return; }
         if (!res.ok) { setError(`API error ${res.status}`); setLoading(false); return; }
         const data = await res.json();
         setDraws(data.draws ?? []);
@@ -80,6 +77,34 @@ export default function AdminPage() {
     };
     load();
   }, []);
+
+  const handleAddPostalEntry = async (drawId: string) => {
+    const form = postalForm[drawId] ?? { name: '', email: '' };
+    if (!form.name.trim() || !form.email.trim()) {
+      setPostalResult(prev => ({ ...prev, [drawId]: 'Error: name and email required' }));
+      return;
+    }
+    setPostalAdding(drawId);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/draws/${drawId}/postal-entry`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ name: form.name.trim(), email: form.email.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPostalResult(prev => ({ ...prev, [drawId]: `Error: ${data.error}` }));
+      } else {
+        setPostalResult(prev => ({ ...prev, [drawId]: `Added postal entry for ${form.name} (${form.email})` }));
+        setPostalForm(prev => ({ ...prev, [drawId]: { name: '', email: '' } }));
+        setDraws(prev => prev.map(d => d.id === drawId ? { ...d, soldTickets: d.soldTickets + 1 } : d));
+      }
+    } catch (e) {
+      setPostalResult(prev => ({ ...prev, [drawId]: e instanceof Error ? e.message : 'Failed' }));
+    } finally {
+      setPostalAdding(null);
+    }
+  };
 
   const handleResolve = async (drawId: string, drawTitle: string) => {
     if (!confirm(`Manually resolve draw:\n"${drawTitle}"\n\nThis will pick a winner now. Continue?`)) return;
@@ -232,6 +257,40 @@ export default function AdminPage() {
                   <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(239,68,68,0.06)', border: '1px solid var(--red)', borderRadius: 8, fontSize: 12 }}>
                     <span style={{ color: 'var(--red)', fontWeight: 700 }}>Cancelled: </span>
                     <span style={{ color: 'var(--text)' }}>{d.cancelReason}</span>
+                  </div>
+                )}
+
+                {/* Postal entry registration — only shown for open draws */}
+                {d.status === 'open' && (
+                  <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: 8 }}>
+                    <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: 'var(--purple)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Register postal entry</p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <input
+                        placeholder="Full name"
+                        value={postalForm[d.id]?.name ?? ''}
+                        onChange={e => setPostalForm(prev => ({ ...prev, [d.id]: { ...prev[d.id] ?? { name: '', email: '' }, name: e.target.value } }))}
+                        style={{ flex: 1, minWidth: 120, padding: '6px 10px', borderRadius: 6, background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 12 }}
+                      />
+                      <input
+                        placeholder="Email address"
+                        type="email"
+                        value={postalForm[d.id]?.email ?? ''}
+                        onChange={e => setPostalForm(prev => ({ ...prev, [d.id]: { ...prev[d.id] ?? { name: '', email: '' }, email: e.target.value } }))}
+                        style={{ flex: 1, minWidth: 160, padding: '6px 10px', borderRadius: 6, background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: 12 }}
+                      />
+                      <button
+                        onClick={() => handleAddPostalEntry(d.id)}
+                        disabled={postalAdding === d.id}
+                        style={{ padding: '6px 14px', borderRadius: 6, background: 'var(--purple)', border: 'none', color: 'var(--white)', fontSize: 12, fontWeight: 700, cursor: postalAdding === d.id ? 'default' : 'pointer', opacity: postalAdding === d.id ? 0.6 : 1 }}
+                      >
+                        {postalAdding === d.id ? 'Adding…' : 'Add'}
+                      </button>
+                    </div>
+                    {postalResult[d.id] && (
+                      <p style={{ margin: '6px 0 0', fontSize: 11, color: postalResult[d.id].startsWith('Error') ? 'var(--red)' : 'var(--green)' }}>
+                        {postalResult[d.id]}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,21 +1,27 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { getStripe, cors } from './stripe-client';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
-const MIN_TOPUP_PENCE = 500; // £5 minimum to keep Stripe fees manageable
+const MIN_TOPUP_PENCE = 500;   // £5 minimum
+const MAX_TOPUP_PENCE = 50000; // £500 maximum per transaction
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const userId = (event.requestContext as any).authorizer?.jwt?.claims?.sub;
   if (!userId) return { statusCode: 401, headers: cors, body: JSON.stringify({ error: 'Unauthorized' }) };
 
-  const body = event.body ? JSON.parse(event.body) : {};
-  const amountPence: number = body.amountPence;
+  let body: Record<string, unknown>;
+  try { body = event.body ? JSON.parse(event.body) : {}; }
+  catch { return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Invalid JSON body' }) }; }
+  const amountPence = body.amountPence as number;
 
-  if (!amountPence || amountPence < MIN_TOPUP_PENCE) {
+  if (!Number.isInteger(amountPence) || amountPence < MIN_TOPUP_PENCE) {
     return { statusCode: 400, headers: cors, body: JSON.stringify({ error: `Minimum top-up is £${MIN_TOPUP_PENCE / 100}` }) };
+  }
+  if (amountPence > MAX_TOPUP_PENCE) {
+    return { statusCode: 400, headers: cors, body: JSON.stringify({ error: `Maximum top-up is £${MAX_TOPUP_PENCE / 100} per transaction` }) };
   }
 
   const stripe = await getStripe();
@@ -36,14 +42,13 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     });
     stripeCustomerId = customer.id;
 
-    await db.send(new PutCommand({
+    // Use SET…if_not_exists to avoid clobbering concurrent profile writes
+    // and to dedup concurrent top-up requests that both try to create a customer.
+    await db.send(new UpdateCommand({
       TableName: process.env.TABLE_NAME,
-      Item: {
-        ...(userRecord.Item ?? {}),
-        PK: `USER#${userId}`,
-        SK: 'PROFILE',
-        stripeCustomerId,
-      },
+      Key: { PK: `USER#${userId}`, SK: 'PROFILE' },
+      UpdateExpression: 'SET stripeCustomerId = if_not_exists(stripeCustomerId, :id)',
+      ExpressionAttributeValues: { ':id': stripeCustomerId },
     }));
   }
 

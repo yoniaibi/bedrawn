@@ -19,8 +19,7 @@ function toDrawShape(item: Record<string, any>) {
   return {
     id: item.id,
     title: item.title ?? '',
-    seller: item.sellerHandle ?? item.sellerId?.slice(0, 8) ?? 'seller',
-    sellerId: item.sellerId ?? '',
+    seller: item.sellerHandle ?? 'seller',
     sellerAvatarUrl: item.sellerAvatarUrl ?? '',
     sellerName: item.sellerName ?? '',
     sellerEmoji: '',

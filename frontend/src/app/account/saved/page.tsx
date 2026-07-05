@@ -15,7 +15,7 @@ export default function SavedPage() {
     (async () => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
+        const token = session.tokens?.idToken?.toString();
         if (!token) return;
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/me/saved`, {
           headers: { Authorization: `Bearer ${token}` },

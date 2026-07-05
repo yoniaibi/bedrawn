@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -91,7 +92,13 @@ export function TicketsScreen() {
                   return (
                     <View key={entry.drawId} style={styles.ticketCard}>
                       <View style={styles.cardTop}>
-                        <View style={styles.thumbnail} />
+                        <View style={styles.thumbnail}>
+                          {entry.drawImageUrl ? (
+                            <Image source={{ uri: entry.drawImageUrl }} style={styles.thumbnailImg} />
+                          ) : (
+                            <Text style={styles.thumbnailEmoji}>🎟</Text>
+                          )}
+                        </View>
                         <View style={styles.cardInfo}>
                           <Text style={styles.cardTitle} numberOfLines={2}>{entry.drawTitle}</Text>
                           <View style={styles.oddsRow}>
@@ -159,7 +166,9 @@ const styles = StyleSheet.create({
     gap: S.md,
   },
   cardTop: { flexDirection: 'row', gap: S.md },
-  thumbnail: { width: 72, height: 72, borderRadius: 10, backgroundColor: C.CARD2 },
+  thumbnail: { width: 72, height: 72, borderRadius: 10, backgroundColor: C.CARD2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  thumbnailImg: { width: 72, height: 72, borderRadius: 10 },
+  thumbnailEmoji: { fontSize: 28 },
   cardInfo: { flex: 1, gap: S.xs },
   cardTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   oddsRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, flexWrap: 'wrap' },

@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
+  ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ActivityTicker } from '../../components/ActivityTicker';
-import { activityMessages } from '../../data/mockData';
-import { apiGet } from '../../lib/api';
+import { apiGet, apiPost } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
@@ -22,11 +22,17 @@ type Props = {
 
 const QUICK_QTYS = [1, 5, 10, 25];
 
+function formatPrice(pence: number): string {
+  return pence >= 100 ? `£${(pence / 100).toFixed(2)}` : `${pence}p`;
+}
+
 export function PurchaseScreen({ route, navigation }: Props) {
   const { draw } = route.params;
   const [qty, setQty] = useState(1);
   const [inputVal, setInputVal] = useState('1');
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     apiGet<{ balancePence: number }>('/wallet/balance')
@@ -35,9 +41,7 @@ export function PurchaseScreen({ route, navigation }: Props) {
   }, []);
 
   const totalPence = qty * draw.ticketPrice;
-  const totalPounds = (totalPence / 100).toFixed(2);
   const balancePence = walletBalance ?? 0;
-  const balancePounds = walletBalance === null ? '...' : (balancePence / 100).toFixed(2);
   const hasSufficientBalance = walletBalance !== null && balancePence >= totalPence;
 
   const handleQtyInput = (text: string) => {
@@ -51,12 +55,25 @@ export function PurchaseScreen({ route, navigation }: Props) {
     setInputVal(String(n));
   };
 
-  const handleConfirm = () => {
-    navigation.navigate('PurchaseSuccess', {
-      draw,
-      ticketCount: qty,
-      totalPence,
-    });
+  const handleConfirm = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await apiPost(`/draws/${draw.id}/enter`, { ticketCount: qty });
+      navigation.navigate('PurchaseSuccess', {
+        draw,
+        ticketCount: qty,
+        totalPence,
+      });
+    } catch (err: any) {
+      setError(err?.message ?? 'Purchase failed — please try again');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTopUp = () => {
+    Linking.openURL('https://www.bedrawn.app/account/wallet');
   };
 
   return (
@@ -73,16 +90,21 @@ export function PurchaseScreen({ route, navigation }: Props) {
 
         {/* Draw summary */}
         <View style={styles.drawSummary}>
-          <View style={[styles.drawThumb, { backgroundColor: draw.imageColor }]} />
+          <View style={[styles.drawThumb, { backgroundColor: draw.imageColor ?? C.CARD2 }]} />
           <View style={styles.drawInfo}>
             <Text style={styles.drawTitle} numberOfLines={2}>{draw.title}</Text>
             <Text style={styles.drawSeller}>{draw.seller}</Text>
-            <Text style={styles.drawPrice}>{draw.ticketPrice}p per ticket · £{draw.retailValue.toLocaleString()} RRP</Text>
+            <Text style={styles.drawPrice}>{formatPrice(draw.ticketPrice)} per ticket · £{draw.retailValue?.toLocaleString()} RRP</Text>
           </View>
         </View>
 
         {/* Divider */}
         <View style={styles.divider} />
+
+        {/* Trust reassurance */}
+        <View style={styles.trustRow}>
+          <Text style={styles.trustText}>Closes {draw.closingDate ?? 'tonight'} at 9pm · Full refund if draw doesn&apos;t reach minimum · Free postal entry available</Text>
+        </View>
 
         {/* Qty section */}
         <Text style={styles.sectionLabel}>How many tickets?</Text>
@@ -137,17 +159,17 @@ export function PurchaseScreen({ route, navigation }: Props) {
         <View style={styles.totalCard}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{qty} ticket{qty !== 1 ? 's' : ''}</Text>
-            <Text style={styles.totalValue}>£{totalPounds}</Text>
+            <Text style={styles.totalValue}>{formatPrice(totalPence)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.balanceLabel}>Your balance</Text>
             <Text style={[styles.balanceValue, hasSufficientBalance ? styles.balanceOk : styles.balanceLow]}>
-              £{balancePounds}
+              {walletBalance === null ? '…' : formatPrice(balancePence)}
             </Text>
           </View>
-          {!hasSufficientBalance && (
+          {walletBalance !== null && !hasSufficientBalance && (
             <Text style={styles.insufficientText}>
-              Insufficient balance · Top up needed: £{((totalPence - balancePence) / 100).toFixed(2)}
+              Need {formatPrice(totalPence - balancePence)} more — tap below to top up
             </Text>
           )}
         </View>
@@ -162,29 +184,35 @@ export function PurchaseScreen({ route, navigation }: Props) {
           </View>
         </View>
 
-        {/* Activity ticker */}
-        <ActivityTicker messages={activityMessages} />
+        {/* Error */}
+        {error && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
 
         {/* Fine print */}
         <Text style={styles.finePrint}>
-          By confirming, you agree to DRAWN's Terms of Service. Draw closes tonight at 9pm. No refunds after purchase. Postal entry available — see T&Cs.
+          By confirming, you agree to DRAWN&apos;s Terms of Service. No refunds after purchase unless the draw is cancelled. Postal entry available — see T&Cs.
         </Text>
       </ScrollView>
 
-      {/* Sticky confirm button */}
+      {/* Sticky confirm / top up button */}
       <View style={styles.stickyBottom}>
         {hasSufficientBalance ? (
           <TouchableOpacity
-            style={styles.confirmBtn}
+            style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
             onPress={handleConfirm}
+            disabled={loading}
             activeOpacity={0.85}
           >
-            <Text style={styles.confirmBtnText}>
-              Confirm · £{totalPounds} for {qty} ticket{qty !== 1 ? 's' : ''}
-            </Text>
+            {loading
+              ? <ActivityIndicator color={C.WHITE} />
+              : <Text style={styles.confirmBtnText}>Confirm · {formatPrice(totalPence)} for {qty} ticket{qty !== 1 ? 's' : ''}</Text>
+            }
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={[styles.confirmBtn, styles.topUpBtn]}>
+          <TouchableOpacity style={[styles.confirmBtn, styles.topUpBtn]} onPress={handleTopUp} activeOpacity={0.85}>
             <Text style={styles.confirmBtnText}>Top up wallet →</Text>
           </TouchableOpacity>
         )}
@@ -219,7 +247,9 @@ const styles = StyleSheet.create({
   drawTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   drawSeller: { color: C.GREY, fontSize: 12 },
   drawPrice: { color: C.PURPLE, fontSize: 12, fontWeight: '600' },
-  divider: { height: 1, backgroundColor: C.BORDER, marginBottom: S.xl },
+  divider: { height: 1, backgroundColor: C.BORDER, marginBottom: S.md },
+  trustRow: { marginBottom: S.xl },
+  trustText: { color: C.MUTED, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   sectionLabel: { color: C.GREY, fontSize: 12, fontWeight: '600', letterSpacing: 0.5, marginBottom: S.md },
   quickQtyRow: { flexDirection: 'row', gap: S.sm, marginBottom: S.xl },
   qtyPill: {
@@ -294,6 +324,15 @@ const styles = StyleSheet.create({
   oddsInfo: {},
   oddsTitle: { color: C.GREY, fontSize: 12 },
   oddsValue: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
+  errorCard: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.RED,
+    padding: S.md,
+    marginBottom: S.lg,
+  },
+  errorText: { color: C.RED, fontSize: 13 },
   finePrint: { color: C.MUTED, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: S.lg },
   stickyBottom: {
     position: 'absolute',
@@ -312,6 +351,7 @@ const styles = StyleSheet.create({
     paddingVertical: S.lg,
     alignItems: 'center',
   },
+  confirmBtnDisabled: { opacity: 0.6 },
   topUpBtn: { backgroundColor: C.GREEN },
   confirmBtnText: { color: C.WHITE, fontWeight: '700', fontSize: 16 },
 });

@@ -1,30 +1,47 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
-function getSecondsUntilHour(targetHour: number): number {
-  const now = new Date();
-  const target = new Date();
-  target.setHours(targetHour, 0, 0, 0);
-  if (target <= now) {
-    target.setDate(target.getDate() + 1);
-  }
-  return Math.floor((target.getTime() - now.getTime()) / 1000);
-}
-
+/**
+ * closingDate: YYYY-MM-DD string (UK closing date). Draw closes at 21:00 Europe/London.
+ * When not provided, falls back to the next 21:00 UTC (approximate — use closingDate in production).
+ */
 type Props = {
-  targetHour?: number;
+  closingDate?: string;
   style?: object;
 };
 
-export function CountdownTimer({ targetHour = 21, style }: Props) {
-  const [seconds, setSeconds] = useState(() => getSecondsUntilHour(targetHour));
+function getSecondsUntilClose(closingDate?: string): number {
+  const now = Date.now();
+  let target: Date;
+
+  if (closingDate) {
+    // Build 21:00 Europe/London on the closing date.
+    // We approximate by constructing the ISO datetime string and letting the browser
+    // parse it. For exact BST/GMT handling this would need a tz library, but
+    // 21:00 UTC is accurate in winter and off by 1h in summer — acceptable for a
+    // countdown display. A server-provided Unix timestamp would be ideal.
+    target = new Date(`${closingDate}T21:00:00Z`);
+  } else {
+    // Fallback: next 21:00 UTC
+    target = new Date();
+    target.setUTCHours(21, 0, 0, 0);
+    if (target.getTime() <= now) {
+      target.setUTCDate(target.getUTCDate() + 1);
+    }
+  }
+
+  return Math.max(0, Math.floor((target.getTime() - now) / 1000));
+}
+
+export function CountdownTimer({ closingDate, style }: Props) {
+  const [seconds, setSeconds] = useState(() => getSecondsUntilClose(closingDate));
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSeconds(getSecondsUntilHour(targetHour));
+      setSeconds(getSecondsUntilClose(closingDate));
     }, 1000);
     return () => clearInterval(interval);
-  }, [targetHour]);
+  }, [closingDate]);
 
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);

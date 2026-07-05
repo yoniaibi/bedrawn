@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { randomInt } from 'crypto';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.TABLE_NAME!;
@@ -11,7 +12,7 @@ function ukDateToday(): string {
 
 function pickWeightedWinner(entries: { userId: string; ticketCount: number }[]): string {
   const total = entries.reduce((sum, e) => sum + e.ticketCount, 0);
-  let roll = Math.floor(Math.random() * total);
+  let roll = randomInt(0, total);
   for (const entry of entries) {
     roll -= entry.ticketCount;
     if (roll < 0) return entry.userId;
@@ -19,61 +20,135 @@ function pickWeightedWinner(entries: { userId: string; ticketCount: number }[]):
   return entries[entries.length - 1].userId;
 }
 
-async function refundEntries(
-  entries: { userId: string; ticketCount: number }[],
+/**
+ * Refund a single entrant atomically. Uses a per-user dedup marker so retries
+ * on partial failures never double-credit.
+ */
+async function refundEntrant(
+  drawId: string,
+  drawTitle: string,
+  userId: string,
+  ticketCount: number,
   ticketPricePence: number,
-): Promise<void> {
-  await Promise.all(
-    entries.map(e =>
-      db.send(new UpdateCommand({
-        TableName: TABLE,
-        Key: { PK: `USER#${e.userId}`, SK: 'WALLET' },
-        UpdateExpression: 'ADD balancePence :refund',
-        ExpressionAttributeValues: { ':refund': e.ticketCount * ticketPricePence },
-      })),
-    ),
-  );
-}
-
-async function notifyWinner(winnerId: string, drawId: string, drawTitle: string): Promise<void> {
+): Promise<boolean> {
+  const refundPence = ticketCount * ticketPricePence;
   const now = new Date().toISOString();
-  await db.send(new PutCommand({
-    TableName: TABLE,
-    Item: {
-      PK: `USER#${winnerId}`,
-      SK: `NOTIF#${now}`,
-      type: 'draw_won',
-      title: '🎉 You won!',
-      body: `You won the draw for: ${drawTitle}`,
-      drawId,
-      drawTitle,
-      read: false,
-      createdAt: now,
-    },
-  }));
+
+  try {
+    await db.send(new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `DEDUP#REFUND#${drawId}`,
+              SK: `USER#${userId}`,
+              refundedAt: now,
+              ttl: Math.floor(Date.now() / 1000) + 90 * 24 * 3600,
+            },
+            ConditionExpression: 'attribute_not_exists(PK)',
+          },
+        },
+        {
+          Update: {
+            TableName: TABLE,
+            Key: { PK: `USER#${userId}`, SK: 'WALLET' },
+            UpdateExpression: 'ADD balancePence :refund',
+            ExpressionAttributeValues: { ':refund': refundPence },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `TX#${now}-REFUND-${drawId}`,
+              type: 'refund',
+              description: `Refund: ${drawTitle} (draw cancelled)`,
+              amountPence: refundPence,
+              drawId,
+              createdAt: now,
+            },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `NOTIF#${now}-REFUND-${drawId}`,
+              type: 'draw_cancelled',
+              title: 'Draw cancelled — refund issued',
+              body: `The draw "${drawTitle}" was cancelled. £${(refundPence / 100).toFixed(2)} has been returned to your wallet.`,
+              drawId,
+              drawTitle,
+              read: false,
+              createdAt: now,
+            },
+          },
+        },
+      ],
+    }));
+    return true;
+  } catch (err: any) {
+    if (err.name === 'TransactionCanceledException') {
+      const reasons = err.CancellationReasons ?? [];
+      if (reasons[0]?.Code === 'ConditionalCheckFailed') {
+        return false;
+      }
+    }
+    throw err;
+  }
 }
 
 export const handler = async (): Promise<void> => {
   const today = ukDateToday();
   console.log(`Resolving draws for ${today}`);
 
-  const scan = await db.send(new ScanCommand({
-    TableName: TABLE,
-    FilterExpression: 'SK = :meta AND #st = :open AND closingDate = :today',
-    ExpressionAttributeNames: { '#st': 'status' },
-    ExpressionAttributeValues: { ':meta': 'META', ':open': 'open', ':today': today },
-  }));
+  // Paginated scan — avoids silently skipping draws when table > 1MB
+  const draws: Record<string, any>[] = [];
+  let lastKey: Record<string, any> | undefined;
+  do {
+    const page = await db.send(new ScanCommand({
+      TableName: TABLE,
+      FilterExpression: 'SK = :meta AND #st = :open AND closingDate <= :today',
+      ExpressionAttributeNames: { '#st': 'status' },
+      ExpressionAttributeValues: { ':meta': 'META', ':open': 'open', ':today': today },
+      ExclusiveStartKey: lastKey,
+    }));
+    draws.push(...(page.Items ?? []));
+    lastKey = page.LastEvaluatedKey;
+  } while (lastKey);
 
-  const draws = scan.Items ?? [];
   console.log(`Found ${draws.length} draw(s) to resolve`);
 
   for (const draw of draws) {
     const drawId = (draw.PK as string).replace('DRAW#', '');
     const ticketPricePence = (draw.ticketPricePence as number) ?? 0;
     const minTickets = (draw.minTickets as number) ?? 0;
+    const drawTitle = draw.title as string;
     const now = new Date().toISOString();
 
-    console.log(`Resolving draw ${drawId}: ${draw.title}`);
+    console.log(`Resolving draw ${drawId}: ${drawTitle}`);
+
+    // C2 fix: atomically claim this draw for resolution before querying entries.
+    // Any entry that arrives after this flip is rejected by enter-draw (status ≠ open).
+    try {
+      await db.send(new UpdateCommand({
+        TableName: TABLE,
+        Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+        UpdateExpression: 'SET #st = :resolving',
+        ConditionExpression: '#st = :open',
+        ExpressionAttributeNames: { '#st': 'status' },
+        ExpressionAttributeValues: { ':resolving': 'resolving', ':open': 'open' },
+      }));
+    } catch (err: any) {
+      if (err.name === 'ConditionalCheckFailedException') {
+        console.log(`Draw ${drawId} already claimed by a concurrent run — skipping`);
+        continue;
+      }
+      throw err;
+    }
 
     const entriesResult = await db.send(new QueryCommand({
       TableName: TABLE,
@@ -88,44 +163,95 @@ export const handler = async (): Promise<void> => {
 
     const soldTickets = entries.reduce((s, e) => s + e.ticketCount, 0);
 
-    // Cancel and refund if no entries or below minimum ticket threshold
     if (entries.length === 0 || soldTickets < minTickets) {
       const reason = entries.length === 0 ? 'no entries' : `below minimum (${soldTickets}/${minTickets})`;
       console.log(`Draw ${drawId} cancelled — ${reason}`);
 
-      await db.send(new UpdateCommand({
-        TableName: TABLE,
-        Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-        UpdateExpression: 'SET #st = :cancelled, resolvedAt = :d, cancelReason = :r',
-        ExpressionAttributeNames: { '#st': 'status' },
-        ExpressionAttributeValues: { ':cancelled': 'cancelled', ':d': now, ':r': reason },
-      }));
+      let refunded = 0;
+      for (const e of entries) {
+        const applied = await refundEntrant(drawId, drawTitle, e.userId, e.ticketCount, ticketPricePence);
+        if (applied) refunded++;
+      }
+      if (refunded > 0) console.log(`Refunded ${refunded}/${entries.length} buyer(s) for draw ${drawId}`);
 
-      if (entries.length > 0) {
-        await refundEntries(entries, ticketPricePence);
-        console.log(`Refunded ${entries.length} buyer(s) for draw ${drawId}`);
+      try {
+        await db.send(new UpdateCommand({
+          TableName: TABLE,
+          Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+          UpdateExpression: 'SET #st = :cancelled, resolvedAt = :d, cancelReason = :r',
+          ConditionExpression: '#st = :resolving',
+          ExpressionAttributeNames: { '#st': 'status' },
+          ExpressionAttributeValues: { ':cancelled': 'cancelled', ':resolving': 'resolving', ':d': now, ':r': reason },
+        }));
+      } catch (err: any) {
+        if (err.name === 'ConditionalCheckFailedException') {
+          console.log(`Draw ${drawId} already flipped — skipping cancel`);
+        } else {
+          throw err;
+        }
       }
       continue;
     }
 
     const winnerId = pickWeightedWinner(entries);
-    console.log(`Draw ${drawId} winner: ${winnerId} (${soldTickets} tickets sold)`);
+    const isPostalWinner = winnerId.startsWith('POSTAL_');
+    console.log(`Draw ${drawId} winner selected (${soldTickets} tickets sold)${isPostalWinner ? ' — POSTAL ENTRY, admin must contact winner manually' : ''}`);
 
-    await db.send(new UpdateCommand({
-      TableName: TABLE,
-      Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-      UpdateExpression: 'SET #st = :resolved, winnerId = :winner, resolvedAt = :d',
-      ConditionExpression: '#st = :open',
-      ExpressionAttributeNames: { '#st': 'status' },
-      ExpressionAttributeValues: {
-        ':resolved': 'resolved',
-        ':open': 'open',
-        ':winner': winnerId,
-        ':d': now,
+    // M1 fix: status flip + notification are a single atomic TransactWrite.
+    // If the Lambda is killed between them the whole transaction is not committed,
+    // so a retry will retry both — no orphaned "draw resolved but winner never notified".
+    const transactItems: any[] = [
+      {
+        Update: {
+          TableName: TABLE,
+          Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+          UpdateExpression: 'SET #st = :resolved, winnerId = :winner, resolvedAt = :d',
+          ConditionExpression: '#st = :resolving',
+          ExpressionAttributeNames: { '#st': 'status' },
+          ExpressionAttributeValues: {
+            ':resolved': 'resolved',
+            ':resolving': 'resolving',
+            ':winner': winnerId,
+            ':d': now,
+          },
+        },
       },
-    }));
+    ];
 
-    await notifyWinner(winnerId, drawId, draw.title as string);
+    if (!isPostalWinner) {
+      transactItems.push({
+        Put: {
+          TableName: TABLE,
+          Item: {
+            PK: `USER#${winnerId}`,
+            SK: `NOTIF#${now}`,
+            type: 'draw_won',
+            title: '🎉 You won!',
+            body: `You won the draw for: ${drawTitle}`,
+            drawId,
+            drawTitle,
+            read: false,
+            createdAt: now,
+          },
+        },
+      });
+    }
+
+    try {
+      await db.send(new TransactWriteCommand({ TransactItems: transactItems }));
+      if (isPostalWinner) {
+        console.log(`POSTAL WINNER for draw ${drawId} — admin must retrieve winner profile USER#${winnerId}/PROFILE and contact manually`);
+      }
+    } catch (err: any) {
+      if (err.name === 'TransactionCanceledException') {
+        const reasons = err.CancellationReasons ?? [];
+        if (reasons[0]?.Code === 'ConditionalCheckFailed') {
+          console.log(`Draw ${drawId} already resolved by a concurrent run — skipping`);
+          continue;
+        }
+      }
+      throw err;
+    }
   }
 
   console.log('Draw resolution complete');

@@ -6,35 +6,27 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
-import ActivityTicker from '@/components/ActivityTicker';
-import { draws, type Draw } from '@/lib/mockData';
+import type { Draw } from '@/lib/mockData';
 
 const qtyPills = [1, 5, 10, 25];
-const activity = [
-  '@sarah just bought 3 tickets',
-  '@collector entered with 10 tickets',
-  '@hypekid just bought 20 tickets',
-];
 
 async function getAuthToken(): Promise<string> {
   const session = await fetchAuthSession();
-  const token = session.tokens?.accessToken?.toString();
+  const token = session.tokens?.idToken?.toString();
   if (!token) throw new Error('Not authenticated');
   return token;
 }
 
 export default function PurchaseClient({ id }: { id: string }) {
-  const mockDraw = draws.find(d => d.id === id) ?? null;
   const router = useRouter();
-  const [draw, setDraw] = useState<Draw | null>(mockDraw);
-  const [drawLoading, setDrawLoading] = useState(!mockDraw);
+  const [draw, setDraw] = useState<Draw | null>(null);
+  const [drawLoading, setDrawLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balancePence, setBalancePence] = useState<number | null>(null);
 
   useEffect(() => {
-    if (mockDraw) return;
     const url = process.env.NEXT_PUBLIC_API_URL;
     if (!url) { setDrawLoading(false); return; }
     fetch(`${url}/draws/${id}`)
@@ -42,7 +34,7 @@ export default function PurchaseClient({ id }: { id: string }) {
       .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
       .catch(() => {})
       .finally(() => setDrawLoading(false));
-  }, [id, mockDraw]);
+  }, [id]);
 
   useEffect(() => {
     getAuthToken()
@@ -62,7 +54,14 @@ export default function PurchaseClient({ id }: { id: string }) {
     );
   }
 
-  if (!draw) return null;
+  if (!draw) return (
+    <AppShell>
+      <div style={{ textAlign: 'center', padding: '60px 32px' }}>
+        <p style={{ color: 'var(--text)', fontSize: 16, margin: '0 0 12px' }}>Draw not found</p>
+        <a href="/home" style={{ color: 'var(--purple)' }}>← Back to home</a>
+      </div>
+    </AppShell>
+  );
 
   const price = draw.ticketPrice;
   const total = qty * price;
@@ -153,8 +152,6 @@ export default function PurchaseClient({ id }: { id: string }) {
               <p style={{ margin: 0, fontSize: 13, color: 'var(--red)' }}>{error}</p>
             </div>
           )}
-
-          <ActivityTicker messages={activity} />
 
           <button
             onClick={handleConfirm}

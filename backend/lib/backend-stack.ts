@@ -9,6 +9,10 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwactions from 'aws-cdk-lib/aws-cloudwatch-actions';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as snssub from 'aws-cdk-lib/aws-sns-subscriptions';
 import { HttpApi, CorsHttpMethod, HttpMethod } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
@@ -83,6 +87,14 @@ export class BackendStack extends cdk.Stack {
       sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // GSI1: query open/resolved draws by status (used by get-draws, get-seller-draws, get-seller-profile)
+    table.addGlobalSecondaryIndex({
+      indexName: 'GSI1',
+      partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'closingDate', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
     });
 
     const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, BUCKET_REGION: this.region };
@@ -190,12 +202,21 @@ export class BackendStack extends cdk.Stack {
     table.grantReadData(getDrawFn);
     table.grantReadWriteData(postDrawFn);
 
-    // EventBridge rule — resolve draws at 9pm UK time (21:00 UTC = 9pm GMT; 10pm BST in summer)
-    const ninepmRule = new events.Rule(this, 'ResolveDrawsSchedule', {
-      schedule: events.Schedule.cron({ hour: '21', minute: '0' }),
-      description: 'Trigger draw resolution at 9pm UTC nightly',
+    // Two month-scoped EventBridge rules so exactly one fires per night at 21:00 UK:
+    //   GMT (Nov–Mar): 21:00 UTC = 21:00 UK    cron months 1-3,11,12
+    //   BST (Apr–Oct): 20:00 UTC = 21:00 UK    cron months 4-10
+    // Using events.Schedule.expression() so we can pass comma-separated month lists.
+    const ninepmGmtRule = new events.Rule(this, 'ResolveDrawsGMT', {
+      schedule: events.Schedule.expression('cron(0 21 * 1-3,11,12 ? *)'),
+      description: 'Resolve draws at 21:00 UTC (= 21:00 GMT), Jan–Mar and Nov–Dec',
     });
-    ninepmRule.addTarget(new targets.LambdaFunction(resolveDrawsFn));
+    ninepmGmtRule.addTarget(new targets.LambdaFunction(resolveDrawsFn));
+
+    const ninepmBstRule = new events.Rule(this, 'ResolveDrawsBST', {
+      schedule: events.Schedule.expression('cron(0 20 * 4-10 ? *)'),
+      description: 'Resolve draws at 20:00 UTC (= 21:00 BST), Apr–Oct',
+    });
+    ninepmBstRule.addTarget(new targets.LambdaFunction(resolveDrawsFn));
 
     // Cognito JWT authorizer for all protected routes
     const authorizer = new HttpUserPoolAuthorizer('CognitoAuthorizer', userPool, {
@@ -240,10 +261,13 @@ export class BackendStack extends cdk.Stack {
     table.grantReadWriteData(getNotificationsFn);
     api.addRoutes({ path: '/notifications', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetNotificationsInt', getNotificationsFn), authorizer });
 
+    // Admin email list — override via: cdk deploy --context adminEmails=a@b.com,c@d.com
+    const adminEmails: string = this.node.tryGetContext('adminEmails') ?? 'yoniaibi@gmail.com';
+
     // Admin — all draws regardless of status
     const getAdminDrawsFn = new nodejs.NodejsFunction(this, 'GetAdminDraws', {
       ...commonProps,
-      environment: { ...commonEnv, ADMIN_EMAILS: 'yoniaibi@gmail.com' },
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
       entry: path.join(__dirname, 'lambda/get-admin-draws.ts'),
     });
     table.grantReadData(getAdminDrawsFn);
@@ -329,14 +353,85 @@ export class BackendStack extends cdk.Stack {
     api.addRoutes({ path: '/sellers/{id}', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSellerProfileInt', getSellerProfileFn) });
     api.addRoutes({ path: '/sellers/{id}/draws', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSellerDrawsInt', getSellerDrawsFn) });
 
-    // Admin — manual draw resolution for testing
+    // Admin — manual draw resolution
     const adminResolveDrawFn = new nodejs.NodejsFunction(this, 'AdminResolveDraw', {
       ...commonProps,
-      environment: { ...commonEnv, ADMIN_EMAILS: 'yoniaibi@gmail.com' },
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
       entry: path.join(__dirname, 'lambda/admin-resolve-draw.ts'),
     });
     table.grantReadWriteData(adminResolveDrawFn);
     api.addRoutes({ path: '/admin/draws/{id}/resolve', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('AdminResolveDrawInt', adminResolveDrawFn), authorizer });
+
+    // Admin — register a physical postal entry for a draw
+    const adminAddPostalEntryFn = new nodejs.NodejsFunction(this, 'AdminAddPostalEntry', {
+      ...commonProps,
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
+      entry: path.join(__dirname, 'lambda/admin-add-postal-entry.ts'),
+    });
+    table.grantReadWriteData(adminAddPostalEntryFn);
+    api.addRoutes({ path: '/admin/draws/{id}/postal-entry', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('AdminAddPostalEntryInt', adminAddPostalEntryFn), authorizer });
+
+    // Mark all notifications as read (POST /notifications/read)
+    const markNotificationsReadFn = new nodejs.NodejsFunction(this, 'MarkNotificationsRead', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/mark-notifications-read.ts'),
+    });
+    table.grantReadWriteData(markNotificationsReadFn);
+    api.addRoutes({ path: '/notifications/read', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('MarkNotificationsReadInt', markNotificationsReadFn), authorizer });
+
+    // GDPR account deletion — DELETE /me
+    const deleteAccountFn = new nodejs.NodejsFunction(this, 'DeleteAccount', {
+      ...commonProps,
+      environment: { ...commonEnv, USER_POOL_ID: userPool.userPoolId },
+      entry: path.join(__dirname, 'lambda/delete-account.ts'),
+      timeout: cdk.Duration.seconds(15),
+    });
+    table.grantReadWriteData(deleteAccountFn);
+    deleteAccountFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminDeleteUser'],
+      resources: [userPool.userPoolArn],
+    }));
+    api.addRoutes({ path: '/me', methods: [HttpMethod.DELETE], integration: new HttpLambdaIntegration('DeleteAccountInt', deleteAccountFn), authorizer });
+
+    // ── Rate limiting: patch throttle settings onto the auto-created $default stage ──
+    // HttpApi creates $default automatically; we override its DefaultRouteSettings.
+    const cfnDefaultStage = api.defaultStage?.node.defaultChild as cdk.CfnResource;
+    cfnDefaultStage.addPropertyOverride('DefaultRouteSettings', {
+      ThrottlingBurstLimit: 100,
+      ThrottlingRateLimit: 50,
+    });
+
+    // ── CloudWatch alarms — alert on Lambda errors and DynamoDB throttles ──
+    const alertTopic = new sns.Topic(this, 'AlertTopic', { displayName: 'Bedrawn Alerts' });
+    const alertEmail: string = this.node.tryGetContext('alertEmail') ?? 'yoniaibi@gmail.com';
+    alertTopic.addSubscription(new snssub.EmailSubscription(alertEmail));
+
+    const criticalFns: nodejs.NodejsFunction[] = [
+      enterDrawFn, resolveDrawsFn, walletTopupFn, stripeWebhookFn, confirmPayoutFn,
+    ];
+    criticalFns.forEach(fn => {
+      const alarm = new cloudwatch.Alarm(this, `${fn.node.id}ErrorAlarm`, {
+        metric: fn.metricErrors({ period: cdk.Duration.minutes(5) }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription: `${fn.node.id} threw errors`,
+      });
+      alarm.addAlarmAction(new cwactions.SnsAction(alertTopic));
+    });
+
+    // DynamoDB throttle alarm
+    const throttleAlarm = new cloudwatch.Alarm(this, 'DdbThrottleAlarm', {
+      metric: table.metricThrottledRequestsForOperations({
+        operations: [dynamodb.Operation.PUT_ITEM, dynamodb.Operation.UPDATE_ITEM, dynamodb.Operation.TRANSACT_WRITE_ITEMS],
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 5,
+      evaluationPeriods: 1,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'DynamoDB throttling detected',
+    });
+    throttleAlarm.addAlarmAction(new cwactions.SnsAction(alertTopic));
 
     new cdk.CfnOutput(this, 'ApiUrl', { value: api.url ?? '', description: 'HTTP API base URL' });
     new cdk.CfnOutput(this, 'UserPoolId', { value: userPool.userPoolId, description: 'Cognito User Pool ID' });

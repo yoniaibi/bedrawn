@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { cors } from './stripe-client';
 
@@ -44,22 +44,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   });
 
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  // Mark all as read in the background (fire-and-forget)
-  const unread = (result.Items ?? []).filter(item => !item.read);
-  if (unread.length > 0) {
-    await Promise.all(
-      unread.map(item =>
-        db.send(new UpdateCommand({
-          TableName: TABLE,
-          Key: { PK: `USER#${userId}`, SK: item.SK as string },
-          UpdateExpression: 'SET #r = :true',
-          ExpressionAttributeNames: { '#r': 'read' },
-          ExpressionAttributeValues: { ':true': true },
-        })),
-      ),
-    );
-  }
 
   return {
     statusCode: 200,

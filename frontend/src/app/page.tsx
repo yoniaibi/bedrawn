@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/auth';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 import Logo from '@/components/Logo';
-import { draws, recentWinners } from '@/lib/mockData';
+import { draws } from '@/lib/mockData';
 
 const displayDraws = (() => {
   const seen = new Set<string>();
@@ -16,15 +16,9 @@ const displayDraws = (() => {
     .slice(0, 6);
 })();
 
-const testimonials = [
-  { handle: '@jess_m', location: 'London', role: 'Winner', quote: "Can't believe I just won a Chanel Classic Flap for literally 30p. I was about to go to bed, the wheel landed on me and I screamed.", item: 'Chanel Classic Flap', paid: '30p', value: 2400 },
-  { handle: '@marcus_t', location: 'Manchester', role: 'Seller', quote: "Listed my whole trainer collection, all 12 pairs. Sold out in 4 hours and got paid £680 by morning. Vinted never moved these.", item: 'Trainer Collection', paid: 'Seller', value: 680 },
-  { handle: '@priya_k', location: 'Birmingham', role: 'Winner', quote: "My friend told me about Bedrawn, I bought 3 tickets at 10p each and won a £400 Mulberry tote. This is actually unreal.", item: 'Mulberry Alexa', paid: '30p', value: 400 },
-  { handle: '@jordan_k', location: 'Manchester', role: 'Seller', quote: "Listed my Air Jordans that had been sitting on Vinted for 4 months. Drew sold out in 6 hours. Cash in my account the next day. That's insane.", item: 'Air Jordan 1', paid: 'Seller', value: 380 },
-];
 
 const faqs = [
-  { q: 'How do I enter for free?', a: 'Every draw has a free postal entry route. Write a postcard with your name, email, and draw name to: Bedrawn, PO Box 1000, London, EC1A 1BB. One postcard = one entry, same odds as paid tickets. This is what makes Bedrawn a legal prize promotion under UK law.' },
+  { q: 'How do I enter for free?', a: 'Every draw has a free postal entry route. Write a postcard with your name, email, and draw name and send it to our postal address (published before launch — check back soon). One postcard = one entry, same odds as paid tickets. This is what makes Bedrawn a legal prize promotion under UK law.' },
   { q: 'Is this gambling?', a: 'No. Bedrawn is a prize draw, not gambling. Every draw has a free entry route (no purchase necessary), which legally distinguishes it from a lottery. No gambling licence required — same structure as large UK charity draws.' },
   { q: "What if a draw doesn't sell enough tickets?", a: 'If a draw closes without reaching its minimum ticket threshold, all buyers are automatically refunded. Funds are held in escrow — we never touch your money directly.' },
   { q: 'How do I get my prize?', a: "Once the wheel picks your name at 9pm, you get an instant notification and your item ships free within 2 business days. All items are held by Bedrawn before going live — we verify them and dispatch directly. You never deal with the seller." },
@@ -145,7 +139,6 @@ const HERO_IMAGES = [
 export default function LandingPage() {
   const { isAuthed, authLoading } = useAuth();
   const router = useRouter();
-  const [winnerIdx, setWinnerIdx] = useState(0);
   const [heroLoaded, setHeroLoaded] = useState(false);
   const [heroIdx, setHeroIdx] = useState(0);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -153,11 +146,6 @@ export default function LandingPage() {
   useEffect(() => {
     if (!authLoading && isAuthed) router.replace('/home');
   }, [isAuthed, authLoading, router]);
-
-  useEffect(() => {
-    const id = setInterval(() => setWinnerIdx(i => (i + 1) % recentWinners.length), 3500);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -175,8 +163,6 @@ export default function LandingPage() {
       </div>
     );
   }
-
-  const w = recentWinners[winnerIdx];
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', overflowX: 'hidden' }}>
@@ -260,22 +246,9 @@ export default function LandingPage() {
               <WaitlistForm />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ display: 'flex' }}>
-                {[['JL', '#7C3AED'], ['AK', '#EC4899'], ['MP', '#D97706'], ['RB', '#059669']].map(([init, bg], i) => (
-                  <div key={i} style={{
-                    width: 30, height: 30, borderRadius: '50%', background: bg,
-                    border: '2px solid rgba(255,255,255,0.25)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10, fontWeight: 700, color: '#fff',
-                    marginLeft: i === 0 ? 0 : -8,
-                  }}>{init}</div>
-                ))}
-              </div>
-              <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.65)' }}>
-                <strong style={{ color: '#FFFFFF' }}>4,312 people</strong> already on the waitlist
-              </p>
-            </div>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+              Be among the first when we launch
+            </p>
           </div>
         </div>
       </div>
@@ -293,20 +266,6 @@ export default function LandingPage() {
               <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--grey)' }}>{s.label}</p>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* ─── WINNER TICKER ─── */}
-      <div style={{ background: 'var(--gold-light)', borderBottom: '1px solid rgba(217,119,6,0.2)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text)' }}>
-            <strong>{w.handle}</strong> just won <strong>{w.item}</strong> — paid <strong>{w.paid}p</strong>, valued at{' '}
-            <strong style={{ color: 'var(--gold)' }}>£{w.value.toLocaleString()}</strong>
-          </p>
-          <div style={{ marginLeft: 'auto', background: 'rgba(217,119,6,0.15)', border: '1px solid rgba(217,119,6,0.3)', borderRadius: 8, padding: '4px 12px', flexShrink: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--gold)' }}>{Math.round((w.value / w.paid) * 100)}× return</p>
-          </div>
         </div>
       </div>
 
@@ -377,41 +336,21 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ─── TESTIMONIALS ─── */}
+      {/* ─── FIRST DRAW ─── */}
       <div id="winners" style={{ padding: '80px 0', background: 'var(--purple-light)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Real wins</p>
-          <h2 style={{ margin: '0 0 8px', fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>Someone wins every night at 9pm.</h2>
-          <p style={{ margin: '0 0 44px', fontSize: 16, color: 'var(--grey)', lineHeight: 1.6 }}>Real people, real items, real draws. Every single night.</p>
-          <div className="landing-split">
-            {testimonials.map(t => (
-              <div key={t.handle} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                    background: t.role === 'Winner' ? 'var(--gold-light)' : 'var(--purple-light)',
-                    border: `2px solid ${t.role === 'Winner' ? 'var(--gold)' : 'var(--purple)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 700, color: t.role === 'Winner' ? 'var(--gold)' : 'var(--purple)',
-                  }}>
-                    {t.handle.slice(1, 3).toUpperCase()}
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{t.handle}</p>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>{t.location} · {t.role}</p>
-                  </div>
-                  {t.role === 'Winner' && (
-                    <div style={{ marginLeft: 'auto', background: 'var(--gold-light)', border: '1px solid rgba(217,119,6,0.3)', borderRadius: 8, padding: '6px 12px', textAlign: 'center', flexShrink: 0 }}>
-                      <p style={{ margin: 0, fontSize: 12, color: 'var(--gold)', fontWeight: 700 }}>{t.paid} → £{t.value.toLocaleString()}</p>
-                    </div>
-                  )}
-                </div>
-                <p style={{ margin: 0, fontSize: 14, color: 'var(--grey)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-              </div>
-            ))}
-          </div>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Be first</p>
+          <h2 style={{ margin: '0 0 16px', fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>The first draw is coming.</h2>
+          <p style={{ margin: '0 0 36px', fontSize: 16, color: 'var(--grey)', lineHeight: 1.65, maxWidth: 500, marginLeft: 'auto', marginRight: 'auto' }}>
+            Every night at 9pm, a draw resolves live. Someone wins something they couldn&apos;t afford, for the price of a coffee. Join the waitlist — be there for draw number one.
+          </p>
+          <a href="#waitlist" style={{
+            display: 'inline-block', padding: '14px 36px', borderRadius: 999,
+            background: 'var(--accent-coral)', color: 'var(--white)',
+            fontSize: 15, fontWeight: 700, textDecoration: 'none',
+          }}>
+            Join the waitlist →
+          </a>
         </div>
       </div>
 
@@ -449,12 +388,12 @@ export default function LandingPage() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                 {[
-                  { value: '14,200+', label: 'Authenticated' },
-                  { value: '99.1%',   label: 'Pass rate' },
-                  { value: '36h',     label: 'Avg turnaround' },
+                  { value: 'Every draw',    label: 'Auth on every item' },
+                  { value: 'Independent',   label: 'Third-party specialists' },
+                  { value: 'Pre-dispatch',  label: 'Checked before it ships' },
                 ].map(s => (
                   <div key={s.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-                    <p className="serif" style={{ margin: '0 0 3px', fontSize: 22, color: 'var(--purple)', fontWeight: 700 }}>{s.value}</p>
+                    <p className="serif" style={{ margin: '0 0 3px', fontSize: 16, color: 'var(--purple)', fontWeight: 700 }}>{s.value}</p>
                     <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>{s.label}</p>
                   </div>
                 ))}
@@ -496,49 +435,6 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ─── REVIEWS ─── */}
-      <div style={{ padding: '80px 0', background: 'var(--bg)' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Reviews</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 40, flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0, fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>What people are saying</h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: 'var(--gold)', fontSize: 18, letterSpacing: 2 }}>★★★★★</span>
-              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>4.9</span>
-              <span style={{ fontSize: 13, color: 'var(--grey)' }}>· 312 beta testers</span>
-            </div>
-          </div>
-          <div className="landing-split" style={{ marginBottom: 16 }}>
-            {[
-              { name: 'Sophie M.', loc: 'London', title: 'Won Chanel Classic Flap', quote: "I genuinely could not believe it. I won a Chanel bag for 30p. I entered on a whim before bed and woke up to a notification saying I'd won. The item arrived authenticated, tracked, perfect condition. This app is not normal." },
-              { name: 'Jordan K.', loc: 'Manchester', title: 'Seller, Air Jordan 1', quote: "Listed my Air Jordans that had been sitting on Vinted for 4 months. Drew sold out in 6 hours. Cash in my account the next day. That's insane." },
-              { name: 'Priya T.', loc: 'Leeds', title: 'Beta tester', quote: "The live draw at 9pm is genuinely addictive. Everyone's in the comments, the wheel spins, someone wins. It's like nothing else out there." },
-              { name: 'Marcus R.', loc: 'Bristol', title: 'Won Rolex Submariner', quote: "Won a Rolex for £1.20. The authentication cert arrived before the watch did. I actually felt safer buying here than I would have on eBay." },
-            ].map(r => (
-              <div key={r.name} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '22px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                  <div>
-                    <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{r.name}</p>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>{r.loc} · {r.title}</p>
-                  </div>
-                  <span style={{ color: 'var(--gold)', fontSize: 13, letterSpacing: 2 }}>★★★★★</span>
-                </div>
-                <p style={{ margin: 0, fontSize: 14, color: 'var(--grey)', lineHeight: 1.7 }}>&ldquo;{r.quote}&rdquo;</p>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ background: 'var(--green-light)', border: '1px solid rgba(5,150,105,0.2)', borderRadius: 12, padding: '18px', textAlign: 'center' }}>
-              <p style={{ margin: '0 0 4px', fontSize: 32, fontWeight: 800, color: 'var(--green)' }}>94%</p>
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>would recommend to a friend</p>
-            </div>
-            <div style={{ background: 'rgba(236,72,153,0.07)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: 12, padding: '18px', textAlign: 'center' }}>
-              <p style={{ margin: '0 0 4px', fontSize: 32, fontWeight: 800, color: 'var(--pink)' }}>98%</p>
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>would enter another draw</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ─── FAQ ─── */}
       <div style={{ padding: '80px 0', background: 'var(--card)' }}>

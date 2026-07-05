@@ -55,8 +55,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     id: item.id,
     title: item.title ?? '',
     description: item.description ?? '',
-    seller: item.sellerHandle ?? item.sellerId?.slice(0, 8) ?? 'seller',
-    sellerId: item.sellerId ?? '',
+    seller: item.sellerHandle ?? 'seller',
     sellerName: item.sellerName ?? '',
     sellerAvatarUrl: item.sellerAvatarUrl ?? '',
     sellerEmoji: '',
@@ -75,7 +74,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     tags: item.tags ?? [],
     status: item.status,
     closingDate: item.closingDate,
-    winnerId: item.status === 'resolved' ? item.winnerId : undefined,
+    // winnerHandle is safe to expose; winnerId (Cognito sub) is never sent
     winnerHandle: item.status === 'resolved' ? winnerHandle : undefined,
     resolvedAt: item.resolvedAt,
     userTickets,

@@ -17,7 +17,7 @@ export default function ProfilePage() {
     (async () => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.accessToken?.toString();
+        const token = session.tokens?.idToken?.toString();
         if (!token) return;
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -38,7 +38,7 @@ export default function ProfilePage() {
     setSaved(false);
     try {
       const session = await fetchAuthSession();
-      const token = session.tokens?.accessToken?.toString();
+      const token = session.tokens?.idToken?.toString();
       if (!token) throw new Error('Not authenticated');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile`, {
         method: 'PUT',

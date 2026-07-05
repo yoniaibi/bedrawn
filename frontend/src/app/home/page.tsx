@@ -8,7 +8,6 @@ import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 
-import { draws as mockDraws, activityMessages, recentWinners } from '@/lib/mockData';
 import type { Draw } from '@/lib/mockData';
 
 const categories = [
@@ -26,21 +25,18 @@ const filters = ['Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', '
 export default function HomePage() {
   const [category, setCategory] = useState('all');
   const [filter, setFilter] = useState('');
-  const [winnerIdx, setWinnerIdx] = useState(0);
-  const [allDraws, setAllDraws] = useState<Draw[]>(mockDraws);
-
-  useEffect(() => {
-    const id = setInterval(() => setWinnerIdx(i => (i + 1) % recentWinners.length), 9000);
-    return () => clearInterval(id);
-  }, []);
+  const [allDraws, setAllDraws] = useState<Draw[]>([]);
+  const [drawsLoading, setDrawsLoading] = useState(true);
+  const [drawsError, setDrawsError] = useState(false);
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_API_URL;
-    if (!url) return;
+    if (!url) { setDrawsLoading(false); return; }
     fetch(`${url}/draws`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => { if (data?.draws?.length) setAllDraws(data.draws as Draw[]); })
-      .catch(() => {});
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(data => { setAllDraws(data?.draws ?? []); })
+      .catch(() => setDrawsError(true))
+      .finally(() => setDrawsLoading(false));
   }, []);
 
   const filtered = allDraws.filter(d => {
@@ -57,12 +53,13 @@ export default function HomePage() {
   const heroPct = hero ? Math.round((hero.soldTickets / hero.totalTickets) * 100) : 0;
   const heroPrice = hero ? (hero.ticketPrice >= 100 ? `£${(hero.ticketPrice / 100).toFixed(2)}` : `${hero.ticketPrice}p`) : '';
   const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
-  const w = recentWinners[winnerIdx];
 
   const womenswear = allDraws.filter(d => d.style === 'Womenswear').slice(0, 8);
   const menswear = allDraws.filter(d => d.style === 'Menswear').slice(0, 8);
 
-  if (!hero) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}>Loading draws…</div></AppShell>;
+  if (drawsLoading) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}>Loading draws…</div></AppShell>;
+  if (drawsError) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Couldn&apos;t load draws</p><p>Please refresh the page.</p></div></AppShell>;
+  if (!hero) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No draws tonight</p><p>Check back at 9pm — new draws go live daily.</p></div></AppShell>;
 
   return (
     <AppShell>
@@ -95,19 +92,21 @@ export default function HomePage() {
                 padding: '20px 24px',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{
-                    background: 'rgba(255,35,86,0.18)',
-                    border: '1px solid rgba(255,35,86,0.40)',
-                    color: '#FFFFFF', fontSize: 10, fontWeight: 600,
-                    padding: '3px 10px', borderRadius: 6,
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-                    backdropFilter: 'blur(8px)',
-                  }}>
-                    <LiveDot size={5} /> Closing Tonight
-                  </span>
-                </div>
+                {hero.isClosingTonight && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      background: 'rgba(255,35,86,0.18)',
+                      border: '1px solid rgba(255,35,86,0.40)',
+                      color: '#FFFFFF', fontSize: 10, fontWeight: 600,
+                      padding: '3px 10px', borderRadius: 6,
+                      display: 'flex', alignItems: 'center', gap: 5,
+                      letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+                      backdropFilter: 'blur(8px)',
+                    }}>
+                      <LiveDot size={5} /> Closing Tonight
+                    </span>
+                  </div>
+                )}
 
                 <div>
                   <p className="serif" style={{ fontSize: 28, color: 'var(--white)', margin: '0 0 6px', lineHeight: 1.2 }}>
@@ -125,7 +124,7 @@ export default function HomePage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '6px 0 16px' }}>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{heroPct}% sold</span>
                     <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>
-                      <CountdownTimer />
+                      <CountdownTimer closingDate={hero.closingDate} />
                     </span>
                   </div>
                   <button style={{
@@ -165,20 +164,6 @@ export default function HomePage() {
           }}>
             Watch live →
           </Link>
-        </div>
-
-        {/* ── Recent winner ── */}
-        <div style={{
-          background: 'var(--bg-raised)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 12, padding: '12px 16px',
-          marginBottom: 24,
-        }}>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{w.handle}</span>{' '}
-            just won {w.item} — paid {w.paid}p, retail{' '}
-            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>£{w.value.toLocaleString()}</span>
-          </p>
         </div>
 
         {/* ── Filter chips (category + filter combined) ── */}
