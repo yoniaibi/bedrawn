@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
@@ -13,17 +13,24 @@ function getSavedDraws(): string[] {
   try { return JSON.parse(localStorage.getItem('saved_draws') ?? '[]'); } catch { return []; }
 }
 
+// Extract the real draw ID from the browser URL — bypasses Next.js static prop
+// which is baked as "1" when Amplify's catch-all rewrite serves /draw/1 for unknown IDs.
+function getRealId(idProp: string): string {
+  if (typeof window === 'undefined') return idProp;
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  // pathname is /draw/<id>  →  segments[0]='draw', segments[1]=id
+  return segments[1] || idProp;
+}
+
 export default function DrawDetailClient({ id: idProp }: { id: string }) {
   const router = useRouter();
-  const params = useParams();
-  // Use live URL params so Amplify's catch-all rewrite still fetches the correct draw
-  const id = (params?.id as string) || idProp;
   const [draw, setDraw] = useState<Draw | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
-  const [saved, setSaved] = useState(() => getSavedDraws().includes(id));
+  const [saved, setSaved] = useState(() => getSavedDraws().includes(getRealId(idProp)));
 
   useEffect(() => {
+    const id = getRealId(idProp);
     const url = process.env.NEXT_PUBLIC_API_URL;
     if (!url) { setLoading(false); return; }
     fetch(`${url}/draws/${id}`)
@@ -31,9 +38,11 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSave = () => {
+    const id = getRealId(idProp);
     setSaved(prev => {
       const arr = getSavedDraws();
       const next = prev ? arr.filter(x => x !== id) : [...arr, id];
