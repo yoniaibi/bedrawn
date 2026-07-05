@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
@@ -13,8 +13,11 @@ function getSavedDraws(): string[] {
   try { return JSON.parse(localStorage.getItem('saved_draws') ?? '[]'); } catch { return []; }
 }
 
-export default function DrawDetailClient({ id }: { id: string }) {
+export default function DrawDetailClient({ id: idProp }: { id: string }) {
   const router = useRouter();
+  const params = useParams();
+  // Use live URL params so Amplify's catch-all rewrite still fetches the correct draw
+  const id = (params?.id as string) || idProp;
   const [draw, setDraw] = useState<Draw | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
