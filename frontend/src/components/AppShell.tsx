@@ -37,8 +37,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <TopNav />
-      {/* content — padTop for fixed header, padBottom for mobile bottom nav */}
-      <main style={{ paddingTop: 60, paddingBottom: 80 }}>
+      <main style={{ paddingTop: 60, paddingBottom: 96, maxWidth: 960, margin: '0 auto' }}>
         {children}
       </main>
       <BottomNav />

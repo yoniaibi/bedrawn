@@ -188,7 +188,7 @@ button { cursor: pointer; font-family: inherit; }
   justify-content: center;
   padding: 0 24px;
   height: 52px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   border: none;
   background: var(--accent-coral);
   color: #FFFFFF;
@@ -210,9 +210,9 @@ button { cursor: pointer; font-family: inherit; }
   align-items: center;
   justify-content: center;
   height: 56px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   border: none;
-  background: var(--accent-coral);
+  background: linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%);
   color: #FFFFFF;
   font-size: 16px;
   font-weight: 700;
@@ -220,11 +220,12 @@ button { cursor: pointer; font-family: inherit; }
   letter-spacing: 0.01em;
   cursor: pointer;
   width: 100%;
-  transition: opacity var(--duration-fast) ease-out, transform var(--duration-fast) ease-out;
+  box-shadow: 0 4px 16px rgba(255,35,86,0.30);
+  transition: opacity var(--duration-fast) ease-out, transform var(--duration-fast) ease-out, box-shadow var(--duration-fast) ease-out;
 }
-.btn-purchase:hover:not(:disabled) { opacity: 0.88; }
+.btn-purchase:hover:not(:disabled) { opacity: 0.92; box-shadow: 0 6px 20px rgba(255,35,86,0.40); }
 .btn-purchase:active:not(:disabled) { transform: scale(0.98); }
-.btn-purchase:disabled { opacity: 0.38; pointer-events: none; }
+.btn-purchase:disabled { opacity: 0.38; pointer-events: none; box-shadow: none; }
 
 .btn-secondary {
   display: inline-flex;
@@ -305,8 +306,125 @@ button { cursor: pointer; font-family: inherit; }
 .page-container-narrow { max-width: 720px; margin: 0 auto; padding: 0 24px; }
 
 @media (max-width: 768px) {
-  .page-container { padding: 0 20px; }
-  .page-container-narrow { padding: 0 20px; }
+  .page-container { padding: 0 16px; }
+  .page-container-narrow { padding: 0 16px; }
+}
+
+/* ─── Section headings ─── */
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-coral);
+  margin: 0 0 4px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 16px;
+  letter-spacing: -0.01em;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.section-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-coral);
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity var(--duration-fast) ease-out;
+}
+.section-link:hover { opacity: 1; }
+
+/* ─── Sticky bottom CTA bar ─── */
+
+.sticky-cta-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 20px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: rgba(250,250,248,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 50;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Shift sticky bar up on desktop to account for no bottom nav */
+@media (min-width: 768px) {
+  .sticky-cta-bar {
+    max-width: 720px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 20px 20px 0 0;
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+  }
+}
+
+/* Horizontal scroll strip with edge fade */
+.scroll-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 16px 8px;
+  scroll-padding: 16px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-strip::-webkit-scrollbar { display: none; }
+
+/* ─── Skeleton cards ─── */
+
+.skeleton-card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+.skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+  transform: translateX(-100%);
+}
+
+.skeleton-img {
+  background: var(--bg-overlay);
+  aspect-ratio: 4/3;
+  width: 100%;
+}
+
+.skeleton-line {
+  background: var(--bg-overlay);
+  border-radius: var(--radius-xs);
+  height: 12px;
+  margin: 8px 12px 6px;
+}
+
+.skeleton-line-short {
+  background: var(--bg-overlay);
+  border-radius: var(--radius-xs);
+  height: 10px;
+  margin: 0 12px 12px;
+  width: 60%;
 }
 
 /* Draw grid */

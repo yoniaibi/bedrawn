@@ -57,7 +57,28 @@ export default function HomePage() {
   const womenswear = allDraws.filter(d => d.style === 'Womenswear').slice(0, 8);
   const menswear = allDraws.filter(d => d.style === 'Menswear').slice(0, 8);
 
-  if (drawsLoading) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}>Loading draws…</div></AppShell>;
+  if (drawsLoading) return (
+    <AppShell>
+      <div style={{ padding: '20px 16px' }}>
+        {/* Skeleton hero */}
+        <div className="skeleton-card" style={{ borderRadius: 20, marginBottom: 20, aspectRatio: '16/7' }}>
+          <div style={{ width: '100%', height: '100%', background: 'var(--bg-overlay)' }} />
+        </div>
+        {/* Skeleton strip label */}
+        <div className="skeleton" style={{ height: 12, width: 140, borderRadius: 6, marginBottom: 16 }} />
+        {/* Skeleton draw grid */}
+        <div className="draw-grid">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="skeleton-card">
+              <div className="skeleton-img" />
+              <div className="skeleton-line" />
+              <div className="skeleton-line-short" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </AppShell>
+  );
   if (drawsError) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Couldn&apos;t load draws</p><p>Please refresh the page.</p></div></AppShell>;
   if (!hero) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No draws tonight</p><p>Check back at 9pm — new draws go live daily.</p></div></AppShell>;
 
@@ -127,14 +148,16 @@ export default function HomePage() {
                       <CountdownTimer closingDate={hero.closingDate} />
                     </span>
                   </div>
-                  <button style={{
-                    height: 52, borderRadius: 10, border: 'none',
-                    background: 'var(--accent-pink)', color: '#FFFFFF',
-                    fontSize: 15, fontWeight: 700, padding: '0 28px', cursor: 'pointer',
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    height: 52, borderRadius: 999, border: 'none',
+                    background: 'var(--accent-coral)', color: '#FFFFFF',
+                    fontSize: 15, fontWeight: 700, padding: '0 28px',
                     letterSpacing: '0.01em',
+                    boxShadow: '0 4px 16px rgba(255,35,86,0.30)',
                   }}>
                     Enter draw — {heroPrice} per ticket
-                  </button>
+                  </span>
                 </div>
               </div>
             </div>
@@ -194,47 +217,47 @@ export default function HomePage() {
         </div>
 
         {/* ── Womenswear row ── */}
-        <section style={{ marginBottom: 36 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h2 style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Womenswear &amp; Accessories</h2>
-            <Link href="/categories" style={{ fontSize: 12, color: 'var(--accent-lilac)', textDecoration: 'none', fontWeight: 600 }}>See all</Link>
+        {womenswear.length > 0 && (
+        <section style={{ marginBottom: 32 }}>
+          <div className="section-header">
+            <h2 className="section-title" style={{ marginBottom: 0 }}>Womenswear</h2>
+            <Link href="/categories" className="section-link">See all</Link>
           </div>
-          <div style={{ overflowX: 'auto' }} className="scrollbar-hide">
-            <div style={{ display: 'flex', gap: 14, width: 'max-content', paddingBottom: 4 }}>
-              {womenswear.map(d => (
-                <div key={d.id} style={{ width: 180 }}>
-                  <DrawCard draw={d} />
-                </div>
-              ))}
-            </div>
+          <div className="scroll-strip" style={{ margin: '0 -16px' }}>
+            {womenswear.map(d => (
+              <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
+                <DrawCard draw={d} />
+              </div>
+            ))}
           </div>
         </section>
+        )}
 
         {/* ── Menswear row ── */}
-        <section style={{ marginBottom: 36 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <h2 style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Menswear &amp; Streetwear</h2>
-            <Link href="/categories" style={{ fontSize: 12, color: 'var(--accent-lilac)', textDecoration: 'none', fontWeight: 600 }}>See all</Link>
+        {menswear.length > 0 && (
+        <section style={{ marginBottom: 32 }}>
+          <div className="section-header">
+            <h2 className="section-title" style={{ marginBottom: 0 }}>Menswear</h2>
+            <Link href="/categories" className="section-link">See all</Link>
           </div>
-          <div style={{ overflowX: 'auto' }} className="scrollbar-hide">
-            <div style={{ display: 'flex', gap: 14, width: 'max-content', paddingBottom: 4 }}>
-              {menswear.map(d => (
-                <div key={d.id} style={{ width: 180 }}>
-                  <DrawCard draw={d} />
-                </div>
-              ))}
-            </div>
+          <div className="scroll-strip" style={{ margin: '0 -16px' }}>
+            {menswear.map(d => (
+              <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
+                <DrawCard draw={d} />
+              </div>
+            ))}
           </div>
         </section>
+        )}
 
         {/* ── Main grid ── */}
         <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h2 style={{ margin: 0, fontSize: 10, fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+          <div className="section-header">
+            <h2 className="section-title" style={{ marginBottom: 0 }}>
               {category === 'all' ? 'All draws' : category}
-              {filter ? <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text-tertiary)', marginLeft: 8 }}>{filter}</span> : null}
+              {filter ? <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>{filter}</span> : null}
             </h2>
-            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{filtered.length} draws</span>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{filtered.length} draws</span>
           </div>
 
           <div className="draw-grid">

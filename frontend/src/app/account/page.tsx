@@ -99,9 +99,7 @@ export default function AccountPage() {
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 40px' }}>
 
         {/* Profile header */}
-        <div style={{
-          background: 'var(--card)',
-          border: '1px solid var(--border)',
+        <div className="glass-panel" style={{
           borderRadius: 20,
           padding: '28px 24px',
           marginBottom: 20,
@@ -127,12 +125,15 @@ export default function AccountPage() {
             </span>
           </div>
           <Link href="/account/wallet" style={{
-            textDecoration: 'none', background: 'var(--accent-coral)',
-            borderRadius: 12, padding: '10px 20px',
+            textDecoration: 'none',
+            background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+            borderRadius: 18, padding: '12px 20px',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
+            boxShadow: '0 4px 16px rgba(255,35,86,0.28)',
+            minWidth: 90,
           }}>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginBottom: 1 }}>Balance</span>
-            <span className="serif" style={{ fontSize: 20, color: 'var(--white)', fontWeight: 700 }}>
+            <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Balance</span>
+            <span className="serif" style={{ fontSize: 22, color: '#FFFFFF', fontWeight: 700, lineHeight: 1.1 }}>
               {balancePence !== null ? `£${(balancePence / 100).toFixed(2)}` : '—'}
             </span>
           </Link>

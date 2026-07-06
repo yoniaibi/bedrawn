@@ -18,7 +18,6 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
     ? `£${(draw.ticketPrice / 100).toFixed(2)}`
     : `${draw.ticketPrice}p`;
 
-  const imageHeight = fullWidth ? 220 : 180;
   const sellerInitial = (draw.sellerName || draw.seller || '?').charAt(0).toUpperCase();
   const sellerDisplayName = draw.sellerName ? draw.sellerName.split(' ')[0] : `@${draw.seller}`;
 
@@ -37,7 +36,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
         }}
       >
         {/* Image with gradient overlay + text-on-image */}
-        <div style={{ position: 'relative', height: imageHeight, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', aspectRatio: fullWidth ? '16/7' : '4/3', overflow: 'hidden' }}>
           <img
             className="card-image-img"
             src={draw.imageUrl}
@@ -128,7 +127,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
             </p>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
               <span className="serif" style={{
-                fontSize: fullWidth ? 22 : 18,
+                fontSize: fullWidth ? 22 : 17,
                 fontWeight: 700,
                 color: '#FF5F7E',
               }}>

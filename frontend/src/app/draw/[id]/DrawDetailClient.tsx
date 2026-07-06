@@ -111,7 +111,17 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
   if (loading) {
     return (
       <AppShell>
-        <div style={{ textAlign: 'center', padding: '60px 32px', color: 'var(--grey)' }}>Loading…</div>
+        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+          <div className="skeleton-card" style={{ margin: '0 0 1px' }}>
+            <div className="skeleton-img" style={{ aspectRatio: '16/7' }} />
+          </div>
+          <div style={{ padding: '20px 16px' }}>
+            <div className="skeleton" style={{ height: 28, width: '75%', marginBottom: 12, borderRadius: 8 }} />
+            <div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 24, borderRadius: 6 }} />
+            <div className="skeleton" style={{ height: 80, marginBottom: 16, borderRadius: 14 }} />
+            <div className="skeleton" style={{ height: 80, borderRadius: 14 }} />
+          </div>
+        </div>
       </AppShell>
     );
   }
@@ -286,24 +296,24 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
         )}
 
         {/* Sticky CTA */}
-        <div style={{ position: 'fixed', bottom: 64, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 500, padding: '12px 16px', background: 'var(--bg)', borderTop: '1px solid var(--border)', zIndex: 50 }}>
+        <div className="sticky-cta-bar" style={{ bottom: 58 }}>
           {draw.status === 'resolved' ? (
-            <Link href={`/draw/${draw.id}/winner`} style={{ textDecoration: 'none' }}>
-              <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 16, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Link href={`/draw/${draw.id}/winner`} style={{ textDecoration: 'none', flex: 1 }}>
+              <button style={{ width: '100%', height: 52, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 16, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
                 <TrophyIcon size={16} color="currentColor" /> See who won
               </button>
             </Link>
           ) : (
-            <>
-              {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}><ClockIcon size={14} color="var(--accent-rose)" /> Closing tonight at 9pm</p>}
-              <button
-                className="btn-purchase"
-                onClick={openModal}
-                style={{ width: '100%', fontSize: 16, fontWeight: 700, borderRadius: 10 }}
-              >
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {draw.isClosingTonight && (
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--accent-rose)', textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                  <ClockIcon size={13} color="var(--accent-rose)" /> Closing tonight at 9pm
+                </p>
+              )}
+              <button className="btn-purchase" onClick={openModal}>
                 Enter draw · {price}
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
