@@ -578,3 +578,79 @@ button { cursor: pointer; font-family: inherit; }
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ─── Glass morphism ─── */
+
+/* Frosted card — light mode */
+.glass-card {
+  background: rgba(255,255,255,0.76);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.90);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Frosted card — dark context */
+.glass-dark {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.40);
+}
+
+/* Coral tinted glass */
+.glass-coral {
+  background: rgba(255,35,86,0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,35,86,0.18);
+}
+
+/* Purple tinted glass */
+.glass-purple {
+  background: rgba(139,92,246,0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(139,92,246,0.18);
+}
+
+/* Gold tinted glass */
+.glass-gold {
+  background: rgba(245,158,11,0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(245,158,11,0.20);
+}
+
+/* Floating panel with glow */
+.glass-panel {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.95);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.04),
+    0 8px 32px rgba(0,0,0,0.10),
+    0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* ─── Arena (dark sections) ─── */
+.arena-bg {
+  background: linear-gradient(180deg, #0D0B14 0%, #110E1C 60%, #15112A 100%);
+}
+
+.arena-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+}
+
+/* ─── Wheel glow ─── */
+@keyframes wheel-glow-pulse {
+  0%, 100% { box-shadow: 0 0 40px rgba(139,92,246,0.25), 0 0 80px rgba(255,35,86,0.10); }
+  50%       { box-shadow: 0 0 60px rgba(139,92,246,0.40), 0 0 100px rgba(255,35,86,0.18); }
+}
+.wheel-glow { animation: wheel-glow-pulse 3s ease-in-out infinite; }

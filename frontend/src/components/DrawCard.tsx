@@ -55,24 +55,27 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
           <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 5, alignItems: 'center' }}>
             {draw.isClosingTonight && (
               <span style={{
-                background: 'rgba(255,35,86,0.18)',
-                border: '1px solid rgba(255,35,86,0.40)',
+                background: 'rgba(255,35,86,0.22)',
+                border: '1px solid rgba(255,35,86,0.50)',
                 color: '#FFFFFF',
-                fontSize: 10, fontWeight: 700, padding: '3px 8px',
-                borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase',
-                backdropFilter: 'blur(8px)',
+                fontSize: 9, fontWeight: 800, padding: '3px 9px',
+                borderRadius: 999, letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow: '0 2px 8px rgba(255,35,86,0.25)',
               }}>
                 Tonight
               </span>
             )}
             {draw.isBundle && (
               <span style={{
-                background: 'rgba(245,158,11,0.18)',
-                border: '1px solid rgba(245,158,11,0.35)',
-                color: '#FCD34D',
-                fontSize: 10, fontWeight: 700, padding: '3px 8px',
-                borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase',
-                backdropFilter: 'blur(8px)',
+                background: 'rgba(245,158,11,0.22)',
+                border: '1px solid rgba(245,158,11,0.45)',
+                color: '#FDE68A',
+                fontSize: 9, fontWeight: 800, padding: '3px 9px',
+                borderRadius: 999, letterSpacing: '0.10em', textTransform: 'uppercase' as const,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
               }}>
                 Bundle
               </span>
@@ -82,25 +85,29 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
           {draw.isVerified && (
             <span style={{
               position: 'absolute', top: 8, right: 8,
-              background: 'rgba(139,92,246,0.18)',
-              border: '1px solid rgba(139,92,246,0.35)',
+              background: 'rgba(139,92,246,0.22)',
+              border: '1px solid rgba(139,92,246,0.45)',
               color: '#FFFFFF',
-              fontSize: 10, fontWeight: 600, padding: '3px 8px',
-              borderRadius: 6, letterSpacing: '0.06em',
-              backdropFilter: 'blur(8px)',
+              fontSize: 9, fontWeight: 700, padding: '3px 8px',
+              borderRadius: 999, letterSpacing: '0.06em',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
             }}>
-              ✓
+              ✓ verified
             </span>
           )}
 
           {scarce && (
             <span style={{
-              position: 'absolute', bottom: 44, left: 8,
-              background: 'rgba(220,38,38,0.18)',
-              border: '1px solid rgba(220,38,38,0.35)',
-              color: '#FFAAAA',
-              fontSize: 10, fontWeight: 600, padding: '3px 8px',
-              borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase',
+              position: 'absolute', bottom: 46, left: 8,
+              background: 'rgba(220,38,38,0.22)',
+              border: '1px solid rgba(220,38,38,0.45)',
+              color: '#FCA5A5',
+              fontSize: 9, fontWeight: 700, padding: '3px 9px',
+              borderRadius: 999, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              boxShadow: '0 2px 8px rgba(220,38,38,0.20)',
             }}>
               {remaining.toLocaleString()} left
             </span>
@@ -136,7 +143,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
         </div>
 
         {/* Below-image: progress + meta */}
-        <div style={{ background: '#FFFFFF', padding: '8px 12px 11px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.97)', padding: '8px 12px 11px' }}>
           {/* Progress bar */}
           <div style={{
             height: 3, background: 'rgba(0,0,0,0.08)',
