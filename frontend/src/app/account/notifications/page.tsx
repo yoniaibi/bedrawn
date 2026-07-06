@@ -76,7 +76,7 @@ export default function NotificationsPage() {
           <div style={{ textAlign: 'center', padding: '60px 32px', color: 'var(--grey)' }}>Loading…</div>
         ) : notifications.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 32px' }}>
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: 'var(--purple)' }}>○</div>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(124,58,237,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 24, color: 'var(--purple)' }}>○</div>
             <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: '0 0 6px' }}>Nothing yet</p>
             <p style={{ fontSize: 14, color: 'var(--grey)', margin: 0 }}>We&apos;ll let you know when you win a draw</p>
           </div>

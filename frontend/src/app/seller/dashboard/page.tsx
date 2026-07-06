@@ -158,7 +158,7 @@ export default function SellerDashboardPage() {
 
               {/* Not yet verified — resume onboarding */}
               {!isVerified && (
-                <div style={{ background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: 20 }}>
+                <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: 20 }}>
                   <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Complete your verification</p>
                   <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
                     Your Stripe account needs a few more details before you can receive payouts. This usually takes 2–3 minutes.
@@ -168,7 +168,7 @@ export default function SellerDashboardPage() {
                     disabled={resumeLoading}
                     style={{
                       width: '100%', padding: '12px 0', borderRadius: 999, border: 'none',
-                      background: resumeLoading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+                      background: resumeLoading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                       color: 'var(--white)', fontWeight: 700, fontSize: 14,
                       cursor: resumeLoading ? 'not-allowed' : 'pointer',
                     }}
@@ -199,7 +199,7 @@ export default function SellerDashboardPage() {
                   <Link href="/seller/list" style={{ textDecoration: 'none' }}>
                     <button style={{
                       width: '100%', padding: '14px', borderRadius: 999,
-                      background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                      background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                       border: 'none', color: 'var(--white)', fontWeight: 700, fontSize: 15,
                       cursor: 'pointer',
                     }}>+ List new item</button>

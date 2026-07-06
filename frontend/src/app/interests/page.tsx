@@ -73,7 +73,7 @@ export default function InterestsPage() {
                 onClick={() => toggle(item.id)}
                 style={{
                   padding: '10px 20px', borderRadius: 999, cursor: 'pointer',
-                  background: active ? 'var(--purple-light)' : 'var(--card)',
+                  background: active ? 'rgba(139,92,246,0.08)' : 'var(--card)',
                   border: `2px solid ${active ? 'var(--purple)' : 'var(--border)'}`,
                   color: active ? 'var(--purple)' : 'var(--grey)',
                   fontSize: 14, fontWeight: active ? 700 : 500,
@@ -91,7 +91,7 @@ export default function InterestsPage() {
           disabled={saving}
           style={{
             width: '100%', padding: 16, borderRadius: 999,
-            background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+            background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
             border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
             marginBottom: 12, cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.7 : 1,

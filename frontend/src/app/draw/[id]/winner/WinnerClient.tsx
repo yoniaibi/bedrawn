@@ -240,7 +240,7 @@ export default function WinnerClient({ id }: { id: string }) {
 
             <Link href="/home" style={{
               display: 'inline-block', padding: '12px 32px', borderRadius: 999,
-              background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
               color: 'var(--white)', fontWeight: 700, fontSize: 14,
               textDecoration: 'none',
             }}>

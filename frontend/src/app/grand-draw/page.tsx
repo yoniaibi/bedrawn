@@ -88,7 +88,7 @@ export default function GrandDrawPage() {
                 </div>
               ))}
             </div>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--pink)' }}>Last day of {monthName} · 9pm</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--accent-coral)' }}>Last day of {monthName} · 9pm</p>
           </div>
 
           {/* Entries card */}
@@ -163,7 +163,7 @@ export default function GrandDrawPage() {
                   <div key={day} style={{
                     aspectRatio: '1', borderRadius: 4,
                     background: logged ? 'var(--gold)' : future ? 'var(--card2)' : 'var(--border)',
-                    border: isToday ? '2px solid var(--pink)' : 'none',
+                    border: isToday ? '2px solid var(--accent-coral)' : 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10,
                     color: logged ? '#000' : 'var(--muted)',
@@ -180,7 +180,7 @@ export default function GrandDrawPage() {
                 <span style={{ fontSize: 10, color: 'var(--grey)' }}>Logged in</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 2, border: '2px solid var(--pink)' }} />
+                <div style={{ width: 12, height: 12, borderRadius: 2, border: '2px solid var(--accent-coral)' }} />
                 <span style={{ fontSize: 10, color: 'var(--grey)' }}>Today</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>

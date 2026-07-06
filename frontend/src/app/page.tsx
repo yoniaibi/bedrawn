@@ -280,28 +280,26 @@ export default function LandingPage() {
             </div>
             <div style={{ background: 'rgba(255,35,86,0.1)', border: '1px solid rgba(255,35,86,0.3)', borderRadius: 999, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
               <LiveDot size={6} />
-              <span style={{ color: 'var(--pink)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LIVE TONIGHT</span>
+              <span style={{ color: 'var(--accent-coral)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LIVE TONIGHT</span>
             </div>
           </div>
           <div className="landing-draw-grid">
-            {displayDraws.map(d => {
+            {displayDraws.map((d, idx) => {
               const pct = Math.round((d.soldTickets / d.totalTickets) * 100);
               const priceLabel = d.ticketPrice >= 100 ? `£${(d.ticketPrice / 100).toFixed(2)}` : `${d.ticketPrice}p`;
               return (
-                <a key={d.id} href="#waitlist" style={{ textDecoration: 'none' }}>
-                  <div style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', transition: 'box-shadow 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,35,86,0.12)')}
-                    onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
-                    <div style={{ position: 'relative', height: 140 }}>
-                      <img src={d.imageUrl} alt={d.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <a key={d.id} href="#waitlist" style={{ textDecoration: 'none', animationDelay: `${idx * 50}ms`, animation: 'fade-in-up 0.3s ease-out both' }}>
+                  <div className="landing-draw-card" style={{ border: '1px solid var(--border)', background: 'var(--card)' }}>
+                    <div style={{ position: 'relative', aspectRatio: '3/2', overflow: 'hidden' }}>
+                      <img src={d.imageUrl} alt={d.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 300ms ease-out' }} className="card-image-img" />
                       {pct >= 70 && (
-                        <span style={{ position: 'absolute', top: 8, left: 8, background: 'var(--pink)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999 }}>{pct}% sold</span>
+                        <span style={{ position: 'absolute', top: 8, left: 8, background: 'var(--accent-coral)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, backdropFilter: 'blur(8px)' }}>{pct}% sold</span>
                       )}
-                      <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'var(--accent-coral)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999 }}>{priceLabel}</span>
+                      <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(255,35,86,0.90)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, backdropFilter: 'blur(8px)' }}>{priceLabel}</span>
                     </div>
                     <div style={{ padding: '10px 12px 14px' }}>
-                      <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{d.title}</p>
-                      <p style={{ margin: 0, fontSize: 11, color: 'var(--gold)', fontWeight: 600 }}>£{d.retailValue.toLocaleString()}</p>
+                      <p style={{ margin: '0 0 3px', fontSize: 12, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const }}>{d.title}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: 'var(--accent-gold)', fontWeight: 600 }}>£{d.retailValue.toLocaleString()} retail</p>
                     </div>
                   </div>
                 </a>
@@ -338,7 +336,7 @@ export default function LandingPage() {
       </div>
 
       {/* ─── FIRST DRAW ─── */}
-      <div id="winners" style={{ padding: '80px 0', background: 'var(--purple-light)' }}>
+      <div id="winners" style={{ padding: '80px 0', background: 'rgba(139,92,246,0.04)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
           <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Be first</p>
           <h2 style={{ margin: '0 0 16px', fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>The first draw is coming.</h2>
@@ -366,7 +364,7 @@ export default function LandingPage() {
           <div className="landing-features-grid">
             {features.map(card => (
               <div key={card.title} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '24px' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--purple-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(139,92,246,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                   <span style={{ color: 'var(--purple)', fontSize: 16, lineHeight: 1 }}>✓</span>
                 </div>
                 <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{card.title}</p>
@@ -497,7 +495,7 @@ export default function LandingPage() {
       </div>
 
       {/* ─── FOUNDING SELLERS ─── */}
-      <div id="sellers" style={{ padding: '80px 0', background: 'var(--purple-light)' }}>
+      <div id="sellers" style={{ padding: '80px 0', background: 'rgba(139,92,246,0.04)' }}>
         <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ background: 'var(--card)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 24, padding: '52px 48px' }}>
             <span style={{ display: 'inline-block', background: 'var(--gold-light)', border: '1px solid var(--gold)', color: 'var(--gold)', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 999, letterSpacing: '0.1em', marginBottom: 18 }}>
@@ -509,7 +507,7 @@ export default function LandingPage() {
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28 }}>
               <div style={{ display: 'flex' }}>
-                {[['JK', 'var(--purple)'], ['AM', 'var(--pink)'], ['PR', 'var(--gold)'], ['LT', 'var(--green)'], ['MR', 'var(--purple-dark)']].map(([init, bg], i) => (
+                {[['JK', 'var(--accent-lilac)'], ['AM', 'var(--accent-coral)'], ['PR', 'var(--accent-gold)'], ['LT', 'var(--success)'], ['MR', '#7C3AED']].map(([init, bg], i) => (
                   <div key={i} style={{ width: 40, height: 40, borderRadius: '50%', background: bg, border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', marginLeft: i === 0 ? 0 : -10 }}>{init}</div>
                 ))}
               </div>
@@ -593,7 +591,7 @@ export default function LandingPage() {
             Join the waitlist.
           </h2>
           <p style={{ margin: '0 0 28px', fontSize: 16, color: 'var(--grey)', lineHeight: 1.6 }}>
-            4,312 already in. Spots filling fast.
+            Be among the first in. Spots are limited.
           </p>
           <WaitlistForm />
           <p style={{ margin: '16px 0 0', fontSize: 12, color: 'var(--muted)' }}>
@@ -610,7 +608,7 @@ export default function LandingPage() {
       </div>
 
       {/* ─── FOOTER ─── */}
-      <div style={{ background: '#111111', padding: '48px 24px 36px' }}>
+      <div style={{ background: 'var(--black)', padding: '48px 24px 36px' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 36, flexWrap: 'wrap', gap: 24 }}>
             <div>

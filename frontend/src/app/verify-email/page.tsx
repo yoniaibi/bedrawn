@@ -94,7 +94,7 @@ function VerifyEmailContent() {
           <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
 
-        <div style={{ width: 56, height: 56, borderRadius: 12, background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 26, color: 'var(--purple)' }}>✉</div>
+        <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 26, color: 'var(--purple)' }}>✉</div>
         <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>Check your email</p>
         <p style={{ fontSize: 14, color: 'var(--grey)', margin: '0 0 8px', lineHeight: 1.5 }}>
           We sent a 6-digit verification code to
@@ -145,7 +145,7 @@ function VerifyEmailContent() {
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
               background: loading || fullCode.length !== 6
                 ? 'var(--muted)'
-                : 'linear-gradient(135deg, var(--purple), var(--pink))',
+                : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
               cursor: loading || fullCode.length !== 6 ? 'not-allowed' : 'pointer',
               marginBottom: 16,

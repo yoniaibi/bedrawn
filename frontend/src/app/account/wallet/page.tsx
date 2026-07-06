@@ -85,7 +85,7 @@ function CheckoutForm({ amountPence, onSuccess, onCancel }: {
         disabled={!stripe || loading}
         style={{
           width: '100%', padding: 16, borderRadius: 999, border: 'none',
-          background: !stripe || loading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+          background: !stripe || loading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
           color: 'var(--white)', fontSize: 16, fontWeight: 700,
           cursor: !stripe || loading ? 'not-allowed' : 'pointer',
         }}

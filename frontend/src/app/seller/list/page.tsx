@@ -121,7 +121,7 @@ export default function ListItemPage() {
             This protects buyers and ensures you can receive payouts.
           </p>
           <Link href="/seller/dashboard" style={{ textDecoration: 'none' }}>
-            <button style={{ padding: '13px 28px', borderRadius: 999, background: 'linear-gradient(135deg, var(--purple), var(--pink))', border: 'none', color: 'var(--white)', fontSize: 15, fontWeight: 700 }}>
+            <button style={{ padding: '13px 28px', borderRadius: 999, background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)', border: 'none', color: 'var(--white)', fontSize: 15, fontWeight: 700 }}>
               Complete verification →
             </button>
           </Link>
@@ -400,7 +400,7 @@ export default function ListItemPage() {
                 disabled={!agreed || submitting}
                 style={{
                   width: '100%', padding: 16, borderRadius: 999, border: 'none',
-                  background: agreed && !submitting ? 'linear-gradient(135deg, var(--purple), var(--pink))' : 'var(--muted)',
+                  background: agreed && !submitting ? 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)' : 'var(--muted)',
                   color: 'var(--white)', fontSize: 16, fontWeight: 700, cursor: agreed && !submitting ? 'pointer' : 'not-allowed',
                 }}
               >{submitting ? 'Submitting…' : 'Submit listing'}</button>
@@ -442,7 +442,7 @@ export default function ListItemPage() {
                   }}
                   style={{
                     flex: 2, padding: 14, borderRadius: 999,
-                    background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                    background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                     border: 'none', color: 'var(--white)', fontWeight: 700, cursor: 'pointer', fontSize: 15,
                   }}
                 >

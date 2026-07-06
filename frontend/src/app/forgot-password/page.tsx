@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
             </p>
             <Link href="/login" style={{
               display: 'block', padding: '14px 0', borderRadius: 999,
-              background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
               color: 'var(--white)', fontWeight: 700, textDecoration: 'none', fontSize: 16,
             }}>
               Log in now
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                 disabled={loading || code.length < 6 || !newPassword}
                 style={{
                   width: '100%', padding: 16, borderRadius: 999,
-                  background: loading || code.length < 6 || !newPassword ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+                  background: loading || code.length < 6 || !newPassword ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                   border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
                   cursor: loading || code.length < 6 || !newPassword ? 'not-allowed' : 'pointer',
                 }}
@@ -143,7 +143,7 @@ export default function ForgotPasswordPage() {
                 disabled={loading || !email}
                 style={{
                   width: '100%', padding: 16, borderRadius: 999,
-                  background: !email || loading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+                  background: !email || loading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                   border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
                   cursor: !email || loading ? 'not-allowed' : 'pointer',
                 }}

@@ -49,7 +49,7 @@ export default function BecomeSellerPage() {
 
         <div style={{ padding: 16 }}>
           {/* Hero card */}
-          <div style={{ background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px', marginBottom: 24 }}>
+          <div style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px', marginBottom: 24 }}>
             <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--purple)' }}>Sell on BeDrawn</p>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
               List your luxury goods for raffle. Reach thousands of buyers. Keep 88% of all ticket revenue. Draws close every night at 9pm.
@@ -81,7 +81,7 @@ export default function BecomeSellerPage() {
               <div key={step} style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                  background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                  background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, color: 'var(--white)',
                 }}>{step}</div>
@@ -104,7 +104,7 @@ export default function BecomeSellerPage() {
             disabled={loading}
             style={{
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
-              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
             }}

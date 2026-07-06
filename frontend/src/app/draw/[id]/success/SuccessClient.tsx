@@ -53,7 +53,7 @@ function SuccessContent({ id }: { id: string }) {
           ))}
         </div>
         <div style={{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--purple-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(139,92,246,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 36 }}>✓</span>
           </div>
           <div>
@@ -73,13 +73,13 @@ function SuccessContent({ id }: { id: string }) {
               </div>
             ))}
           </div>
-          <div style={{ width: '100%', background: 'rgba(255,35,86,0.1)', border: '1px solid var(--pink)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--pink)', textTransform: 'uppercase', letterSpacing: 1 }}>Draw starts in</p>
+          <div style={{ width: '100%', background: 'rgba(255,35,86,0.1)', border: '1px solid var(--accent-coral)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--accent-coral)', textTransform: 'uppercase', letterSpacing: 1 }}>Draw starts in</p>
             <CountdownTimer className="text-3xl font-bold" />
             <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--grey)' }}>Tonight at 9pm</p>
           </div>
           <Link href="/live" style={{ textDecoration: 'none', width: '100%' }}>
-            <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, var(--purple), var(--pink))', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
+            <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
               Watch live at 9pm →
             </button>
           </Link>

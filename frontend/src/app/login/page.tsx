@@ -83,7 +83,7 @@ function LoginContent() {
             disabled={loading}
             style={{
               width: '100%', padding: 16, borderRadius: 999,
-              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, var(--purple), var(--pink))',
+              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
               border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
               marginTop: 8, cursor: loading ? 'not-allowed' : 'pointer',
             }}

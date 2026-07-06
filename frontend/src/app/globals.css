@@ -300,6 +300,42 @@ button { cursor: pointer; font-family: inherit; }
 .pill-btn { transition: background var(--duration-fast) ease-out, border-color var(--duration-fast) ease-out, color var(--duration-fast) ease-out; }
 .pill-btn:hover { border-color: var(--accent-coral); background: rgba(255,35,86,0.06); color: var(--accent-coral); }
 
+/* ─── Brand gradient button (replaces purple→pink) ─── */
+
+.btn-gradient {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 24px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  width: 100%;
+  box-shadow: 0 4px 14px rgba(255,35,86,0.28);
+  transition: opacity var(--duration-fast) ease-out, box-shadow var(--duration-fast) ease-out;
+}
+.btn-gradient:hover:not(:disabled) { opacity: 0.90; box-shadow: 0 6px 20px rgba(255,35,86,0.38); }
+.btn-gradient:active:not(:disabled) { transform: scale(0.98); }
+.btn-gradient:disabled { opacity: 0.38; pointer-events: none; box-shadow: none; }
+
+/* ─── Staggered draw-grid entry animations ─── */
+
+.draw-grid > * { animation: fade-in-up 0.28s ease-out both; }
+.draw-grid > *:nth-child(1)  { animation-delay: 0ms; }
+.draw-grid > *:nth-child(2)  { animation-delay: 40ms; }
+.draw-grid > *:nth-child(3)  { animation-delay: 80ms; }
+.draw-grid > *:nth-child(4)  { animation-delay: 120ms; }
+.draw-grid > *:nth-child(5)  { animation-delay: 160ms; }
+.draw-grid > *:nth-child(6)  { animation-delay: 200ms; }
+.draw-grid > *:nth-child(n+7) { animation-delay: 240ms; }
+
 /* ─── Layout helpers ─── */
 
 .page-container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
@@ -614,6 +650,21 @@ button { cursor: pointer; font-family: inherit; }
 @keyframes screenEnter {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .skeleton::after,
+  .skeleton-card::after {
+    animation: none;
+    background: none;
+  }
 }
 
 @keyframes cardMount {

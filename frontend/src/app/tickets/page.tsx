@@ -97,7 +97,7 @@ export default function TicketsPage() {
             <Link href="/home" style={{ textDecoration: 'none' }}>
               <button style={{
                 padding: '12px 28px', borderRadius: 999,
-                background: 'linear-gradient(135deg, var(--purple), var(--pink))',
+                background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                 border: 'none', color: 'var(--white)', fontSize: 14, fontWeight: 700,
               }}>Browse tonight&apos;s draws →</button>
             </Link>
@@ -144,8 +144,8 @@ export default function TicketsPage() {
                   <div style={{ padding: '0 14px 10px' }}>
                     <span style={{
                       background: isClosingTonight ? 'rgba(255,35,86,0.15)' : 'rgba(139,92,246,0.15)',
-                      border: `1px solid ${isClosingTonight ? 'var(--pink)' : 'var(--purple)'}`,
-                      color: isClosingTonight ? 'var(--pink)' : 'var(--purple)',
+                      border: `1px solid ${isClosingTonight ? 'var(--accent-coral)' : 'var(--purple)'}`,
+                      color: isClosingTonight ? 'var(--accent-coral)' : 'var(--purple)',
                       fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
                     }}>
                       {isClosingTonight ? 'Draws tonight at 9pm' : `Closes ${entry.closingDate}`}
