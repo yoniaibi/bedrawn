@@ -28,7 +28,7 @@ function SuccessContent({ id }: { id: string }) {
   }, []); // empty deps — reads real URL at mount
 
   useEffect(() => {
-    const colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'];
+    const colors = ['#8B5CF6', '#FF2356', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'];
     setParticles(Array.from({ length: 20 }, (_, i) => ({
       id: i, x: Math.random() * 100, color: colors[i % colors.length],
       delay: Math.random() * 0.5, duration: 1.5 + Math.random() * 1,
@@ -73,7 +73,7 @@ function SuccessContent({ id }: { id: string }) {
               </div>
             ))}
           </div>
-          <div style={{ width: '100%', background: 'rgba(236,72,153,0.1)', border: '1px solid var(--pink)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
+          <div style={{ width: '100%', background: 'rgba(255,35,86,0.1)', border: '1px solid var(--pink)', borderRadius: 14, padding: '16px', textAlign: 'center' }}>
             <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--pink)', textTransform: 'uppercase', letterSpacing: 1 }}>Draw starts in</p>
             <CountdownTimer className="text-3xl font-bold" />
             <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--grey)' }}>Tonight at 9pm</p>

@@ -143,7 +143,7 @@ export default function TicketsPage() {
 
                   <div style={{ padding: '0 14px 10px' }}>
                     <span style={{
-                      background: isClosingTonight ? 'rgba(236,72,153,0.15)' : 'rgba(139,92,246,0.15)',
+                      background: isClosingTonight ? 'rgba(255,35,86,0.15)' : 'rgba(139,92,246,0.15)',
                       border: `1px solid ${isClosingTonight ? 'var(--pink)' : 'var(--purple)'}`,
                       color: isClosingTonight ? 'var(--pink)' : 'var(--purple)',
                       fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,

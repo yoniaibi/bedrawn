@@ -266,7 +266,7 @@ export default function HomePage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
         }}>
           <div>
-            <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Get the DRAWN app</p>
+            <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Get the BeDrawn app</p>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>Watch draws go live at 9pm and get instant win notifications</p>
           </div>
           <a href="#" style={{

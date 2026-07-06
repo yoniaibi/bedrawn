@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from '@/components/Logo';
+import { HomeIcon, RadioIcon, TicketIcon, StarIcon, UserIcon } from './icons';
 
 const tabs = [
   { href: '/home',       label: 'Home' },
@@ -28,9 +30,8 @@ export function TopNav() {
         display: 'flex', alignItems: 'center', gap: 0,
       }}>
         {/* Logo */}
-        <Link href="/home" style={{ textDecoration: 'none', flexShrink: 0, marginRight: 40 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 44, width: 'auto' }} />
+        <Link href="/home" aria-label="BeDrawn home" style={{ textDecoration: 'none', flexShrink: 0, marginRight: 40, display: 'flex', alignItems: 'center' }}>
+          <Logo width={126} bg="#FAFAF8" />
         </Link>
 
         {/* Desktop nav links */}
@@ -52,24 +53,12 @@ export function TopNav() {
 
         {/* Right side actions */}
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link href="/search" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-            textDecoration: 'none', color: 'var(--text-secondary)',
-            transition: 'border-color 0.15s, color 0.15s',
-          }}>
+          <Link href="/search" className="icon-btn" aria-label="Search">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
           </Link>
-          <Link href="/account/notifications" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-            textDecoration: 'none', color: 'var(--text-secondary)',
-            transition: 'border-color 0.15s, color 0.15s',
-          }}>
+          <Link href="/account/notifications" className="icon-btn" aria-label="Notifications">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
@@ -85,13 +74,7 @@ export function TopNav() {
           }}>
             Wallet
           </Link>
-          <Link href="/account" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)',
-            textDecoration: 'none', color: 'var(--text-secondary)',
-            transition: 'border-color 0.15s',
-          }}>
+          <Link href="/account" className="icon-btn" aria-label="Account">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
             </svg>
@@ -102,16 +85,24 @@ export function TopNav() {
   );
 }
 
+const tabIconMap: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number; color?: string }>> = {
+  '/home':       HomeIcon,
+  '/live':       RadioIcon,
+  '/tickets':    TicketIcon,
+  '/grand-draw': StarIcon,
+  '/account':    UserIcon,
+};
+
 export function BottomNav() {
   const path = usePathname();
   const allTabs = [...tabs, { href: '/account', label: 'Account' }];
   return (
     <nav className="mobile-only" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: 'rgba(250,250,248,0.96)',
+      background: 'rgba(250,250,248,0.88)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
-      borderTop: '1px solid rgba(0,0,0,0.08)',
+      boxShadow: '0 -1px 0 rgba(0,0,0,0.06)',
       display: 'flex', zIndex: 200,
       paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
@@ -121,22 +112,19 @@ export function BottomNav() {
         const color = active
           ? (isGold ? 'var(--accent-gold)' : 'var(--accent-coral)')
           : 'var(--text-tertiary)';
+        const IconComp = tabIconMap[tab.href] ?? UserIcon;
         return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              padding: '10px 0 8px', textDecoration: 'none', gap: 3,
-            }}
-          >
+          <Link key={tab.href} href={tab.href} style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '9px 0 7px', textDecoration: 'none', gap: 3,
+            minHeight: 54,
+          }}>
+            <IconComp size={22} strokeWidth={active ? 2.4 : 1.8} color={color} />
             <span style={{
-              fontSize: 10, fontWeight: active ? 700 : 500,
-              letterSpacing: '0.04em', color,
-              textTransform: 'uppercase',
+              fontSize: 10, fontWeight: active ? 600 : 500,
+              color, letterSpacing: '0.01em',
             }}>{tab.label}</span>
-            {active && <span style={{ width: 4, height: 4, borderRadius: '50%', background: isGold ? 'var(--accent-gold)' : 'var(--accent-coral)' }} />}
           </Link>
         );
       })}

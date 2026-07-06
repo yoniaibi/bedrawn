@@ -37,7 +37,7 @@ export default function CookieConsent() {
       boxShadow: '0 -4px 24px rgba(0,0,0,0.3)',
     }}>
       <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)', flex: '1 1 300px', lineHeight: 1.55 }}>
-        We use cookies to keep you signed in and understand how you use DRAWN.
+        We use cookies to keep you signed in and understand how you use BeDrawn.
         Read our{' '}
         <Link href="/legal/privacy" style={{ color: 'var(--purple)', textDecoration: 'underline' }}>Privacy Policy</Link>.
       </p>

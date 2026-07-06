@@ -5,7 +5,7 @@ import AppShell from '@/components/AppShell';
 
 const available = [
   { emoji: '👗', label: 'Fashion', desc: 'Designer clothing & outerwear', accent: '#8B5CF6' },
-  { emoji: '👟', label: 'Trainers', desc: 'Rare & limited edition footwear', accent: '#EC4899' },
+  { emoji: '👟', label: 'Trainers', desc: 'Rare & limited edition footwear', accent: '#FF2356' },
   { emoji: '⌚', label: 'Watches', desc: 'Luxury timepieces', accent: '#F59E0B' },
   { emoji: '👜', label: 'Bags', desc: 'Designer handbags & accessories', accent: '#10B981' },
   { emoji: '💍', label: 'Jewellery', desc: 'Fine & costume jewellery', accent: '#F59E0B' },

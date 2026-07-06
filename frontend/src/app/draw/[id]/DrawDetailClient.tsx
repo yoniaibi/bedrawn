@@ -7,6 +7,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
+import { ChevronLeftIcon, HeartFilledIcon, ShareIcon, TrophyIcon, ClockIcon } from '@/components/icons';
 import type { Draw } from '@/lib/mockData';
 
 function getSavedDraws(): string[] {
@@ -137,12 +138,16 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       <div style={{ maxWidth: 720, margin: '0 auto', paddingBottom: 100 }}>
         {/* Header */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/home" style={{ color: 'var(--grey)', textDecoration: 'none', fontSize: 20 }}>←</Link>
+          <Link href="/home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Back to home">
+            <ChevronLeftIcon size={20} color="var(--text-secondary)" />
+          </Link>
           <div style={{ flex: 1 }} />
-          <button onClick={handleSave} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: saved ? 'var(--pink)' : 'var(--grey)' }}>
-            {saved ? '♥' : '♡'}
+          <button onClick={handleSave} aria-label={saved ? 'Remove from saved' : 'Save draw'} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+            <HeartFilledIcon size={20} filled={saved} color={saved ? 'var(--accent-coral)' : 'var(--text-secondary)'} />
           </button>
-          <button style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--grey)' }}>⤴</button>
+          <button aria-label="Share" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+            <ShareIcon size={20} color="var(--text-secondary)" />
+          </button>
         </div>
 
         {/* Hero image */}
@@ -151,7 +156,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(13,11,20,0.6))' }} />
           {draw.isClosingTonight && (
             <div style={{ position: 'absolute', top: 12, left: 12 }}>
-              <span style={{ background: 'rgba(244,114,182,0.15)', border: '1px solid rgba(244,114,182,0.35)', color: '#F472B6', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(8px)' }}>
+              <span style={{ background: 'rgba(255,35,86,0.15)', border: '1px solid rgba(255,35,86,0.35)', color: '#FF2356', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(8px)' }}>
                 <LiveDot size={5} /> Closing Tonight
               </span>
             </div>
@@ -284,13 +289,13 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
         <div style={{ position: 'fixed', bottom: 64, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 500, padding: '12px 16px', background: 'var(--bg)', borderTop: '1px solid var(--border)', zIndex: 50 }}>
           {draw.status === 'resolved' ? (
             <Link href={`/draw/${draw.id}/winner`} style={{ textDecoration: 'none' }}>
-              <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 16, fontWeight: 700 }}>
-                🏆 See who won
+              <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 16, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <TrophyIcon size={16} color="currentColor" /> See who won
               </button>
             </Link>
           ) : (
             <>
-              {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600 }}>⏰ Closing tonight at 9pm</p>}
+              {draw.isClosingTonight && <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--pink)', textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}><ClockIcon size={14} color="var(--accent-rose)" /> Closing tonight at 9pm</p>}
               <button
                 className="btn-purchase"
                 onClick={openModal}
@@ -306,10 +311,11 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       {/* Purchase modal */}
       {showModal && draw && (
         <div
+          className="purchase-overlay"
           onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(13,11,20,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
         >
-          <div style={{ background: 'var(--card)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 500, padding: 24, paddingBottom: 40 }}>
+          <div className="purchase-sheet" style={{ background: 'var(--card)', width: '100%', padding: 24, paddingBottom: 40, animation: 'sheetEnter 320ms cubic-bezier(0.16,1,0.3,1)' }}>
 
             {purchased ? (
               /* Success state */
@@ -320,7 +326,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                 {walletPence !== null && (
                   <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 24px' }}>Wallet balance: {walletPence >= 100 ? `£${(walletPence / 100).toFixed(2)}` : `${walletPence}p`}</p>
                 )}
-                <button onClick={() => setShowModal(false)} style={{ padding: '12px 32px', borderRadius: 999, background: 'var(--purple)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+                <button onClick={() => setShowModal(false)} style={{ padding: '12px 32px', borderRadius: 999, background: 'var(--accent-coral)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
                   Done
                 </button>
               </div>
@@ -352,15 +358,15 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                       onClick={() => setQty(n)}
                       style={{
                         flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: 'pointer',
-                        background: qty === n ? 'var(--purple)' : 'var(--bg)',
-                        border: `2px solid ${qty === n ? 'var(--purple)' : 'var(--border)'}`,
-                        color: qty === n ? '#fff' : 'var(--text)',
+                        background: qty === n ? 'rgba(255,35,86,0.10)' : 'var(--bg)',
+                        border: `2px solid ${qty === n ? 'var(--accent-coral)' : 'var(--border)'}`,
+                        color: qty === n ? 'var(--accent-coral)' : 'var(--text)',
                       }}
                     >{n}</button>
                   ))}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                  <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--border)', color: 'var(--text)', fontSize: 20, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>−</button>
+                  <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg-elevated)', border: '1.5px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 20, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>−</button>
                   <input
                     type="number"
                     min={1}
@@ -370,9 +376,9 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                       const v = parseInt(e.target.value, 10);
                       if (!isNaN(v) && v >= 1) setQty(Math.min(v, draw.totalTickets - draw.soldTickets));
                     }}
-                    style={{ flex: 1, textAlign: 'center', padding: '8px', borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--purple)', color: 'var(--text)', fontSize: 18, fontWeight: 700, outline: 'none' }}
+                    style={{ flex: 1, textAlign: 'center', padding: '8px', borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--accent-coral)', color: 'var(--text)', fontSize: 18, fontWeight: 700, outline: 'none' }}
                   />
-                  <button onClick={() => setQty(q => Math.min(q + 1, draw.totalTickets - draw.soldTickets))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg)', border: '2px solid var(--border)', color: 'var(--text)', fontSize: 20, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                  <button onClick={() => setQty(q => Math.min(q + 1, draw.totalTickets - draw.soldTickets))} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--bg-elevated)', border: '1.5px solid var(--border-default)', color: 'var(--text-primary)', fontSize: 20, fontWeight: 700, cursor: 'pointer', lineHeight: 1 }}>+</button>
                 </div>
 
                 {/* Total */}
@@ -397,9 +403,9 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                   </div>
                 ) : (
                   <button
+                    className="btn-purchase"
                     onClick={handlePurchase}
                     disabled={submitting}
-                    style={{ width: '100%', padding: 16, borderRadius: 999, background: submitting ? 'var(--border)' : 'var(--purple)', border: 'none', color: '#fff', fontSize: 16, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer' }}
                   >
                     {submitting ? 'Confirming…' : `Confirm · ${qty * draw.ticketPrice >= 100 ? `£${(qty * draw.ticketPrice / 100).toFixed(2)}` : `${qty * draw.ticketPrice}p`}`}
                   </button>

@@ -11,13 +11,13 @@ import type { WheelEntry } from '@/components/PrizeWheel';
 import type { Draw } from '@/lib/mockData';
 
 // ─── Demo participants ────────────────────────────────────────────────────────
-const DEMO_COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#F97316'];
+const DEMO_COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#FF2356', '#06B6D4', '#F97316'];
 const DEMO_BASE: WheelEntry[] = [
   { handle: '@sarah_j',    tickets: 3,  color: '#8B5CF6' },
   { handle: '@marcus_t',   tickets: 7,  color: '#3B82F6' },
   { handle: '@collector',  tickets: 12, color: '#10B981' },
   { handle: '@luxe_fan',   tickets: 2,  color: '#F59E0B' },
-  { handle: '@fashionista',tickets: 4,  color: '#EC4899' },
+  { handle: '@fashionista',tickets: 4,  color: '#FF2356' },
   { handle: '@streetwear', tickets: 2,  color: '#06B6D4' },
   { handle: '@watchman99', tickets: 5,  color: '#F97316' },
 ];
@@ -27,7 +27,7 @@ const CHAT_INIT = [
   { id: '2', handle: '@marcus_t',   color: '#3B82F6', text: 'That bag is INSANE value' },
   { id: '3', handle: '@collector',  color: '#10B981', text: 'Got my 12 tickets in 👌' },
   { id: '4', handle: '@luxe_fan',   color: '#F59E0B', text: 'First time entering, nervous!' },
-  { id: '5', handle: '@fashionista',color: '#EC4899', text: 'GOOD LUCK EVERYONE 🎉' },
+  { id: '5', handle: '@fashionista',color: '#FF2356', text: 'GOOD LUCK EVERYONE 🎉' },
   { id: '6', handle: '@streetwear', color: '#06B6D4', text: 'Still got 45 mins to buy 🏃' },
   { id: '7', handle: '@watchman99', color: '#F97316', text: 'The wheel spin is so satisfying' },
 ];
@@ -329,8 +329,8 @@ export default function LivePage() {
                       <span style={{ width: 36, fontSize: 10, color: 'rgba(255,255,255,0.35)', textAlign: 'right', flexShrink: 0 }}>
                         {share.toFixed(1)}%
                       </span>
-                      <span style={{ width: 22, fontSize: 10, color: 'rgba(255,255,255,0.25)', textAlign: 'right', flexShrink: 0 }}>
-                        {entry.tickets}🎟
+                      <span style={{ width: 56, fontSize: 10, color: 'rgba(255,255,255,0.25)', textAlign: 'right', flexShrink: 0 }}>
+                        {entry.tickets} tickets
                       </span>
                     </div>
                   );

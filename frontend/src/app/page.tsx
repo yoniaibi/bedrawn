@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 import Logo from '@/components/Logo';
+import { AppleIcon, PhoneIcon } from '@/components/icons';
 import { draws } from '@/lib/mockData';
 
 const displayDraws = (() => {
@@ -18,11 +19,11 @@ const displayDraws = (() => {
 
 
 const faqs = [
-  { q: 'How do I enter for free?', a: 'Every draw has a free postal entry route. Write a postcard with your name, email, and draw name and send it to our postal address (published before launch — check back soon). One postcard = one entry, same odds as paid tickets. This is what makes Bedrawn a legal prize promotion under UK law.' },
-  { q: 'Is this gambling?', a: 'No. Bedrawn is a prize draw, not gambling. Every draw has a free entry route (no purchase necessary), which legally distinguishes it from a lottery. No gambling licence required — same structure as large UK charity draws.' },
+  { q: 'How do I enter for free?', a: 'Every draw has a free postal entry route. Write a postcard with your name, email, and draw name and send it to our postal address (published before launch — check back soon). One postcard = one entry, same odds as paid tickets. This is what makes BeDrawn a legal prize promotion under UK law.' },
+  { q: 'Is this gambling?', a: 'No. BeDrawn is a prize draw, not gambling. Every draw has a free entry route (no purchase necessary), which legally distinguishes it from a lottery. No gambling licence required — same structure as large UK charity draws.' },
   { q: "What if a draw doesn't sell enough tickets?", a: 'If a draw closes without reaching its minimum ticket threshold, all buyers are automatically refunded. Funds are held in escrow — we never touch your money directly.' },
-  { q: 'How do I get my prize?', a: "Once the wheel picks your name at 9pm, you get an instant notification and your item ships free within 2 business days. All items are held by Bedrawn before going live — we verify them and dispatch directly. You never deal with the seller." },
-  { q: 'How are sellers paid?', a: "Sellers are paid within 24 hours of the winner confirming delivery. Bedrawn takes a 12% platform fee. For a £200 item at 25p/ticket with 2,000 tickets sold, a seller receives approximately £423." },
+  { q: 'How do I get my prize?', a: "Once the wheel picks your name at 9pm, you get an instant notification and your item ships free within 2 business days. All items are held by BeDrawn before going live — we verify them and dispatch directly. You never deal with the seller." },
+  { q: 'How are sellers paid?', a: "Sellers are paid within 24 hours of the winner confirming delivery. BeDrawn takes a 12% platform fee. For a £200 item at 25p/ticket with 2,000 tickets sold, a seller receives approximately £423." },
   { q: 'Is the draw actually random?', a: "Yes — draws use a cryptographically secure random number generator. The outcome is provably fair. The live wheel is purely visual — the winner is determined by algorithm, not where the animation stops." },
   { q: 'How many tickets can I buy?', a: "Up to 25% of the tickets in any draw. If a draw has 2,000 tickets, the max is 500. At 10p each, that's £50 for a 25% shot at the prize." },
   { q: 'When does the draw happen?', a: "Every night at 9pm UK time. All draws close simultaneously and resolve live in the app with a live chat and reaction stream. Results and winner notifications go out by 9:15pm." },
@@ -84,7 +85,7 @@ function WaitlistForm({ compact = false }: { compact?: boolean }) {
       }}>
         <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--green)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', color: '#fff', fontSize: 18, fontWeight: 700 }}>✓</div>
         <p style={{ margin: '0 0 4px', fontSize: compact ? 14 : 16, fontWeight: 700, color: 'var(--green)' }}>You&apos;re on the list!</p>
-        <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>We&apos;ll let you know when Bedrawn launches.</p>
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)' }}>We&apos;ll let you know when BeDrawn launches.</p>
       </div>
     );
   }
@@ -215,11 +216,11 @@ export default function LandingPage() {
           <div style={{ maxWidth: 620 }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
-              background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.4)',
+              background: 'rgba(255,35,86,0.15)', border: '1px solid rgba(255,35,86,0.4)',
               borderRadius: 999, padding: '5px 14px', marginBottom: 24,
             }}>
               <LiveDot size={6} />
-              <span style={{ color: '#EC4899', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LAUNCHING SOON · 9PM NIGHTLY</span>
+              <span style={{ color: '#FF2356', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LAUNCHING SOON · 9PM NIGHTLY</span>
             </div>
 
             <h1 style={{ margin: '0 0 4px', color: '#FFFFFF', fontSize: 68, fontWeight: 800, lineHeight: 1, letterSpacing: -2 }}>
@@ -235,11 +236,11 @@ export default function LandingPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(236,72,153,0.3)',
+              border: '1px solid rgba(255,35,86,0.3)',
               borderRadius: 999, padding: '8px 18px', marginBottom: 28,
             }}>
               <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13 }}>First draw closes in</span>
-              <CountdownTimer style={{ color: '#EC4899', fontWeight: 800, fontSize: 14 }} />
+              <CountdownTimer style={{ color: '#FF2356', fontWeight: 800, fontSize: 14 }} />
             </div>
 
             <div id="waitlist" style={{ marginBottom: 22, maxWidth: 480 }}>
@@ -277,7 +278,7 @@ export default function LandingPage() {
               <h2 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.5 }}>Drawing at 9pm tonight</h2>
               <p style={{ margin: 0, fontSize: 14, color: 'var(--grey)' }}>Join the waitlist to grab tickets before they close</p>
             </div>
-            <div style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.3)', borderRadius: 999, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ background: 'rgba(255,35,86,0.1)', border: '1px solid rgba(255,35,86,0.3)', borderRadius: 999, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
               <LiveDot size={6} />
               <span style={{ color: 'var(--pink)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LIVE TONIGHT</span>
             </div>
@@ -354,7 +355,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ─── WHY BEDRAWN ─── */}
+      {/* ─── WHY BeDrawn ─── */}
       <div style={{ padding: '80px 0', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
           <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Why us</p>
@@ -406,7 +407,7 @@ export default function LandingPage() {
                     <img src={draws[0].imageUrl} alt="Auth" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div>
-                    <p style={{ margin: '0 0 2px', fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Bedrawn Auth Certificate</p>
+                    <p style={{ margin: '0 0 2px', fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>BeDrawn Auth Certificate</p>
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Chanel Classic Flap · Beige</p>
                   </div>
                   <div style={{ marginLeft: 'auto', background: 'var(--green-light)', border: '1px solid var(--green)', borderRadius: 8, padding: '5px 12px', flexShrink: 0 }}>
@@ -466,15 +467,15 @@ export default function LandingPage() {
       <div style={{ padding: '80px 0', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px' }}>
           <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--purple)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>The landscape</p>
-          <h2 style={{ margin: '0 0 10px', fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>Many players. None of them Bedrawn.</h2>
+          <h2 style={{ margin: '0 0 10px', fontSize: 40, fontWeight: 800, color: 'var(--text)', letterSpacing: -1 }}>Many players. None of them BeDrawn.</h2>
           <p style={{ margin: '0 0 36px', fontSize: 15, color: 'var(--grey)', lineHeight: 1.6 }}>
             There are hundreds of resale and raffle sites. Not one combines a real marketplace with a nightly live draw at 10p.
           </p>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 100px 100px', borderBottom: '1px solid var(--border)', padding: '14px 22px', background: 'var(--card)' }}>
               <span style={{ fontSize: 12, color: 'var(--muted)' }}></span>
-              {['Vinted', 'eBay', 'StockX', 'Bedrawn'].map(h => (
-                <span key={h} style={{ fontSize: 13, fontWeight: 700, color: h === 'Bedrawn' ? 'var(--purple)' : 'var(--grey)', textAlign: 'center' }}>{h}</span>
+              {['Vinted', 'eBay', 'StockX', 'BeDrawn'].map(h => (
+                <span key={h} style={{ fontSize: 13, fontWeight: 700, color: h === 'BeDrawn' ? 'var(--purple)' : 'var(--grey)', textAlign: 'center' }}>{h}</span>
               ))}
             </div>
             {compareRows.map((row, i) => (
@@ -541,7 +542,7 @@ export default function LandingPage() {
                 The best experience
               </p>
               <h2 style={{ margin: '0 0 12px', fontSize: 36, fontWeight: 800, color: 'var(--text)', letterSpacing: -0.5, lineHeight: 1.1 }}>
-                Get the DRAWN app.
+                Get the BeDrawn app.
               </h2>
               <p style={{ margin: '0 0 28px', fontSize: 15, color: 'var(--grey)', lineHeight: 1.6 }}>
                 Watch draws go live, get instant win notifications, and manage your tickets — all from your phone at 9pm.
@@ -557,7 +558,7 @@ export default function LandingPage() {
                     textDecoration: 'none', border: '1px solid rgba(255,255,255,0.1)',
                   }}
                 >
-                  <span style={{ fontSize: 22, lineHeight: 1 }}>⬛</span>
+                  <AppleIcon size={18} color="currentColor" />
                   <div>
                     <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>Download on the</p>
                     <p style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>App Store</p>
@@ -568,18 +569,15 @@ export default function LandingPage() {
                   background: 'rgba(255,35,86,0.06)', border: '1px solid rgba(255,35,86,0.15)',
                   borderRadius: 12, padding: '12px 22px', color: 'var(--accent-coral)', fontSize: 13,
                 }}>
-                  <span>📱</span>
+                  <PhoneIcon size={16} color="currentColor" />
                   <span style={{ fontWeight: 600 }}>Coming soon on Android</span>
                 </div>
               </div>
             </div>
-            <div style={{
-              flex: '0 0 180px', height: 180,
-              background: 'var(--accent-coral)',
-              borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 80,
-            }}>
-              📲
+            <div style={{ width: 180, height: 320, borderRadius: 28, background: 'linear-gradient(160deg, #1A1030, #0D0B14)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 64px rgba(0,0,0,0.35)', flexShrink: 0 }}>
+              <PhoneIcon size={36} color="rgba(255,255,255,0.25)" />
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>iOS App</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)' }}>Coming soon</span>
             </div>
           </div>
         </div>
@@ -629,7 +627,7 @@ export default function LandingPage() {
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 22 }}>
             <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.25)', lineHeight: 1.7, maxWidth: 760 }}>
-              © 2026 Bedrawn. Bedrawn operates prize draws, not lotteries. Every draw offers a genuine free entry route with equal odds, in line with the Gambling Act 2005. No gambling licence required. 18+. Please play responsibly.
+              © 2026 BeDrawn. BeDrawn operates prize draws, not lotteries. Every draw offers a genuine free entry route with equal odds, in line with the Gambling Act 2005. No gambling licence required. 18+. Please play responsibly.
             </p>
           </div>
         </div>

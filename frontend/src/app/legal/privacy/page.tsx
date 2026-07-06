@@ -5,7 +5,7 @@ import Link from 'next/link';
 const sections = [
   {
     title: '1. Who We Are',
-    body: 'DRAWN is a luxury raffle platform operated from London, United Kingdom. We are the data controller for personal data collected through this platform. For privacy-related queries, contact privacy@bedrawn.app.',
+    body: 'BeDrawn is a luxury raffle platform operated from London, United Kingdom. We are the data controller for personal data collected through this platform. For privacy-related queries, contact privacy@bedrawn.app.',
   },
   {
     title: '2. What Data We Collect',
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
             ))}
           </div>
           <div style={{ marginTop: 32, borderTop: '1px solid var(--border)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>DRAWN · privacy@bedrawn.app · London, UK</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--muted)' }}>BeDrawn · privacy@bedrawn.app · London, UK</p>
             <Link href="/legal/terms" style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>Terms of Service →</Link>
           </div>
         </div>

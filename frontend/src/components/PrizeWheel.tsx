@@ -163,7 +163,7 @@ export default function PrizeWheel({ entries, size = 300, rotation }: PrizeWheel
 
         {/* Hub text */}
         <text x={cx} y={cy - 5} textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="9" fontWeight="800" letterSpacing="2.5" style={{ userSelect: 'none' }}>
-          DRAWN
+          BeDrawn
         </text>
         <text x={cx} y={cy + 9} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize="8" style={{ userSelect: 'none' }}>
           ◆

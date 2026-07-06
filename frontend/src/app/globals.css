@@ -102,8 +102,8 @@
   --color-muted: var(--text-tertiary);
   --color-drawn-green: var(--success);
   --color-drawn-red: var(--danger);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-fraunces);
 }
 
 * { box-sizing: border-box; }
@@ -111,7 +111,7 @@
 html, body {
   background: var(--bg-base);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -151,9 +151,10 @@ button { cursor: pointer; font-family: inherit; }
 /* ─── Typography ─── */
 
 .serif {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-fraunces, Georgia, 'Times New Roman', serif);
   font-style: italic;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  font-weight: 600;
 }
 
 /* ─── Utilities ─── */
@@ -646,6 +647,48 @@ button { cursor: pointer; font-family: inherit; }
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
+}
+
+/* ─── Purchase sheet / modal ─── */
+
+.purchase-sheet {
+  border-radius: 24px 24px 0 0;
+  max-height: 92vh;
+  overflow-y: auto;
+}
+@media (min-width: 768px) {
+  .purchase-sheet {
+    border-radius: 20px;
+    max-width: 440px;
+    width: 100%;
+    position: relative;
+    margin: auto;
+    max-height: 85vh;
+  }
+  .purchase-overlay {
+    align-items: center !important;
+  }
+}
+
+/* ─── Icon buttons ─── */
+
+.icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  color: var(--text-secondary); cursor: pointer;
+  transition: border-color 150ms ease-out, background 150ms ease-out, color 150ms ease-out;
+  text-decoration: none;
+}
+.icon-btn:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+}
+:where(a, button):focus-visible {
+  outline: 2px solid var(--accent-coral);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ─── Wheel glow ─── */

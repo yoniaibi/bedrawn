@@ -50,7 +50,7 @@ export default function BecomeSellerPage() {
         <div style={{ padding: 16 }}>
           {/* Hero card */}
           <div style={{ background: 'var(--purple-light)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px', marginBottom: 24 }}>
-            <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--purple)' }}>Sell on Bedrawn</p>
+            <p style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--purple)' }}>Sell on BeDrawn</p>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
               List your luxury goods for raffle. Reach thousands of buyers. Keep 88% of all ticket revenue. Draws close every night at 9pm.
             </p>

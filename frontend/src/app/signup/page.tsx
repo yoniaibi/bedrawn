@@ -104,7 +104,7 @@ export default function SignupPage() {
               {agreed && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>✓</span>}
             </button>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)', lineHeight: 1.4 }}>
-              I agree to DRAWN&apos;s{' '}
+              I agree to BeDrawn&apos;s{' '}
               <Link href="/legal/terms" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Terms of Service</Link>
               {' '}and{' '}
               <Link href="/legal/privacy" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Privacy Policy</Link>

@@ -240,7 +240,7 @@ export default function AccountPage() {
           </button>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', margin: 0 }}>Bedrawn · v1.0 · London, UK</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--muted)', margin: 0 }}>BeDrawn · v1.0 · London, UK</p>
       </div>
     </AppShell>
   );
