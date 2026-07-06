@@ -164,10 +164,16 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
         <div style={{ height: 280, background: 'var(--card)', position: 'relative', overflow: 'hidden' }}>
           <img src={draw.imageUrl} alt={draw.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(13,11,20,0.6))' }} />
-          {draw.isClosingTonight && (
+          {draw.isClosingTonight ? (
             <div style={{ position: 'absolute', top: 12, left: 12 }}>
               <span style={{ background: 'rgba(255,35,86,0.15)', border: '1px solid rgba(255,35,86,0.35)', color: '#FF2356', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(8px)' }}>
-                <LiveDot size={5} /> Closing Tonight
+                <LiveDot size={5} /> Drawing Tonight 9pm
+              </span>
+            </div>
+          ) : (
+            <div style={{ position: 'absolute', top: 12, left: 12 }}>
+              <span style={{ background: 'rgba(0,0,0,0.40)', color: 'rgba(255,255,255,0.70)', fontSize: 10, fontWeight: 500, padding: '3px 10px', borderRadius: 6, backdropFilter: 'blur(8px)', letterSpacing: '0.04em' }}>
+                Open · accepting entries
               </span>
             </div>
           )}
@@ -307,7 +313,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {draw.isClosingTonight && (
                 <p style={{ margin: 0, fontSize: 12, color: 'var(--accent-rose)', textAlign: 'center', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                  <ClockIcon size={13} color="var(--accent-rose)" /> Closing tonight at 9pm
+                  <ClockIcon size={13} color="var(--accent-rose)" /> Drawing tonight at 9pm
                 </p>
               )}
               <button className="btn-purchase" onClick={openModal}>

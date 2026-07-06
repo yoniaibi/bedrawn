@@ -62,7 +62,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     retailValue,       // pounds (e.g. "6800")
     reservePct,        // seller-chosen reserve: 25 | 50 | 75 | 100 (default 25)
     imageUrls = [],
-    closingDate,       // optional override (YYYY-MM-DD); defaults to tonight/tomorrow
   } = body;
 
   if (!title || !ticketPrice || !totalTickets || !retailValue) {
@@ -75,7 +74,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   const ticketPricePence = parseTicketPricePence(ticketPrice);
   const totalTicketsNum = Math.max(1, Math.round(Number(totalTickets)));
   const retailValuePence = Math.round(parseFloat(String(retailValue)) * 100);
-  const resolvedClosingDate: string = closingDate ?? getUKClosingDate();
 
   if (ticketPricePence < 1 || totalTicketsNum < 1 || retailValuePence < 1) {
     return {
@@ -103,7 +101,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     minTickets: Math.ceil(totalTicketsNum * (Math.min(100, Math.max(25, Number(reservePct) || 25)) / 100)),
     retailValuePence,
     imageUrls: Array.isArray(imageUrls) ? imageUrls.slice(0, 6) : [],
-    closingDate: resolvedClosingDate,
+    // No closingDate at listing time — set automatically by enter-draw when reserve is hit
     sellerId: userId,
     sellerHandle,
     sellerStripeAccountId: sellerRecord.Item.stripeAccountId,
@@ -119,6 +117,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   return {
     statusCode: 201,
     headers: cors,
-    body: JSON.stringify({ drawId, closingDate: resolvedClosingDate }),
+    body: JSON.stringify({ drawId }),
   };
 };

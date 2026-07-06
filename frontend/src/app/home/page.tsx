@@ -20,7 +20,7 @@ const categories = [
   { id: 'Streetwear',  label: 'Streetwear' },
 ];
 
-const filters = ['Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
+const filters = ['Drawing Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
 
 export default function HomePage() {
   const [category, setCategory] = useState('all');
@@ -41,7 +41,7 @@ export default function HomePage() {
 
   const filtered = allDraws.filter(d => {
     if (category !== 'all' && d.category !== category) return false;
-    if (filter === 'Tonight') return d.isClosingTonight;
+    if (filter === 'Drawing Tonight') return d.isClosingTonight;
     if (filter === 'Womenswear') return d.style === 'Womenswear';
     if (filter === 'Menswear') return d.style === 'Menswear';
     if (filter === 'High Value') return d.retailValue >= 1000;
@@ -54,6 +54,7 @@ export default function HomePage() {
   const heroPrice = hero ? (hero.ticketPrice >= 100 ? `£${(hero.ticketPrice / 100).toFixed(2)}` : `${hero.ticketPrice}p`) : '';
   const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
 
+  const drawingTonight = allDraws.filter(d => d.isClosingTonight).slice(0, 8);
   const womenswear = allDraws.filter(d => d.style === 'Womenswear').slice(0, 8);
   const menswear = allDraws.filter(d => d.style === 'Menswear').slice(0, 8);
 
@@ -80,7 +81,7 @@ export default function HomePage() {
     </AppShell>
   );
   if (drawsError) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Couldn&apos;t load draws</p><p>Please refresh the page.</p></div></AppShell>;
-  if (!hero) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No draws tonight</p><p>Check back at 9pm — new draws go live daily.</p></div></AppShell>;
+  if (!hero) return <AppShell><div style={{ padding: 40, textAlign: 'center', color: 'var(--grey)' }}><p style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>No draws yet</p><p>Items go live once they hit their reserve. Check back soon — draws are added daily.</p></div></AppShell>;
 
   return (
     <AppShell>
@@ -175,7 +176,9 @@ export default function HomePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <LiveDot size={7} />
             <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {tonightCount} draws closing tonight at 9pm
+              {tonightCount > 0
+                ? `${tonightCount} draw${tonightCount > 1 ? 's' : ''} drawing tonight at 9pm`
+                : 'No draws scheduled tonight yet'}
             </p>
           </div>
           <Link href="/live" style={{
@@ -210,11 +213,31 @@ export default function HomePage() {
                 className={`chip${filter === f ? ' active' : ''}`}
                 style={{ fontFamily: 'inherit' }}
               >
-                {f}{f === 'Tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
+                {f}{f === 'Drawing Tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
               </button>
             ))}
           </div>
         </div>
+
+        {/* ── Drawing Tonight row ── */}
+        {drawingTonight.length > 0 && (
+        <section style={{ marginBottom: 32 }}>
+          <div className="section-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <LiveDot size={6} />
+              <h2 className="section-title" style={{ marginBottom: 0 }}>Drawing Tonight · 9pm</h2>
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{drawingTonight.length} draw{drawingTonight.length > 1 ? 's' : ''}</span>
+          </div>
+          <div className="scroll-strip" style={{ margin: '0 -16px' }}>
+            {drawingTonight.map(d => (
+              <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
+                <DrawCard draw={d} />
+              </div>
+            ))}
+          </div>
+        </section>
+        )}
 
         {/* ── Womenswear row ── */}
         {womenswear.length > 0 && (

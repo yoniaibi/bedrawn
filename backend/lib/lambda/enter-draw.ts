@@ -4,6 +4,19 @@ import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda
 import { cors } from './stripe-client';
 import { randomUUID } from 'crypto';
 
+// Returns tonight's date (YYYY-MM-DD UK) if before 9pm, otherwise tomorrow's
+function getNextClosingDate(): string {
+  const now = new Date();
+  const ukHour = parseInt(
+    new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }))
+      .toLocaleString('en-US', { hour: 'numeric', hour12: false, timeZone: 'Europe/London' }),
+    10,
+  );
+  const target = ukHour >= 21 ? new Date(now.getTime() + 86_400_000) : now;
+  return target.toLocaleDateString('en-GB', { timeZone: 'Europe/London' })
+    .split('/').reverse().join('-');
+}
+
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.TABLE_NAME!;
 
@@ -153,6 +166,30 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       }
     }
     throw err;
+  }
+
+  // After purchase: check if this sale tipped the draw over its reserve.
+  // If so, schedule it for the next 9pm by setting closingDate (once only).
+  if (!draw.closingDate) {
+    const freshDraw = await db.send(new GetCommand({
+      TableName: TABLE,
+      Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+    }));
+    const fresh = freshDraw.Item;
+    if (fresh && !fresh.closingDate && (fresh.soldTickets as number) >= (fresh.minTickets as number)) {
+      try {
+        await db.send(new UpdateCommand({
+          TableName: TABLE,
+          Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+          UpdateExpression: 'SET closingDate = :date',
+          ConditionExpression: 'attribute_not_exists(closingDate)',
+          ExpressionAttributeValues: { ':date': getNextClosingDate() },
+        }));
+      } catch (err: any) {
+        if (err.name !== 'ConditionalCheckFailedException') throw err;
+        // Concurrent purchase already scheduled it — fine
+      }
+    }
   }
 
   return {
