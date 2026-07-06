@@ -29,12 +29,14 @@ export default function PurchaseClient({ id }: { id: string }) {
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_API_URL;
     if (!url) { setDrawLoading(false); return; }
-    fetch(`${url}/draws/${id}`)
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    const realId = segments[1] || id;
+    fetch(`${url}/draws/${realId}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
       .catch(() => {})
       .finally(() => setDrawLoading(false));
-  }, [id]);
+  }, []); // empty deps — reads real URL at mount
 
   useEffect(() => {
     getAuthToken()
@@ -74,7 +76,9 @@ export default function PurchaseClient({ id }: { id: string }) {
     setError(null);
     try {
       const token = await getAuthToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/enter`, {
+      const segments = window.location.pathname.split('/').filter(Boolean);
+      const realId = segments[1] || id;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${realId}/enter`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ ticketCount: qty }),
@@ -83,7 +87,7 @@ export default function PurchaseClient({ id }: { id: string }) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `Error ${res.status}`);
       }
-      router.push(`/draw/${id}/success?qty=${qty}&total=${total}`);
+      router.push(`/draw/${realId}/success?qty=${qty}&total=${total}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Purchase failed');
       setLoading(false);

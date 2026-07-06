@@ -1,16 +1,17 @@
 import SuccessClient from './SuccessClient';
-import { draws } from '@/lib/mockData';
 
-const PLAYWRIGHT_TEST_IDS = [
-  '8df1fe4b-1109-4f21-afeb-1cf7eea6011d',
-  'fa84542d-614a-4868-bcd5-886c40649df4',
-];
+const FALLBACK_IDS = ['1', '2', '3', '4', '5'];
 
-export function generateStaticParams() {
-  return [
-    ...draws.map(d => ({ id: d.id })),
-    ...PLAYWRIGHT_TEST_IDS.map(id => ({ id })),
-  ];
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      const fromApi = (data.draws ?? []).map((d: { id: string }) => ({ id: d.id }));
+      return [...fromApi, ...FALLBACK_IDS.map(id => ({ id }))];
+    }
+  } catch {}
+  return FALLBACK_IDS.map(id => ({ id }));
 }
 
 export default async function SuccessPage({ params }: { params: Promise<{ id: string }> }) {

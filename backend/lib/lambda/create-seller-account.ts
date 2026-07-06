@@ -29,28 +29,55 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         body: JSON.stringify({ stripeAccountId: null, chargesEnabled: false, payoutsEnabled: false, onboardingUrl: null }),
       };
     }
-    const stripe = await getStripe();
-    const account = await stripe.accounts.retrieve(existing.Item.stripeAccountId as string);
-    await db.send(new UpdateCommand({
-      TableName: process.env.TABLE_NAME,
-      Key: { PK: `USER#${userId}`, SK: 'STRIPE_ACCOUNT' },
-      UpdateExpression: 'SET chargesEnabled = :c, payoutsEnabled = :p, updatedAt = :d',
-      ExpressionAttributeValues: {
-        ':c': account.charges_enabled ?? false,
-        ':p': account.payouts_enabled ?? false,
-        ':d': new Date().toISOString(),
-      },
-    }));
-    return {
-      statusCode: 200,
-      headers: cors,
-      body: JSON.stringify({
-        stripeAccountId: existing.Item.stripeAccountId,
-        chargesEnabled: account.charges_enabled ?? false,
-        payoutsEnabled: account.payouts_enabled ?? false,
-        onboardingUrl: null,
-      }),
-    };
+    // If already verified in DB, trust the cached value — avoids hitting Stripe for test/bypassed accounts
+    if (existing.Item.chargesEnabled) {
+      return {
+        statusCode: 200,
+        headers: cors,
+        body: JSON.stringify({
+          stripeAccountId: existing.Item.stripeAccountId,
+          chargesEnabled: true,
+          payoutsEnabled: existing.Item.payoutsEnabled ?? true,
+          onboardingUrl: null,
+        }),
+      };
+    }
+    // Not yet verified — refresh from Stripe
+    try {
+      const stripe = await getStripe();
+      const account = await stripe.accounts.retrieve(existing.Item.stripeAccountId as string);
+      await db.send(new UpdateCommand({
+        TableName: process.env.TABLE_NAME,
+        Key: { PK: `USER#${userId}`, SK: 'STRIPE_ACCOUNT' },
+        UpdateExpression: 'SET chargesEnabled = :c, payoutsEnabled = :p, updatedAt = :d',
+        ExpressionAttributeValues: {
+          ':c': account.charges_enabled ?? false,
+          ':p': account.payouts_enabled ?? false,
+          ':d': new Date().toISOString(),
+        },
+      }));
+      return {
+        statusCode: 200,
+        headers: cors,
+        body: JSON.stringify({
+          stripeAccountId: existing.Item.stripeAccountId,
+          chargesEnabled: account.charges_enabled ?? false,
+          payoutsEnabled: account.payouts_enabled ?? false,
+          onboardingUrl: null,
+        }),
+      };
+    } catch {
+      return {
+        statusCode: 200,
+        headers: cors,
+        body: JSON.stringify({
+          stripeAccountId: existing.Item.stripeAccountId,
+          chargesEnabled: existing.Item.chargesEnabled ?? false,
+          payoutsEnabled: existing.Item.payoutsEnabled ?? false,
+          onboardingUrl: null,
+        }),
+      };
+    }
   }
 
   const stripe = await getStripe();

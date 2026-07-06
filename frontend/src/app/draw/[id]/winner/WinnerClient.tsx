@@ -30,20 +30,21 @@ export default function WinnerClient({ id }: { id: string }) {
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_API_URL;
     if (!url) { setLoading(false); return; }
-    fetch(`${url}/draws/${id}`)
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    const realId = segments[1] || id;
+    fetch(`${url}/draws/${realId}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.draw) setDraw(d.draw); })
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    // Get current user's sub so we can check if they're the winner
     fetchAuthSession()
       .then(session => {
         const sub = (session.tokens?.idToken?.payload as any)?.sub as string | undefined;
         if (sub) setCurrentUserId(sub);
       })
       .catch(() => {});
-  }, [id]);
+  }, []); // empty deps — reads real URL at mount
 
   const handleConfirmDelivery = async () => {
     setConfirming(true);
@@ -52,7 +53,9 @@ export default function WinnerClient({ id }: { id: string }) {
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
       if (!token) throw new Error('Not authenticated');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/payout`, {
+      const segments = window.location.pathname.split('/').filter(Boolean);
+      const realId = segments[1] || id;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${realId}/payout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       });
