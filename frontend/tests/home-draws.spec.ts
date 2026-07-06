@@ -82,7 +82,8 @@ test.describe('Home page — API-connected draws', () => {
   });
 
   test('filter chip Tonight works', async ({ page }) => {
-    await page.locator('button').filter({ hasText: /^Tonight$/ }).click();
+    // Tonight chip may show count e.g. "Tonight · 2" — use partial match
+    await page.locator('button').filter({ hasText: 'Tonight' }).first().click();
     await page.waitForTimeout(300);
     await expect(page.locator('text=Gucci Dionysus').first()).toBeVisible();
   });
@@ -126,8 +127,9 @@ test.describe('Draw detail — real API draw UUID', () => {
     await expect(page.locator('text=Enter draw').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('CTA links to purchase page', async ({ page }) => {
-    await expect(page.locator(`a[href*="${DRAW_ID}/purchase"]`).first()).toBeVisible({ timeout: 5000 });
+  test('CTA shows Enter draw button', async ({ page }) => {
+    // CTA is now a modal button (sticky bar), not a link to /purchase
+    await expect(page.locator('button').filter({ hasText: 'Enter draw' }).first()).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -140,10 +142,10 @@ test.describe('Home page — API unavailable fallback', () => {
     await page.waitForTimeout(2500);
   });
 
-  test('falls back to mock data draws when API returns empty', async ({ page }) => {
-    // Mock data has Chanel, Rolex etc
+  test('shows empty state when API returns no draws', async ({ page }) => {
+    // Empty draws → shows "No draws tonight" or similar empty state message
     await expect(
-      page.locator('text=Chanel').or(page.locator('text=Rolex')).or(page.locator('text=Loading')).first()
+      page.locator('text=No draws').or(page.locator('text=no draws')).or(page.locator('text=Check back')).first()
     ).toBeVisible({ timeout: 5000 });
   });
 });

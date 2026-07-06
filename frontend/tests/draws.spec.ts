@@ -59,13 +59,14 @@ test.describe('Draw detail — authenticated', () => {
     ).toBeVisible({ timeout: 5000 });
   });
 
-  test('CTA navigates to purchase page', async ({ page }) => {
-    // CTA is now a button that router.push()es — look for the Enter draw button
-    const cta = page.locator('button:has-text("Enter draw")').or(page.locator('a[href*="/purchase"]'));
-    await expect(cta.first()).toBeVisible({ timeout: 5000 });
-    await cta.first().click();
-    await page.waitForTimeout(1000);
-    expect(page.url()).toContain('purchase');
+  test('CTA opens purchase modal', async ({ page }) => {
+    // CTA is now a sticky-bar button that opens an in-page modal (no URL change)
+    const cta = page.locator('button').filter({ hasText: 'Enter draw' }).first();
+    await expect(cta).toBeVisible({ timeout: 5000 });
+    await cta.click();
+    await page.waitForTimeout(800);
+    // Modal shows "Wallet balance" row inside the purchase sheet
+    await expect(page.locator('text=Wallet balance').first()).toBeVisible({ timeout: 3000 });
   });
 });
 
