@@ -118,6 +118,29 @@ test.describe('Admin panel — authenticated admin', () => {
     await page.waitForTimeout(1000);
     await expect(page).toHaveURL(/\/draw\//);
   });
+
+  test('shows Cancel draw button on open draw', async ({ page }) => {
+    await expect(page.locator('button').filter({ hasText: 'Cancel draw' }).first()).toBeVisible({ timeout: 5000 });
+  });
+
+  test('Cancel draw calls /admin/draws/{id}/cancel and updates draw to cancelled', async ({ page }) => {
+    let cancelCalled = false;
+    await page.route(`**/admin/draws/${MOCK_ADMIN_DRAWS[0].id}/cancel`, async route => {
+      cancelCalled = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ result: 'cancelled', reason: 'Admin cancel test', refunded: 0 }),
+      });
+    });
+    // Override window.prompt so it auto-accepts
+    await page.evaluate(() => { window.prompt = () => 'Admin cancel test'; });
+    await page.locator('button').filter({ hasText: 'Cancel draw' }).first().click();
+    await page.waitForTimeout(1500);
+    expect(cancelCalled).toBeTruthy();
+    // Result feedback appears
+    await expect(page.locator('text=Cancelled').first()).toBeVisible({ timeout: 5000 });
+  });
 });
 
 test.describe('Admin — access without auth', () => {

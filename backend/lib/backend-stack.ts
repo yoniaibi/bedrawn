@@ -362,6 +362,15 @@ export class BackendStack extends cdk.Stack {
     table.grantReadWriteData(adminResolveDrawFn);
     api.addRoutes({ path: '/admin/draws/{id}/resolve', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('AdminResolveDrawInt', adminResolveDrawFn), authorizer });
 
+    // Admin — force-cancel a draw (refunds all entrants regardless of ticket count)
+    const adminCancelDrawFn = new nodejs.NodejsFunction(this, 'AdminCancelDraw', {
+      ...commonProps,
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
+      entry: path.join(__dirname, 'lambda/admin-cancel-draw.ts'),
+    });
+    table.grantReadWriteData(adminCancelDrawFn);
+    api.addRoutes({ path: '/admin/draws/{id}/cancel', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('AdminCancelDrawInt', adminCancelDrawFn), authorizer });
+
     // Admin — register a physical postal entry for a draw
     const adminAddPostalEntryFn = new nodejs.NodejsFunction(this, 'AdminAddPostalEntry', {
       ...commonProps,

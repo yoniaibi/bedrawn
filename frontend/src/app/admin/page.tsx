@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [authToken, setAuthToken] = useState('');
   const [resolving, setResolving] = useState<string | null>(null);
   const [resolveResult, setResolveResult] = useState<Record<string, string>>({});
+  const [cancelling, setCancelling] = useState<string | null>(null);
   const [postalForm, setPostalForm] = useState<Record<string, { name: string; email: string }>>({});
   const [postalAdding, setPostalAdding] = useState<string | null>(null);
   const [postalResult, setPostalResult] = useState<Record<string, string>>({});
@@ -103,6 +104,31 @@ export default function AdminPage() {
       setPostalResult(prev => ({ ...prev, [drawId]: e instanceof Error ? e.message : 'Failed' }));
     } finally {
       setPostalAdding(null);
+    }
+  };
+
+  const handleCancel = async (drawId: string, drawTitle: string) => {
+    const reason = prompt(`Cancel reason for:\n"${drawTitle}"\n\nAll entrants will be refunded. Enter reason (or leave blank):`, 'Cancelled by admin');
+    if (reason === null) return; // user pressed Cancel in prompt
+    setCancelling(drawId);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/draws/${drawId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ reason: reason || 'Cancelled by admin' }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResolveResult(prev => ({ ...prev, [drawId]: `Error: ${data.error}` }));
+      } else {
+        setResolveResult(prev => ({ ...prev, [drawId]: `Cancelled. ${data.refunded} entrant(s) refunded.` }));
+        setDraws(prev => prev.map(d => d.id === drawId ? { ...d, status: 'cancelled', cancelReason: data.reason } : d));
+        setCounts(prev => ({ ...prev, open: Math.max(0, (prev.open ?? 1) - 1), cancelled: (prev.cancelled ?? 0) + 1 }));
+      }
+    } catch (e) {
+      setResolveResult(prev => ({ ...prev, [drawId]: e instanceof Error ? e.message : 'Failed' }));
+    } finally {
+      setCancelling(null);
     }
   };
 
@@ -213,18 +239,32 @@ export default function AdminPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
                     {d.status === 'open' && (
-                      <button
-                        onClick={() => handleResolve(d.id, d.title)}
-                        disabled={resolving === d.id}
-                        style={{
-                          padding: '5px 12px', borderRadius: 8, cursor: resolving === d.id ? 'default' : 'pointer',
-                          background: 'rgba(245,158,11,0.15)', border: '1px solid var(--gold)',
-                          color: 'var(--gold)', fontSize: 12, fontWeight: 700,
-                          opacity: resolving === d.id ? 0.6 : 1,
-                        }}
-                      >
-                        {resolving === d.id ? 'Resolving…' : 'Resolve now'}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleResolve(d.id, d.title)}
+                          disabled={resolving === d.id || cancelling === d.id}
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, cursor: (resolving === d.id || cancelling === d.id) ? 'default' : 'pointer',
+                            background: 'rgba(245,158,11,0.15)', border: '1px solid var(--gold)',
+                            color: 'var(--gold)', fontSize: 12, fontWeight: 700,
+                            opacity: (resolving === d.id || cancelling === d.id) ? 0.6 : 1,
+                          }}
+                        >
+                          {resolving === d.id ? 'Resolving…' : 'Resolve now'}
+                        </button>
+                        <button
+                          onClick={() => handleCancel(d.id, d.title)}
+                          disabled={resolving === d.id || cancelling === d.id}
+                          style={{
+                            padding: '5px 12px', borderRadius: 8, cursor: (resolving === d.id || cancelling === d.id) ? 'default' : 'pointer',
+                            background: 'rgba(239,68,68,0.10)', border: '1px solid var(--red)',
+                            color: 'var(--red)', fontSize: 12, fontWeight: 700,
+                            opacity: (resolving === d.id || cancelling === d.id) ? 0.6 : 1,
+                          }}
+                        >
+                          {cancelling === d.id ? 'Cancelling…' : 'Cancel draw'}
+                        </button>
+                      </>
                     )}
                     <Link href={`/draw/${d.id}`} style={{ color: 'var(--purple)', fontSize: 12, textDecoration: 'none', fontWeight: 600 }}>
                       View →
