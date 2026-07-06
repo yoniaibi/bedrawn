@@ -60,6 +60,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     ticketPrice,       // string from wizard: '10p', '25p', '50p', '£1'
     totalTickets,
     retailValue,       // pounds (e.g. "6800")
+    reservePct,        // seller-chosen reserve: 25 | 50 | 75 | 100 (default 25)
     imageUrls = [],
     closingDate,       // optional override (YYYY-MM-DD); defaults to tonight/tomorrow
   } = body;
@@ -98,8 +99,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     type: String(type),
     ticketPricePence,
     totalTickets: totalTicketsNum,
-    // Cancel and refund if fewer than 25% of tickets are sold by closing time
-    minTickets: Math.ceil(totalTicketsNum * 0.25),
+    // Seller-chosen reserve: cancel if fewer than reservePct% of tickets sold by closing time
+    minTickets: Math.ceil(totalTicketsNum * (Math.min(100, Math.max(25, Number(reservePct) || 25)) / 100)),
     retailValuePence,
     imageUrls: Array.isArray(imageUrls) ? imageUrls.slice(0, 6) : [],
     closingDate: resolvedClosingDate,

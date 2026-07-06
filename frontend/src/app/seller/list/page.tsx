@@ -38,6 +38,7 @@ export default function ListItemPage() {
   const [ticketPrice, setTicketPrice] = useState('');
   const [customPrice, setCustomPrice] = useState('');
   const [totalTickets, setTotalTickets] = useState('');
+  const [reservePct, setReservePct] = useState(25);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -314,6 +315,32 @@ export default function ListItemPage() {
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Total tickets available</label>
                 <input type="number" value={totalTickets} onChange={e => setTotalTickets(e.target.value)} placeholder="e.g. 13600" />
               </div>
+              <div>
+                <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Reserve — minimum tickets to proceed</label>
+                <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
+                  If fewer than this many tickets are sold, the draw cancels and buyers are fully refunded. Like an auction reserve — set higher to protect your item.
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[25, 50, 75, 100].map(pct => (
+                    <button
+                      key={pct}
+                      onClick={() => setReservePct(pct)}
+                      style={{
+                        flex: 1, padding: '10px 0', borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                        background: reservePct === pct ? 'rgba(255,35,86,0.08)' : 'var(--card)',
+                        border: `1.5px solid ${reservePct === pct ? 'var(--accent-coral)' : 'var(--border)'}`,
+                        color: reservePct === pct ? 'var(--accent-coral)' : 'var(--grey)',
+                      }}
+                    >{pct}%</button>
+                  ))}
+                </div>
+                {totalTickets && (
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>
+                    Reserve = {Math.ceil(parseInt(totalTickets, 10) * reservePct / 100).toLocaleString()} tickets
+                    {reservePct === 100 ? ' — draw only proceeds at full sell-out' : ''}
+                  </p>
+                )}
+              </div>
               {earnings && (
                 <div style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid var(--green)', borderRadius: 12, padding: '14px 16px' }}>
                   <p style={{ margin: 0, fontSize: 14, color: 'var(--text)' }}>
@@ -324,7 +351,7 @@ export default function ListItemPage() {
                     88% of {totalTickets} tickets × {ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice} = £{((resolvedTicketPricePence / 100) * parseInt(totalTickets, 10)).toFixed(2)} revenue
                   </p>
                   <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
-                    Draw needs {Math.ceil(parseInt(totalTickets, 10) * 0.25)} tickets sold (25% minimum) or it cancels and buyers are refunded
+                    Draw needs {Math.ceil(parseInt(totalTickets, 10) * reservePct / 100).toLocaleString()} tickets sold ({reservePct}% reserve) or it cancels and buyers are refunded
                   </p>
                 </div>
               )}
@@ -345,6 +372,7 @@ export default function ListItemPage() {
                   { label: 'Retail value', value: retailValue ? `£${retailValue}` : '—' },
                   { label: 'Ticket price', value: ticketPrice || '—' },
                   { label: 'Total tickets', value: totalTickets || '—' },
+                  { label: 'Reserve', value: `${reservePct}% (${totalTickets ? Math.ceil(parseInt(totalTickets, 10) * reservePct / 100).toLocaleString() : '—'} tickets)` },
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 13, color: 'var(--grey)' }}>{row.label}</span>
@@ -384,7 +412,7 @@ export default function ListItemPage() {
                     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice: ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice, totalTickets, retailValue, imageUrls: photoUrls.filter(Boolean) }),
+                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice: ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice, totalTickets, retailValue, reservePct, imageUrls: photoUrls.filter(Boolean) }),
                     });
                     if (!res.ok) {
                       const body = await res.json().catch(() => ({}));
