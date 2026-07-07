@@ -1,9 +1,22 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { randomInt } from 'crypto';
+import { sendWinnerEmail, sendSellerResolvedEmail, sendCancelledEmail } from './resend-client';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const cognito = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
 const TABLE = process.env.TABLE_NAME!;
+const USER_POOL_ID = process.env.USER_POOL_ID!;
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  try {
+    const res = await cognito.send(new AdminGetUserCommand({ UserPoolId: USER_POOL_ID, Username: userId }));
+    return res.UserAttributes?.find(a => a.Name === 'email')?.Value ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function ukDateToday(): string {
   return new Date().toLocaleDateString('en-GB', { timeZone: 'Europe/London' })
@@ -170,7 +183,15 @@ export const handler = async (): Promise<void> => {
       let refunded = 0;
       for (const e of entries) {
         const applied = await refundEntrant(drawId, drawTitle, e.userId, e.ticketCount, ticketPricePence);
-        if (applied) refunded++;
+        if (applied) {
+          refunded++;
+          const email = await getUserEmail(e.userId);
+          if (email) {
+            const refundPounds = ((e.ticketCount * ticketPricePence) / 100).toFixed(2);
+            await sendCancelledEmail(email, drawTitle, refundPounds).catch(err =>
+              console.error(`Failed to send cancellation email to ${e.userId}:`, err));
+          }
+        }
       }
       if (refunded > 0) console.log(`Refunded ${refunded}/${entries.length} buyer(s) for draw ${drawId}`);
 
@@ -241,6 +262,19 @@ export const handler = async (): Promise<void> => {
       await db.send(new TransactWriteCommand({ TransactItems: transactItems }));
       if (isPostalWinner) {
         console.log(`POSTAL WINNER for draw ${drawId} — admin must retrieve winner profile USER#${winnerId}/PROFILE and contact manually`);
+      } else {
+        // Send winner email
+        const winnerEmail = await getUserEmail(winnerId);
+        if (winnerEmail) {
+          await sendWinnerEmail(winnerEmail, drawTitle, drawId).catch(err =>
+            console.error(`Failed to send winner email to ${winnerId}:`, err));
+        }
+        // Send seller resolved email
+        const sellerEmail = draw.sellerId ? await getUserEmail(draw.sellerId as string) : null;
+        if (sellerEmail) {
+          await sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, ticketPricePence).catch(err =>
+            console.error(`Failed to send seller email to ${draw.sellerId}:`, err));
+        }
       }
     } catch (err: any) {
       if (err.name === 'TransactionCanceledException') {

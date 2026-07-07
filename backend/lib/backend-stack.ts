@@ -153,6 +153,11 @@ export class BackendStack extends cdk.Stack {
       ...commonProps,
       entry: path.join(__dirname, 'lambda/resolve-draws.ts'),
       timeout: cdk.Duration.seconds(60),
+      environment: {
+        ...commonEnv,
+        RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full',
+        USER_POOL_ID: userPool.userPoolId,
+      },
     });
 
     // Stripe Lambdas — read Stripe secret key from SSM at runtime
@@ -198,6 +203,14 @@ export class BackendStack extends cdk.Stack {
     table.grantReadData(walletBalanceFn);
     table.grantReadWriteData(enterDrawFn);
     table.grantReadWriteData(resolveDrawsFn);
+    resolveDrawsFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminGetUser'],
+      resources: [userPool.userPoolArn],
+    }));
+    resolveDrawsFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/bedrawn/resend/api-key-full`],
+    }));
     table.grantReadData(getDrawsFn);
     table.grantReadData(getDrawFn);
     table.grantReadWriteData(postDrawFn);

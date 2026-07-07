@@ -29,6 +29,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "aws-cdk-lib": "^2.260.0",
     "constructs": "^10.6.0",
+    "resend": "^6.17.1",
     "stripe": "^22.3.0"
   }
 }
