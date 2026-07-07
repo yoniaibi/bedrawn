@@ -1,27 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppShell from '@/components/AppShell';
-import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
 import ProgressBar from '@/components/ProgressBar';
-import { grandDraw } from '@/lib/mockData';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import '@/lib/amplify';
 
 const today = new Date();
 const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
 const todayDate = today.getDate();
-
 const monthName = today.toLocaleString('default', { month: 'long' });
 const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 const daysLeft = Math.ceil((lastDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-const loginDays = [1, 2, 3, 4, 7, 8, 9, 10, 14, 15, 16, 17, 21, 22, 23, todayDate];
+interface GrandDrawState {
+  config: { prize: string; value: number; emoji: string; imageUrl: string; totalEntries: number };
+  userEntries: number;
+  claimedToday: boolean;
+  streak: number;
+  loginDays: number[];
+}
 
 export default function GrandDrawPage() {
-  const [claimed, setClaimed] = useState(false);
-  const entries = 0; // real entries fetched in future; starts at 0 for new users
-  const odds = entries > 0 ? Math.round(grandDraw.totalEntries / entries) : grandDraw.totalEntries;
-  const entriesPct = Math.min(100, (entries / 30) * 100);
+  const [state, setState] = useState<GrandDrawState | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+        const url = process.env.NEXT_PUBLIC_API_URL;
+        const res = await fetch(`${url}/grand-draw`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) setState(await res.json());
+      } catch {}
+    })();
+  }, []);
+
+  const handleClaim = async () => {
+    if (claiming || state?.claimedToday) return;
+    setClaiming(true);
+    setClaimError('');
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) { setClaimError('Sign in to claim your daily ticket'); setClaiming(false); return; }
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/grand-draw/claim`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setState(prev => prev ? {
+          ...prev,
+          claimedToday: true,
+          userEntries: prev.userEntries + 1,
+          streak: prev.streak + 1,
+          loginDays: [...prev.loginDays, todayDate],
+          config: { ...prev.config, totalEntries: prev.config.totalEntries + 1 },
+        } : prev);
+      } else {
+        if (res.status === 409) {
+          setState(prev => prev ? { ...prev, claimedToday: true } : prev);
+        } else {
+          setClaimError(data.error ?? 'Something went wrong');
+        }
+      }
+    } catch {
+      setClaimError('Network error — please try again');
+    }
+    setClaiming(false);
+  };
+
+  const config = state?.config;
+  const userEntries = state?.userEntries ?? 0;
+  const claimedToday = state?.claimedToday ?? false;
+  const streak = state?.streak ?? 0;
+  const loginDays = state?.loginDays ?? [];
+  const totalEntries = config?.totalEntries ?? 0;
+  const odds = userEntries > 0 && totalEntries > 0 ? Math.round(totalEntries / userEntries) : totalEntries || '—';
+  const entriesPct = Math.min(100, (userEntries / 30) * 100);
 
   return (
     <AppShell>
@@ -50,20 +112,25 @@ export default function GrandDrawPage() {
                 <LiveDot size={6} /> GRAND DRAW
               </span>
             </div>
-            {grandDraw.imageUrl ? (
+            {config?.imageUrl ? (
               <div style={{ width: '100%', height: 160, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-                <img src={grandDraw.imageUrl} alt={grandDraw.prize} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={config.imageUrl} alt={config.prize} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             ) : (
-              <p style={{ fontSize: 48, margin: '0 0 8px' }}>{grandDraw.emoji}</p>
+              <p style={{ fontSize: 48, margin: '0 0 8px' }}>{config?.emoji ?? '🏆'}</p>
             )}
-            <p className="serif" style={{ fontSize: 28, color: 'var(--text)', margin: '0 0 4px' }}>{grandDraw.prize}</p>
+            <p className="serif" style={{ fontSize: 28, color: 'var(--text)', margin: '0 0 4px' }}>
+              {config?.prize ?? 'Loading…'}
+            </p>
             <p style={{ fontSize: 13, color: 'var(--grey)', margin: '0 0 16px' }}>This month&apos;s Grand Draw prize</p>
-            <span style={{
-              background: 'rgba(245,158,11,0.2)', border: '1px solid var(--gold)',
-              color: 'var(--gold)', fontSize: 13, fontWeight: 700,
-              padding: '6px 16px', borderRadius: 999,
-            }}>Worth £{grandDraw.value.toLocaleString()} | Fund growing daily</span>
+            {config && (
+              <span style={{
+                background: 'rgba(245,158,11,0.2)', border: '1px solid var(--gold)',
+                color: 'var(--gold)', fontSize: 13, fontWeight: 700,
+                padding: '6px 16px', borderRadius: 999,
+              }}>Worth £{config.value.toLocaleString()} | Fund growing daily</span>
+            )}
           </div>
 
           {/* Countdown */}
@@ -77,7 +144,7 @@ export default function GrandDrawPage() {
             <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 8 }}>
               {[
                 { label: 'Days', value: daysLeft },
-                { label: 'Hours', value: new Date().getHours() === 21 ? 0 : (21 - new Date().getHours()) },
+                { label: 'Hours', value: Math.max(0, 21 - new Date().getHours()) },
                 { label: 'Mins', value: new Date().getMinutes() },
               ].map(unit => (
                 <div key={unit.label} style={{ textAlign: 'center' }}>
@@ -97,26 +164,29 @@ export default function GrandDrawPage() {
             borderRadius: 14, padding: '20px',
           }}>
             <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Your entries this month</p>
-            <p className="serif" style={{ fontSize: 48, color: 'var(--gold)', margin: '0 0 4px', fontWeight: 700 }}>{entries}</p>
-            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--grey)' }}>Your odds: 1 in {odds}</p>
+            <p className="serif" style={{ fontSize: 48, color: 'var(--gold)', margin: '0 0 4px', fontWeight: 700 }}>{userEntries}</p>
+            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--grey)' }}>
+              {userEntries > 0 ? `Your odds: 1 in ${odds}` : 'Claim your first ticket below'}
+            </p>
             <ProgressBar percent={entriesPct} height={6} />
-            <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--muted)' }}>{grandDraw.totalEntries} total entries in pool</p>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--muted)' }}>{totalEntries} total entries in pool</p>
           </div>
 
           {/* Claim button */}
           <button
-            onClick={() => setClaimed(true)}
-            disabled={claimed}
+            onClick={handleClaim}
+            disabled={claimedToday || claiming}
             style={{
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
-              background: claimed ? 'var(--muted)' : 'var(--green)',
+              background: claimedToday ? 'var(--muted)' : 'var(--green)',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
-              cursor: claimed ? 'not-allowed' : 'pointer',
-              opacity: claimed ? 0.7 : 1,
+              cursor: claimedToday || claiming ? 'not-allowed' : 'pointer',
+              opacity: claimedToday ? 0.7 : 1,
             }}
           >
-            {claimed ? '✓ +1 ticket claimed for today' : '🎟 Claim today\'s ticket'}
+            {claiming ? 'Claiming…' : claimedToday ? '✓ Ticket claimed for today' : '🎟 Claim today\'s ticket'}
           </button>
+          {claimError && <p style={{ textAlign: 'center', color: 'var(--red)', fontSize: 13, margin: '-8px 0 0' }}>{claimError}</p>}
 
           {/* Streak card */}
           <div style={{
@@ -126,15 +196,16 @@ export default function GrandDrawPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
               <div style={{ textAlign: 'center' }}>
                 <p style={{ fontSize: 40, margin: 0 }}>🔥</p>
-                <p className="serif" style={{ fontSize: 32, color: 'var(--white)', margin: 0, fontWeight: 700 }}>0</p>
+                <p className="serif" style={{ fontSize: 32, color: 'var(--white)', margin: 0, fontWeight: 700 }}>{streak}</p>
               </div>
               <div>
                 <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Day streak</p>
-                <p style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--grey)' }}>Longest: 12 days</p>
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>All-time earned: 23 tickets</p>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>
+                  {streak >= 7 ? '⭐ 7-day streak!' : `${userEntries} ticket${userEntries !== 1 ? 's' : ''} earned this month`}
+                </p>
               </div>
             </div>
-            {false && (
+            {streak >= 7 && (
               <div style={{
                 background: 'rgba(245,158,11,0.1)', border: '1px solid var(--gold)',
                 borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
@@ -145,7 +216,7 @@ export default function GrandDrawPage() {
             )}
           </div>
 
-          {/* Calendar */}
+          {/* Login calendar */}
           <div style={{
             background: 'var(--card)', border: '1px solid var(--border)',
             borderRadius: 14, padding: '20px',
@@ -177,7 +248,7 @@ export default function GrandDrawPage() {
             <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--gold)' }} />
-                <span style={{ fontSize: 10, color: 'var(--grey)' }}>Logged in</span>
+                <span style={{ fontSize: 10, color: 'var(--grey)' }}>Claimed</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ width: 12, height: 12, borderRadius: 2, border: '2px solid var(--accent-coral)' }} />
@@ -187,27 +258,6 @@ export default function GrandDrawPage() {
                 <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--border)' }} />
                 <span style={{ fontSize: 10, color: 'var(--grey)' }}>Missed</span>
               </div>
-            </div>
-          </div>
-
-          {/* Past draw */}
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 14, padding: '16px',
-          }}>
-            <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: 'var(--white)' }}>Last month&apos;s draw</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <p style={{ fontSize: 32, margin: 0 }}>👜</p>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Louis Vuitton Neverfull</p>
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--gold)' }}>Worth £1,200</p>
-                <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--grey)' }}>Won by @luxe_fan_99</p>
-              </div>
-              <span style={{
-                marginLeft: 'auto', background: 'rgba(16,185,129,0.15)',
-                border: '1px solid var(--green)', color: 'var(--green)',
-                fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
-              }}>WINNER</span>
             </div>
           </div>
         </div>

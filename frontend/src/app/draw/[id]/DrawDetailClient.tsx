@@ -10,10 +10,7 @@ import LiveDot from '@/components/LiveDot';
 import { ChevronLeftIcon, HeartFilledIcon, ShareIcon, TrophyIcon, ClockIcon } from '@/components/icons';
 import type { Draw } from '@/lib/mockData';
 
-function getSavedDraws(): string[] {
-  if (typeof window === 'undefined') return [];
-  try { return JSON.parse(localStorage.getItem('saved_draws') ?? '[]'); } catch { return []; }
-}
+import '@/lib/amplify';
 
 // Extract the real draw ID from the browser URL — bypasses Next.js static prop
 // which is baked as "1" when Amplify's catch-all rewrite serves /draw/1 for unknown IDs.
@@ -29,7 +26,8 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
   const [draw, setDraw] = useState<Draw | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
-  const [saved, setSaved] = useState(() => getSavedDraws().includes(getRealId(idProp)));
+  const [saved, setSaved] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   // Purchase modal state
   const [showModal, setShowModal] = useState(false);
@@ -48,6 +46,16 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       .then(data => { if (data?.draw) setDraw(data.draw as Draw); })
       .catch(() => {})
       .finally(() => setLoading(false));
+    // Load saved state from API (fire-and-forget — no auth = stays false)
+    fetchAuthSession()
+      .then(s => s.tokens?.idToken?.toString())
+      .then(token => {
+        if (!token) return;
+        return fetch(`${url}/draws/${id}/save`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => { if (d) setSaved(d.saved); });
+      })
+      .catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -104,14 +112,26 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saveLoading) return;
+    setSaveLoading(true);
     const id = getRealId(idProp);
-    setSaved(prev => {
-      const arr = getSavedDraws();
-      const next = prev ? arr.filter(x => x !== id) : [...arr, id];
-      localStorage.setItem('saved_draws', JSON.stringify(next));
-      return !prev;
-    });
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) { setSaveLoading(false); return; }
+      const method = saved ? 'DELETE' : 'POST';
+      const res = await fetch(`${url}/draws/${id}/save`, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSaved(data.saved);
+      }
+    } catch {}
+    setSaveLoading(false);
   };
 
   if (loading) {

@@ -355,6 +355,20 @@ export class BackendStack extends cdk.Stack {
     api.addRoutes({ path: '/draws/{id}/save', methods: [HttpMethod.GET, HttpMethod.POST, HttpMethod.DELETE], integration: new HttpLambdaIntegration('ToggleSaveDrawInt', toggleSaveDrawFn), authorizer });
     api.addRoutes({ path: '/me/saved', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetSavedDrawsInt', getSavedDrawsFn), authorizer });
 
+    // Grand draw
+    const getGrandDrawFn = new nodejs.NodejsFunction(this, 'GetGrandDraw', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/get-grand-draw.ts'),
+    });
+    const claimGrandDrawFn = new nodejs.NodejsFunction(this, 'ClaimGrandDraw', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/claim-grand-draw.ts'),
+    });
+    table.grantReadData(getGrandDrawFn);
+    table.grantReadWriteData(claimGrandDrawFn);
+    api.addRoutes({ path: '/grand-draw', methods: [HttpMethod.GET], integration: new HttpLambdaIntegration('GetGrandDrawInt', getGrandDrawFn), authorizer });
+    api.addRoutes({ path: '/grand-draw/claim', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('ClaimGrandDrawInt', claimGrandDrawFn), authorizer });
+
     // Seller stats
     const getSellerStatsFn = new nodejs.NodejsFunction(this, 'GetSellerStats', {
       ...commonProps,
