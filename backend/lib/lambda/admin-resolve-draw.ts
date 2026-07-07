@@ -226,20 +226,18 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     throw err;
   }
 
-  // Send winner + seller emails (non-blocking — don't fail the response if email errors)
+  // Send winner + seller emails — must be awaited before return or Lambda freezes mid-send
   if (!isPostalWinner) {
     const [winnerEmail, sellerEmail] = await Promise.all([
       getUserEmail(winnerId),
       draw.sellerId ? getUserEmail(draw.sellerId as string) : Promise.resolve(null),
     ]);
-    if (winnerEmail) {
-      sendWinnerEmail(winnerEmail, drawTitle, drawId).catch(err =>
-        console.error('Winner email failed:', err));
-    }
-    if (sellerEmail) {
-      sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number).catch(err =>
-        console.error('Seller email failed:', err));
-    }
+    await Promise.allSettled([
+      winnerEmail ? sendWinnerEmail(winnerEmail, drawTitle, drawId) : Promise.resolve(),
+      sellerEmail ? sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number) : Promise.resolve(),
+    ]).then(results => results.forEach((r, i) => {
+      if (r.status === 'rejected') console.error(`Email ${i === 0 ? 'winner' : 'seller'} failed:`, r.reason);
+    }));
   }
 
   return {
