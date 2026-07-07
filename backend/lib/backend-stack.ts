@@ -7,6 +7,7 @@ import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as ses from 'aws-cdk-lib/aws-ses';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
@@ -29,8 +30,30 @@ export class BackendStack extends cdk.Stack {
       identity: ses.Identity.domain('bedrawn.app'),
     });
 
-    // Cognito User Pool — using Cognito's built-in email until bedrawn.app is SES-verified.
-    // Once DNS records are added and domain is verified, swap to UserPoolEmail.withSES.
+    // KMS key for Cognito Custom Email Sender — encrypts one-time codes before passing to Lambda
+    const cognitoEmailKey = new kms.Key(this, 'CognitoEmailKey', {
+      description: 'Encrypts Cognito one-time codes for custom email sender Lambda',
+      enableKeyRotation: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Custom Email Sender Lambda — intercepts all Cognito emails and sends via Resend
+    const cognitoEmailSenderFn = new nodejs.NodejsFunction(this, 'CognitoEmailSender', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      entry: path.join(__dirname, 'lambda/cognito-email-sender.ts'),
+      timeout: cdk.Duration.seconds(15),
+      environment: {
+        KMS_KEY_ARN: cognitoEmailKey.keyArn,
+        RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full',
+      },
+    });
+    cognitoEmailKey.grantDecrypt(cognitoEmailSenderFn);
+    cognitoEmailSenderFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/bedrawn/resend/api-key-full`],
+    }));
+
+    // Cognito User Pool — Custom Email Sender routes all auth emails through Resend + bedrawn.app
     const userPool = new cognito.UserPool(this, 'BedrawnUserPool', {
       userPoolName: 'bedrawn-users',
       selfSignUpEnabled: true,
@@ -45,6 +68,10 @@ export class BackendStack extends cdk.Stack {
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
+      lambdaTriggers: {
+        customEmailSender: cognitoEmailSenderFn,
+      },
+      customSenderKmsKey: cognitoEmailKey,
     });
 
     const userPoolClient = new cognito.UserPoolClient(this, 'BedrawnUserPoolClient', {
