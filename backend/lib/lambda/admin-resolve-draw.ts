@@ -221,6 +221,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       drawTitle,
       soldTickets,
       entries: entries.length,
+      winnerId,
       ...(isPostalWinner ? { postalWinner: winnerId, note: 'Postal winner — retrieve USER#POSTAL_.../PROFILE and contact manually' } : {}),
     }),
   };

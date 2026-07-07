@@ -144,7 +144,8 @@ export default function AdminPage() {
       if (!res.ok) {
         setResolveResult(prev => ({ ...prev, [drawId]: `Error: ${data.error}` }));
       } else if (data.result === 'resolved') {
-        setResolveResult(prev => ({ ...prev, [drawId]: `Winner: ${data.winnerId} (${data.soldTickets} tickets sold)` }));
+        const winnerLabel = data.winnerId ? `${data.winnerId.slice(0, 8)}…` : 'unknown';
+        setResolveResult(prev => ({ ...prev, [drawId]: `Winner: ${winnerLabel} (${data.soldTickets} tickets sold)` }));
         setDraws(prev => prev.map(d => d.id === drawId ? { ...d, status: 'resolved', winnerId: data.winnerId } : d));
         setCounts(prev => ({ ...prev, open: Math.max(0, (prev.open ?? 1) - 1), resolved: (prev.resolved ?? 0) + 1 }));
       } else {
