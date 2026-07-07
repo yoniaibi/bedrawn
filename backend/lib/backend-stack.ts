@@ -396,10 +396,18 @@ export class BackendStack extends cdk.Stack {
     // Admin — manual draw resolution
     const adminResolveDrawFn = new nodejs.NodejsFunction(this, 'AdminResolveDraw', {
       ...commonProps,
-      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails, RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full', USER_POOL_ID: userPool.userPoolId },
       entry: path.join(__dirname, 'lambda/admin-resolve-draw.ts'),
     });
     table.grantReadWriteData(adminResolveDrawFn);
+    adminResolveDrawFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminGetUser'],
+      resources: [userPool.userPoolArn],
+    }));
+    adminResolveDrawFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/bedrawn/resend/api-key-full`],
+    }));
     api.addRoutes({ path: '/admin/draws/{id}/resolve', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('AdminResolveDrawInt', adminResolveDrawFn), authorizer });
 
     // Admin — force-cancel a draw (refunds all entrants regardless of ticket count)

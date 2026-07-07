@@ -1,12 +1,25 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand, PutCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { cors } from './stripe-client';
 import { randomInt } from 'crypto';
+import { sendWinnerEmail, sendSellerResolvedEmail } from './resend-client';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const cognito = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
 const TABLE = process.env.TABLE_NAME!;
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
+const USER_POOL_ID = process.env.USER_POOL_ID!;
+
+async function getUserEmail(userId: string): Promise<string | null> {
+  try {
+    const res = await cognito.send(new AdminGetUserCommand({ UserPoolId: USER_POOL_ID, Username: userId }));
+    return res.UserAttributes?.find(a => a.Name === 'email')?.Value ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function pickWeightedWinner(entries: { userId: string; ticketCount: number }[]): string {
   const total = entries.reduce((sum, e) => sum + e.ticketCount, 0);
@@ -211,6 +224,22 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       }
     }
     throw err;
+  }
+
+  // Send winner + seller emails (non-blocking — don't fail the response if email errors)
+  if (!isPostalWinner) {
+    const [winnerEmail, sellerEmail] = await Promise.all([
+      getUserEmail(winnerId),
+      draw.sellerId ? getUserEmail(draw.sellerId as string) : Promise.resolve(null),
+    ]);
+    if (winnerEmail) {
+      sendWinnerEmail(winnerEmail, drawTitle, drawId).catch(err =>
+        console.error('Winner email failed:', err));
+    }
+    if (sellerEmail) {
+      sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number).catch(err =>
+        console.error('Seller email failed:', err));
+    }
   }
 
   return {
