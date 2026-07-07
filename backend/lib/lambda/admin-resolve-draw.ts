@@ -16,7 +16,8 @@ async function getUserEmail(userId: string): Promise<string | null> {
   try {
     const res = await cognito.send(new AdminGetUserCommand({ UserPoolId: USER_POOL_ID, Username: userId }));
     return res.UserAttributes?.find(a => a.Name === 'email')?.Value ?? null;
-  } catch {
+  } catch (err: any) {
+    console.warn('[getUserEmail] failed for', userId, err?.name, err?.message);
     return null;
   }
 }
@@ -228,16 +229,21 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   // Send winner + seller emails — must be awaited before return or Lambda freezes mid-send
   if (!isPostalWinner) {
+    console.log('[email] looking up emails for winner:', winnerId, 'seller:', draw.sellerId);
     const [winnerEmail, sellerEmail] = await Promise.all([
       getUserEmail(winnerId),
       draw.sellerId ? getUserEmail(draw.sellerId as string) : Promise.resolve(null),
     ]);
-    await Promise.allSettled([
+    console.log('[email] winnerEmail:', winnerEmail, 'sellerEmail:', sellerEmail);
+    const emailResults = await Promise.allSettled([
       winnerEmail ? sendWinnerEmail(winnerEmail, drawTitle, drawId) : Promise.resolve(),
       sellerEmail ? sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number) : Promise.resolve(),
-    ]).then(results => results.forEach((r, i) => {
-      if (r.status === 'rejected') console.error(`Email ${i === 0 ? 'winner' : 'seller'} failed:`, r.reason);
-    }));
+    ]);
+    emailResults.forEach((r, i) => {
+      const label = i === 0 ? 'winner' : 'seller';
+      if (r.status === 'rejected') console.error(`[email] ${label} failed:`, r.reason);
+      else console.log(`[email] ${label} ${i === 0 ? winnerEmail : sellerEmail ? 'sent' : 'skipped (no email)'}`);
+    });
   }
 
   return {

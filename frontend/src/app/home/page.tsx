@@ -198,8 +198,8 @@ export default function HomePage() {
             {categories.map(cat => (
               <button
                 key={cat.id}
-                onClick={() => setCategory(cat.id)}
-                className={`chip${category === cat.id ? ' active' : ''}`}
+                onClick={() => { setCategory(cat.id); setFilter(''); }}
+                className={`chip${category === cat.id && !filter ? ' active' : ''}`}
                 style={{ fontFamily: 'inherit' }}
               >
                 {cat.label}
@@ -209,7 +209,7 @@ export default function HomePage() {
             {filters.map(f => (
               <button
                 key={f}
-                onClick={() => setFilter(filter === f ? '' : f)}
+                onClick={() => { setFilter(filter === f ? '' : f); setCategory('all'); }}
                 className={`chip${filter === f ? ' active' : ''}`}
                 style={{ fontFamily: 'inherit' }}
               >
