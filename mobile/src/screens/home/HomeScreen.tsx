@@ -31,7 +31,7 @@ const CATEGORIES = [
   { label: 'Streetwear' },
 ];
 
-const FILTERS = ['Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
+const FILTERS = ['Drawing Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
 
 const IMAGE_COLORS = [
   '#1a1a2e', '#16213e', '#0f3460', '#1e1e2e', '#2d1b69',
@@ -52,6 +52,8 @@ interface ApiDraw {
   isClosingTonight?: boolean;
   isVerified?: boolean;
   description?: string;
+  closingDate?: string;
+  reserveTickets?: number;
 }
 
 // API returns the same shape as mock Draw (id not drawId; ticketPrice in pence; retailValue in pounds)
@@ -73,13 +75,16 @@ function adaptDraw(d: ApiDraw, index: number): Draw {
     isVerified: d.isVerified ?? true,
     description: d.description ?? '',
     imageColor: IMAGE_COLORS[index % IMAGE_COLORS.length],
+    closingDate: d.closingDate,
+    reserveTickets: d.reserveTickets,
   };
 }
 
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
-  const [activeFilter, setActiveFilter] = useState('Tonight');
+  const [activeFilter, setActiveFilter] = useState('Drawing Tonight');
   const [allDraws, setAllDraws] = useState<Draw[]>([]);
+  const [drawsLoaded, setDrawsLoaded] = useState(false);
   const [balancePence, setBalancePence] = useState<number | null>(null);
   const streakScale = useRef(new Animated.Value(1)).current;
 
@@ -97,7 +102,8 @@ export function HomeScreen() {
   const fetchDraws = useCallback(() => {
     apiGet<{ draws: ApiDraw[] }>('/draws')
       .then(d => setAllDraws((d.draws ?? []).map(adaptDraw)))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setDrawsLoaded(true));
   }, []);
 
   useEffect(() => {
@@ -107,7 +113,9 @@ export function HomeScreen() {
       .catch(() => {});
   }, [fetchDraws]);
 
-  const heroDrawItem = allDraws[0];
+  const heroDrawItem = allDraws.find(d => d.isClosingTonight) ?? allDraws[0];
+  const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
+  const drawingTonight = allDraws.filter(d => d.isClosingTonight).slice(0, 8);
   const womenswear = allDraws.filter(d => d.style === 'Womenswear' || d.category === 'Bags').slice(0, 4);
   const menswear = allDraws.filter(d => d.style === 'Menswear' || d.category === 'Streetwear').slice(0, 4);
   const unisex = allDraws.filter(d => d.style === 'Unisex').slice(0, 4);
@@ -149,10 +157,16 @@ export function HomeScreen() {
           <View style={styles.section}>
             <View style={styles.heroCard}>
               <View style={[styles.heroImage, { backgroundColor: heroDrawItem.imageColor }]}>
-                <View style={styles.closingPill}>
-                  <LiveDot />
-                  <Text style={styles.closingText}>CLOSING TONIGHT · 9PM</Text>
-                </View>
+                {heroDrawItem.isClosingTonight ? (
+                  <View style={styles.closingPill}>
+                    <LiveDot />
+                    <Text style={styles.closingText}>DRAWING TONIGHT · 9PM</Text>
+                  </View>
+                ) : (
+                  <View style={styles.openPill}>
+                    <Text style={styles.openText}>OPEN · ACCEPTING ENTRIES</Text>
+                  </View>
+                )}
                 <View style={styles.watchingRow}>
                   <Text style={styles.watchingText}>247 watching</Text>
                 </View>
@@ -187,6 +201,16 @@ export function HomeScreen() {
           </View>
         )}
 
+        {/* Empty state — no draws yet */}
+        {drawsLoaded && allDraws.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No draws yet</Text>
+            <Text style={styles.emptyText}>
+              Items go live once they hit their reserve. Check back soon — draws are added daily.
+            </Text>
+          </View>
+        )}
+
         {/* Recent winner */}
         <View style={styles.winnerBanner}>
           <Text style={styles.winnerText}>
@@ -199,7 +223,11 @@ export function HomeScreen() {
         <View style={styles.tonightStrip}>
           <View style={styles.tonightLeft}>
             <LiveDot />
-            <Text style={styles.tonightText}>{allDraws.length} draws tonight at 9pm</Text>
+            <Text style={styles.tonightText}>
+              {tonightCount > 0
+                ? `${tonightCount} draw${tonightCount > 1 ? 's' : ''} drawing tonight at 9pm`
+                : 'No draws scheduled tonight yet'}
+            </Text>
           </View>
           <TouchableOpacity>
             <Text style={styles.tonightLink}>Watch live →</Text>
@@ -233,11 +261,37 @@ export function HomeScreen() {
               onPress={() => setActiveFilter(f)}
             >
               <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
-                {f}
+                {f}{f === 'Drawing Tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
               </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
+
+        {/* Drawing Tonight row */}
+        {drawingTonight.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.rowHeader}>
+              <View style={styles.rowTitleLive}>
+                <LiveDot />
+                <Text style={styles.rowTitle}>Drawing Tonight · 9pm</Text>
+              </View>
+              <Text style={styles.rowCount}>
+                {drawingTonight.length} draw{drawingTonight.length > 1 ? 's' : ''}
+              </Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalCards}
+            >
+              {drawingTonight.map(draw => (
+                <View key={draw.id} style={styles.horizontalCardWrapper}>
+                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Curated row: Womenswear */}
         {womenswear.length > 0 && (
@@ -379,6 +433,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   closingText: { color: C.PINK, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  openPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0,0,0,0.40)',
+    borderRadius: 999,
+    paddingHorizontal: S.sm,
+    paddingVertical: 4,
+  },
+  openText: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
   watchingRow: { alignSelf: 'flex-end' },
   watchingText: { color: C.WHITE, fontSize: 12, fontWeight: '600', opacity: 0.9 },
   heroContent: { padding: S.lg },
@@ -459,6 +521,8 @@ const styles = StyleSheet.create({
     marginBottom: S.md,
   },
   rowTitle: { fontSize: 16, fontWeight: '700', color: C.TEXT },
+  rowTitleLive: { flexDirection: 'row', alignItems: 'center', gap: S.sm },
+  rowCount: { color: C.MUTED, fontSize: 12 },
   seeAll: { color: C.PURPLE, fontSize: 13 },
   horizontalCards: { gap: S.md, paddingRight: S.xl },
   horizontalCardWrapper: { width: 220 },
@@ -468,6 +532,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: S.md,
   },
+  emptyState: { paddingHorizontal: S.xl, paddingVertical: S.xxl, alignItems: 'center' },
+  emptyTitle: { color: C.TEXT, fontSize: 15, fontWeight: '700', marginBottom: S.xs },
+  emptyText: { color: C.GREY, fontSize: 13, textAlign: 'center', lineHeight: 19 },
   footer: { paddingHorizontal: S.xl, paddingVertical: S.xxl, alignItems: 'center' },
   footerText: { color: C.MUTED, fontSize: 12, textAlign: 'center', lineHeight: 18 },
   footerSub: { color: C.MUTED, fontSize: 11, marginTop: S.xs },

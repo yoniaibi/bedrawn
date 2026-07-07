@@ -35,11 +35,11 @@ export function DrawCard({ draw, onPress, onSellerPress, fullWidth }: Props) {
           </View>
         )}
 
-        {/* Closing tonight badge */}
+        {/* Drawing tonight badge */}
         {draw.isClosingTonight && (
           <View style={styles.closingBadge}>
             <LiveDot />
-            <Text style={styles.closingText}>CLOSING TONIGHT</Text>
+            <Text style={styles.closingText}>DRAWING TONIGHT 9PM</Text>
           </View>
         )}
 

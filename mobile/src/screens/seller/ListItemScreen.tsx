@@ -26,6 +26,7 @@ const ITEM_TYPES = [
 const CONDITIONS = ['Brand New', 'Excellent', 'Very Good', 'Good', 'Fair'];
 const CATEGORIES = ['Fashion', 'Bags', 'Trainers', 'Watches', 'Jewellery', 'Streetwear', 'Accessories', 'Bundles'];
 const TICKET_PRICE_OPTIONS = [10, 20, 50, 100]; // pence
+const RESERVE_OPTIONS = [25, 50, 75, 100]; // % of total tickets
 
 export function ListItemScreen() {
   const navigation = useNavigation();
@@ -38,6 +39,7 @@ export function ListItemScreen() {
   const [retailValue, setRetailValue] = useState('');
   const [ticketPrice, setTicketPrice] = useState(10);
   const [totalTickets, setTotalTickets] = useState('100');
+  const [reservePct, setReservePct] = useState(25);
   const [liquidated, setLiquidated] = useState(false);
 
   const go = (dir: 1 | -1) => {
@@ -57,6 +59,7 @@ export function ListItemScreen() {
   };
 
   const { gross, net } = estimatedEarnings();
+  const reserveTickets = Math.ceil(((parseInt(totalTickets, 10) || 0) * reservePct) / 100);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -226,6 +229,32 @@ export function ListItemScreen() {
               />
             </View>
 
+            <View style={styles.field}>
+              <Text style={styles.label}>Reserve — minimum tickets to proceed</Text>
+              <Text style={styles.reserveHint}>
+                If fewer than this many tickets are sold, the draw cancels and buyers are fully refunded. Like an auction reserve — set higher to protect your item.
+              </Text>
+              <View style={styles.ticketPriceRow}>
+                {RESERVE_OPTIONS.map(pct => (
+                  <TouchableOpacity
+                    key={pct}
+                    style={[styles.pricePill, reservePct === pct && styles.pricePillActive]}
+                    onPress={() => setReservePct(pct)}
+                  >
+                    <Text style={[styles.priceText, reservePct === pct && styles.priceTextActive]}>
+                      {pct}%
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {!!totalTickets && (
+                <Text style={styles.reserveNote}>
+                  Reserve = {reserveTickets.toLocaleString()} tickets
+                  {reservePct === 100 ? ' — draw only proceeds at full sell-out' : ''}
+                </Text>
+              )}
+            </View>
+
             {/* Earnings preview */}
             <View style={styles.earningsCard}>
               <Text style={styles.earningsTitle}>Earnings preview</Text>
@@ -241,6 +270,9 @@ export function ListItemScreen() {
                 <Text style={styles.earningsTotalLabel}>You receive</Text>
                 <Text style={styles.earningsTotalValue}>£{net}</Text>
               </View>
+              <Text style={styles.earningsReserve}>
+                Draw needs {reserveTickets.toLocaleString()} tickets sold ({reservePct}% reserve) or it cancels and buyers are refunded
+              </Text>
             </View>
           </View>
         )}
@@ -275,6 +307,10 @@ export function ListItemScreen() {
               <Text style={styles.reviewRow}>
                 <Text style={styles.reviewLabel}>Total tickets: </Text>
                 <Text style={styles.reviewValue}>{totalTickets}</Text>
+              </Text>
+              <Text style={styles.reviewRow}>
+                <Text style={styles.reviewLabel}>Reserve: </Text>
+                <Text style={styles.reviewValue}>{reservePct}% ({reserveTickets.toLocaleString()} tickets)</Text>
               </Text>
               <Text style={styles.reviewRow}>
                 <Text style={styles.reviewLabel}>You'll earn: </Text>
@@ -448,6 +484,9 @@ const styles = StyleSheet.create({
   },
   earningsTotalLabel: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   earningsTotalValue: { color: C.GREEN, fontWeight: '800', fontSize: 16 },
+  earningsReserve: { color: C.GOLD, fontSize: 12, fontWeight: '600', marginTop: S.xs, lineHeight: 17 },
+  reserveHint: { color: C.MUTED, fontSize: 12, lineHeight: 17, marginBottom: S.sm },
+  reserveNote: { color: C.MUTED, fontSize: 12, marginTop: S.sm },
   reviewCard: {
     backgroundColor: C.CARD,
     borderRadius: 14,

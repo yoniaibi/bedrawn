@@ -103,7 +103,7 @@ export function PurchaseScreen({ route, navigation }: Props) {
 
         {/* Trust reassurance */}
         <View style={styles.trustRow}>
-          <Text style={styles.trustText}>Closes {draw.closingDate ?? 'tonight'} at 9pm · Full refund if draw doesn&apos;t reach minimum · Free postal entry available</Text>
+          <Text style={styles.trustText}>{draw.isClosingTonight ? 'Drawing tonight at 9pm' : draw.closingDate ? `Draws ${draw.closingDate} at 9pm` : 'Open until reserve is met'} · Full refund if draw doesn&apos;t reach reserve · Free postal entry available</Text>
         </View>
 
         {/* Qty section */}

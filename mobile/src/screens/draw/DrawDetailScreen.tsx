@@ -26,6 +26,10 @@ export function DrawDetailScreen({ route, navigation }: Props) {
   const [descExpanded, setDescExpanded] = useState(false);
 
   const percent = Math.round((draw.soldTickets / draw.totalTickets) * 100);
+  const reservePct = draw.reserveTickets && draw.totalTickets
+    ? Math.round((draw.reserveTickets / draw.totalTickets) * 100)
+    : null;
+  const reserveHit = reservePct !== null && percent >= reservePct;
   const heroImageUrl: string | undefined = draw.imageUrls?.[0] ?? draw.imageUrl;
   const priceLabel = draw.ticketPrice >= 100
     ? `£${(draw.ticketPrice / 100).toFixed(2)}`
@@ -45,10 +49,14 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           style={[styles.heroImage, !heroImageUrl && { backgroundColor: draw.imageColor ?? C.CARD2 }]}
           imageStyle={{ resizeMode: 'cover' }}
         >
-          {draw.isClosingTonight && (
+          {draw.isClosingTonight ? (
             <View style={styles.closingBadge}>
               <LiveDot />
-              <Text style={styles.closingText}>CLOSING TONIGHT · 9PM</Text>
+              <Text style={styles.closingText}>DRAWING TONIGHT 9PM</Text>
+            </View>
+          ) : (
+            <View style={styles.openBadge}>
+              <Text style={styles.openText}>OPEN · ACCEPTING ENTRIES</Text>
             </View>
           )}
           {draw.isBundle && (
@@ -121,6 +129,14 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               </Text>
             </View>
             <ProgressBar percent={percent} height={6} />
+            {reservePct !== null && (
+              <View style={styles.reserveRow}>
+                <View style={[styles.reserveSwatch, { backgroundColor: reserveHit ? C.GREEN : C.GOLD }]} />
+                <Text style={[styles.reserveText, { color: reserveHit ? C.GREEN : C.GOLD }]}>
+                  Reserve {reservePct}%{reserveHit ? ' — reached, draw confirmed!' : ' needed to confirm draw'}
+                </Text>
+              </View>
+            )}
             <View style={styles.ticketStats}>
               <Text style={styles.ticketStatText}>
                 {draw.soldTickets.toLocaleString()} / {draw.totalTickets.toLocaleString()} tickets sold
@@ -161,7 +177,14 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               { label: 'Condition', value: draw.condition },
               { label: 'Ticket price', value: priceLabel },
               { label: 'Total tickets', value: draw.totalTickets.toLocaleString() },
-              { label: 'Draw closes', value: draw.closingDate ? `${draw.closingDate} at 9pm UK` : 'Tonight at 9pm UK' },
+              {
+                label: 'Draw date',
+                value: draw.isClosingTonight
+                  ? 'Tonight at 9pm UK'
+                  : draw.closingDate
+                    ? `${draw.closingDate} at 9pm UK`
+                    : 'Open until reserve is met',
+              },
             ].map(item => (
               <View key={item.label} style={styles.detailRow}>
                 <Text style={styles.detailLabel}>{item.label}</Text>
@@ -177,6 +200,9 @@ export function DrawDetailScreen({ route, navigation }: Props) {
 
       {/* Sticky enter button */}
       <View style={styles.stickyBottom}>
+        {draw.isClosingTonight && (
+          <Text style={styles.ctaTonight}>Drawing tonight at 9pm</Text>
+        )}
         <TouchableOpacity
           style={styles.enterBtn}
           onPress={() => navigation.navigate('Purchase', { draw })}
@@ -216,6 +242,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   closingText: { color: C.PINK, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  openBadge: {
+    position: 'absolute',
+    top: S.lg,
+    left: S.lg,
+    backgroundColor: 'rgba(0,0,0,0.40)',
+    borderRadius: 999,
+    paddingHorizontal: S.sm,
+    paddingVertical: 4,
+  },
+  openText: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
   bundleTag: {
     position: 'absolute',
     bottom: S.lg,
@@ -317,6 +353,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: S.xs,
   },
+  reserveRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: S.xs },
+  reserveSwatch: { width: 8, height: 8, borderRadius: 1 },
+  reserveText: { fontSize: 11, fontWeight: '500' },
   ticketStatText: { color: C.MUTED, fontSize: 12 },
   watchingText: { color: C.MUTED, fontSize: 12 },
   postalNote: {
@@ -372,6 +411,13 @@ const styles = StyleSheet.create({
     borderTopColor: C.BORDER,
     padding: S.xl,
     paddingBottom: S.xxl,
+  },
+  ctaTonight: {
+    color: C.PINK,
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: S.sm,
   },
   enterBtn: {
     backgroundColor: C.PURPLE,

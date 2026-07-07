@@ -141,7 +141,7 @@ export function SellerDashboardScreen() {
               <Text style={styles.tipsTitle}>Seller tips</Text>
               {[
                 'Add more photos to increase trust and ticket sales',
-                'Closing tonight draws get 3× more entries',
+                'Draws drawing tonight get 3× more entries',
                 'Bundles earn 40% more on average',
               ].map((tip, i) => (
                 <View key={i} style={styles.tip}>

@@ -18,6 +18,8 @@ export type Draw = {
   isVerified: boolean;
   description: string;
   imageColor: string;
+  closingDate?: string; // YYYY-MM-DD — only set once the reserve is hit (scheduled for next 9pm)
+  reserveTickets?: number; // minimum tickets to confirm the draw
 };
 
 export const draws: Draw[] = [
@@ -39,6 +41,7 @@ export const draws: Draw[] = [
     description:
       'Authentic Chanel Classic Flap in black caviar leather with gold hardware. Serial number verified, comes with dustbag, box, and authenticity card. Purchased from Chanel Paris in 2022.',
     imageColor: '#1a1a2e',
+    reserveTickets: 250,
   },
   {
     id: '2',
@@ -58,6 +61,7 @@ export const draws: Draw[] = [
     description:
       'Size UK 10. Deadstock Air Jordan 1 Retro High OG in the iconic Chicago colourway. Factory laced, never tried on, original receipt included from Nike SNKRS.',
     imageColor: '#8B0000',
+    reserveTickets: 250,
   },
   {
     id: '3',
@@ -77,6 +81,7 @@ export const draws: Draw[] = [
     description:
       'Rolex Datejust 41 in Oystersteel, silver dial with Roman numerals. Jubilee bracelet, 2021, serviced January 2024. Full set with box and papers. Circa £9,200 new.',
     imageColor: '#2C3E50',
+    reserveTickets: 150,
   },
   {
     id: '4',
@@ -96,6 +101,7 @@ export const draws: Draw[] = [
     description:
       'Off-White x Nike Air Force 1 Low "The Ten" from the original 2017 drop. UK 9.5. Deadstock with all original packaging, hangtag, and zip ties intact.',
     imageColor: '#F5F5DC',
+    reserveTickets: 400,
   },
   {
     id: '5',
@@ -115,6 +121,7 @@ export const draws: Draw[] = [
     description:
       'Louis Vuitton Neverfull MM in Damier Ebène canvas with red interior. Comes with pouch, dustbag, and date code 2019. Light wear consistent with age.',
     imageColor: '#4A3728',
+    reserveTickets: 450,
   },
   {
     id: '6',
@@ -134,6 +141,7 @@ export const draws: Draw[] = [
     description:
       'Supreme FW23 Box Logo Hooded Sweatshirt in black, size Large. Purchased in-store week 1. Unworn with tags. Classic bogo front chest.',
     imageColor: '#CC0000',
+    reserveTickets: 150,
   },
   {
     id: '7',
@@ -153,6 +161,7 @@ export const draws: Draw[] = [
     description:
       'Prada Re-Edition 2000 in Re-Nylon and Saffiano leather in Nior. Silver metal lettering, shoulder strap included. 2022, barely used. Original receipt and dustbag.',
     imageColor: '#2D2D2D',
+    reserveTickets: 250,
   },
   {
     id: '8',
@@ -172,6 +181,7 @@ export const draws: Draw[] = [
     description:
       'Bundle of 5 authentic vintage Levi\'s 501 jeans, sourced from US thrift stores. Sizes 30×32, 32×30, 28×32, 34×30, 32×32. Mix of 80s-90s era. All pre-washed and cleaned.',
     imageColor: '#1B4F8C',
+    reserveTickets: 100,
   },
   {
     id: '9',
@@ -191,6 +201,7 @@ export const draws: Draw[] = [
     description:
       'Bottega Veneta small Intrecciato woven leather clutch in tan. Gold zip. 2020, light use. Signature woven pattern, comes with dustbag.',
     imageColor: '#C49A3C',
+    reserveTickets: 300,
   },
   {
     id: '10',
@@ -210,6 +221,7 @@ export const draws: Draw[] = [
     description:
       'Curated bundle of 8 premium streetwear pieces: Palace hoodie (M), Stüssy crewneck (L), KITH tee (M), Carhartt WIP jacket (L), Represent joggers (M), A-COLD-WALL tee (M), Stone Island badge tee (L), and CP Company goggle jacket (L).',
     imageColor: '#1C2833',
+    reserveTickets: 450,
   },
   {
     id: '11',
@@ -229,6 +241,7 @@ export const draws: Draw[] = [
     description:
       'Audemars Piguet Royal Oak Selfwinding 41mm in stainless steel with silver "Grande Tapisserie" dial. Box and papers, 2020. Worn maybe 10 times. Service history available.',
     imageColor: '#7F8C8D',
+    reserveTickets: 300,
   },
   {
     id: '12',
@@ -248,6 +261,7 @@ export const draws: Draw[] = [
     description:
       'Two-piece archive CdG bundle: FW2001 irregular-cut blazer in black wool (fits M/L) and a SS2003 graphic tee (size L). Both sourced from Japanese vintage market, authenticated.',
     imageColor: '#1A1A1A',
+    reserveTickets: 175,
   },
 ];
 
