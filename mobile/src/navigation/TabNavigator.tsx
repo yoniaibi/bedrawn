@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { Draw } from '../data/mockData';
 import { AccountScreen } from '../screens/account/AccountScreen';
 import { NotificationsScreen } from '../screens/account/NotificationsScreen';

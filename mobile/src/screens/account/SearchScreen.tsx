@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { apiGet } from '../../lib/api';
+import { apiGetPublic } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
@@ -48,7 +48,7 @@ export function SearchScreen() {
       return;
     }
     setSearching(true);
-    apiGet<{ draws: DrawResult[] }>(`/draws?q=${encodeURIComponent(q)}`)
+    apiGetPublic<{ draws: DrawResult[] }>(`/draws?q=${encodeURIComponent(q)}`)
       .then(d => setResults(d.draws ?? []))
       .catch(() => setResults([]))
       .finally(() => setSearching(false));

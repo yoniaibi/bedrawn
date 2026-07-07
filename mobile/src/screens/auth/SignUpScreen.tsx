@@ -65,7 +65,7 @@ export function SignUpScreen({ navigation }: Props) {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
-            <Text style={styles.logo}>DRAWN</Text>
+            <Text style={styles.logo}>bedrawn</Text>
           </View>
 
           <Text style={styles.title}>Create account</Text>
@@ -124,7 +124,7 @@ export function SignUpScreen({ navigation }: Props) {
               {agreed && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={styles.checkboxText}>
-              I agree to DRAWN's{' '}
+              I agree to bedrawn's{' '}
               <Text style={styles.link}>Terms of Service</Text>
             </Text>
           </TouchableOpacity>

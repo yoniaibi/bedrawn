@@ -327,7 +327,7 @@ export function ListItemScreen() {
                 {liquidated && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxText}>
-                I understand that DRAWN may claim liquidated damages if I withdraw this listing after tickets have been sold.
+                I understand that bedrawn may claim liquidated damages if I withdraw this listing after tickets have been sold.
               </Text>
             </TouchableOpacity>
           </View>

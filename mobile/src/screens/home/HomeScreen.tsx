@@ -15,7 +15,7 @@ import { DrawCard } from '../../components/DrawCard';
 import { LiveDot } from '../../components/LiveDot';
 import { ProgressBar } from '../../components/ProgressBar';
 import { Draw, activityMessages } from '../../data/mockData';
-import { apiGet } from '../../lib/api';
+import { apiGet, apiGetPublic } from '../../lib/api';
 import { HomeStackParamList } from '../../navigation/TabNavigator';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
@@ -100,7 +100,7 @@ export function HomeScreen() {
   }, [streakScale]);
 
   const fetchDraws = useCallback(() => {
-    apiGet<{ draws: ApiDraw[] }>('/draws')
+    apiGetPublic<{ draws: ApiDraw[] }>('/draws')
       .then(d => setAllDraws((d.draws ?? []).map(adaptDraw)))
       .catch(() => {})
       .finally(() => setDrawsLoaded(true));
@@ -131,7 +131,7 @@ export function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* NavBar */}
         <View style={styles.navbar}>
-          <Text style={styles.logo}>DRAWN</Text>
+          <Text style={styles.logo}>bedrawn</Text>
           <View style={styles.navRight}>
             <Animated.View style={[styles.streakBadge, { transform: [{ scale: streakScale }] }]}>
               <Text style={styles.streakText}>3 day streak</Text>
@@ -373,7 +373,7 @@ export function HomeScreen() {
           <Text style={styles.footerText}>
             All items verified · 100% authentic · Draws at 9pm nightly
           </Text>
-          <Text style={styles.footerSub}>Winners announced live on DRAWN</Text>
+          <Text style={styles.footerSub}>Winners announced live on bedrawn</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

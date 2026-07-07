@@ -39,6 +39,7 @@ const TYPE_CONFIG = {
   win: { icon: '★', color: C.GOLD, bg: 'rgba(252,211,77,0.10)', border: C.GOLD },
   reminder: { icon: '!', color: C.PURPLE, bg: 'rgba(196,181,253,0.10)', border: C.PURPLE },
   promo: { icon: '%', color: C.GREEN, bg: 'rgba(74,222,128,0.10)', border: C.GREEN },
+  draw_won: { icon: '★', color: C.GOLD, bg: 'rgba(252,211,77,0.10)', border: C.GOLD },
 };
 
 export function NotificationsScreen() {

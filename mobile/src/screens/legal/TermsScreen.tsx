@@ -14,15 +14,15 @@ import { S } from '../../theme/spacing';
 const SECTIONS = [
   {
     heading: '1. Introduction',
-    body: 'Welcome to DRAWN ("the Platform", "we", "us", or "our"). These Terms of Service ("Terms") govern your access to and use of our mobile application and services. By creating an account or using DRAWN, you agree to be bound by these Terms. If you do not agree, you must not use the Platform.\n\nDRAWN is operated by Drawn Ltd, a company registered in England and Wales.',
+    body: 'Welcome to bedrawn ("the Platform", "we", "us", or "our"). These Terms of Service ("Terms") govern your access to and use of our mobile application and services. By creating an account or using bedrawn, you agree to be bound by these Terms. If you do not agree, you must not use the Platform.\n\nbedrawn is operated by Drawn Ltd, a company registered in England and Wales.',
   },
   {
     heading: '2. Eligibility',
-    body: 'You must be at least 18 years of age to use DRAWN. By creating an account, you confirm that you are 18 or older. We reserve the right to request proof of age at any time. Draws on DRAWN constitute a genuine competition of skill, not a lottery or game of chance, in accordance with applicable UK law.',
+    body: 'You must be at least 18 years of age to use bedrawn. By creating an account, you confirm that you are 18 or older. We reserve the right to request proof of age at any time. Draws on bedrawn constitute a genuine competition of skill, not a lottery or game of chance, in accordance with applicable UK law.',
   },
   {
     heading: '3. Draw Rules',
-    body: 'Each draw is a competition with a fixed number of tickets. The winning ticket is selected at random from all valid ticket holders at the scheduled draw time (typically 9pm UK time). One ticket equals one entry. Sellers set ticket prices and total ticket numbers. DRAWN does not guarantee any minimum or maximum prize value. All draws are subject to a minimum ticket threshold; if not met, draws may be extended or cancelled and tickets refunded.',
+    body: 'Each draw is a competition with a fixed number of tickets. The winning ticket is selected at random from all valid ticket holders at the scheduled draw time (typically 9pm UK time). One ticket equals one entry. Sellers set ticket prices and total ticket numbers. bedrawn does not guarantee any minimum or maximum prize value. All draws are subject to a minimum ticket threshold; if not met, draws may be extended or cancelled and tickets refunded.',
   },
   {
     heading: '4. Postal Entries',
@@ -30,15 +30,15 @@ const SECTIONS = [
   },
   {
     heading: '5. Payments and Wallet',
-    body: 'DRAWN operates a prepaid wallet system. You add funds to your wallet and use them to purchase draw tickets. Wallet funds are non-refundable except in cases where a draw is cancelled by the seller or platform. All payments are processed securely via our payment provider. DRAWN does not store card details.',
+    body: 'bedrawn operates a prepaid wallet system. You add funds to your wallet and use them to purchase draw tickets. Wallet funds are non-refundable except in cases where a draw is cancelled by the seller or platform. All payments are processed securely via our payment provider. bedrawn does not store card details.',
   },
   {
     heading: '6. Sellers',
-    body: 'Sellers must be approved by DRAWN before listing items. By listing an item, sellers agree to (a) accurately describe items, (b) provide authentication documentation where required, (c) ship winning items promptly. Sellers may be liable for liquidated damages if they withdraw a listing after tickets have been sold. DRAWN reserves the right to remove any listing at its sole discretion.',
+    body: 'Sellers must be approved by bedrawn before listing items. By listing an item, sellers agree to (a) accurately describe items, (b) provide authentication documentation where required, (c) ship winning items promptly. Sellers may be liable for liquidated damages if they withdraw a listing after tickets have been sold. bedrawn reserves the right to remove any listing at its sole discretion.',
   },
   {
     heading: '7. Authenticity',
-    body: 'DRAWN takes authenticity seriously. While we verify sellers and encourage authentication, DRAWN cannot guarantee the authenticity of every item. Buyers should review all provided documentation. In the event of a successful claim of inauthenticity within 30 days of receipt, DRAWN will investigate and may offer remedies at its discretion.',
+    body: 'bedrawn takes authenticity seriously. While we verify sellers and encourage authentication, bedrawn cannot guarantee the authenticity of every item. Buyers should review all provided documentation. In the event of a successful claim of inauthenticity within 30 days of receipt, bedrawn will investigate and may offer remedies at its discretion.',
   },
   {
     heading: '8. Prohibited Conduct',
@@ -46,11 +46,11 @@ const SECTIONS = [
   },
   {
     heading: '9. Intellectual Property',
-    body: 'All content on DRAWN, including logos, branding, and software, is owned by Drawn Ltd or its licensors. You may not reproduce, distribute, or create derivative works without written permission.',
+    body: 'All content on bedrawn, including logos, branding, and software, is owned by Drawn Ltd or its licensors. You may not reproduce, distribute, or create derivative works without written permission.',
   },
   {
     heading: '10. Limitation of Liability',
-    body: 'To the fullest extent permitted by law, DRAWN shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Platform. Our total liability shall not exceed the amount you paid in ticket purchases in the 3 months preceding the event giving rise to the claim.',
+    body: 'To the fullest extent permitted by law, bedrawn shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Platform. Our total liability shall not exceed the amount you paid in ticket purchases in the 3 months preceding the event giving rise to the claim.',
   },
   {
     heading: '11. Governing Law',
@@ -58,11 +58,11 @@ const SECTIONS = [
   },
   {
     heading: '12. Changes to Terms',
-    body: 'We may update these Terms from time to time. We will notify you of material changes via email or in-app notification. Continued use of DRAWN after changes constitutes acceptance of the updated Terms.',
+    body: 'We may update these Terms from time to time. We will notify you of material changes via email or in-app notification. Continued use of bedrawn after changes constitutes acceptance of the updated Terms.',
   },
   {
     heading: '13. Contact',
-    body: 'For questions about these Terms, please contact us at legal@drawn.app or write to: Drawn Ltd, 100 Oxford Street, London, W1D 1LL, United Kingdom.',
+    body: 'For questions about these Terms, please contact us at legal@bedrawn.app or write to: Drawn Ltd, 100 Oxford Street, London, W1D 1LL, United Kingdom.',
   },
 ];
 

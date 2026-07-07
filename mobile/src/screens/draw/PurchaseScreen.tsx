@@ -193,7 +193,7 @@ export function PurchaseScreen({ route, navigation }: Props) {
 
         {/* Fine print */}
         <Text style={styles.finePrint}>
-          By confirming, you agree to DRAWN&apos;s Terms of Service. No refunds after purchase unless the draw is cancelled. Postal entry available — see T&Cs.
+          By confirming, you agree to bedrawn&apos;s Terms of Service. No refunds after purchase unless the draw is cancelled. Postal entry available — see T&Cs.
         </Text>
       </ScrollView>
 

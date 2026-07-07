@@ -111,7 +111,7 @@ export function AccountScreen() {
 
   const handle = profile?.handle ?? '...';
   const initials = handle.replace(/^@/, '').slice(0, 2).toUpperCase();
-  const referralCode = 'DRAWN-' + handle.replace(/^@/, '').toUpperCase();
+  const referralCode = 'BD-' + handle.replace(/^@/, '').toUpperCase();
 
   const handleCopy = () => {
     setCopied(true);
@@ -225,7 +225,7 @@ export function AccountScreen() {
         </View>
 
         {/* Footer */}
-        <Text style={styles.footer}>Drawn · v1.0 · London, UK</Text>
+        <Text style={styles.footer}>bedrawn · v1.0 · London, UK</Text>
       </ScrollView>
 
       <AvatarModal

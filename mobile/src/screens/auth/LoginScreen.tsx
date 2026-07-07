@@ -62,7 +62,7 @@ export function LoginScreen({ navigation }: Props) {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
-            <Text style={styles.logo}>DRAWN</Text>
+            <Text style={styles.logo}>bedrawn</Text>
           </View>
 
           <Text style={styles.title}>Welcome back</Text>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
@@ -7,12 +8,28 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CountdownTimer } from '../../components/CountdownTimer';
 import { LiveDot } from '../../components/LiveDot';
 import { ProgressBar } from '../../components/ProgressBar';
-import { grandDraw } from '../../data/mockData';
+import { grandDraw as mockGrandDraw } from '../../data/mockData';
+import { apiGet, apiPost } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
+
+interface GrandDrawConfig {
+  prize: string;
+  value: number;
+  imageUrl?: string;
+  emoji?: string;
+  totalEntries: number;
+}
+
+interface GrandDrawData {
+  config: GrandDrawConfig;
+  userEntries: number;
+  claimedToday: boolean;
+  streak: number;
+  loginDays: number[];
+}
 
 function getDaysUntilEndOfMonth(): { days: number; hours: number; minutes: number } {
   const now = new Date();
@@ -24,15 +41,14 @@ function getDaysUntilEndOfMonth(): { days: number; hours: number; minutes: numbe
   return { days, hours, minutes };
 }
 
-function LoginCalendar() {
+function LoginCalendar({ loginDays }: { loginDays: number[] }) {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = now.getDate();
 
-  // Simulate logged-in days: all days up to today except a few
-  const missedDays = new Set([5, 12, 18]);
+  const loginSet = new Set(loginDays);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   return (
@@ -47,8 +63,8 @@ function LoginCalendar() {
       {days.map(day => {
         const isPast = day < today;
         const isToday = day === today;
-        const isMissed = missedDays.has(day) && isPast;
-        const isLoggedIn = isPast && !isMissed;
+        const isLoggedIn = loginSet.has(day);
+        const isMissed = isPast && !isLoggedIn;
 
         return (
           <View
@@ -81,133 +97,169 @@ const ACHIEVEMENTS_BADGES = [
 ];
 
 export function GrandDrawScreen() {
+  const [apiData, setApiData] = useState<GrandDrawData | null>(null);
   const [claimed, setClaimed] = useState(false);
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { days, hours, minutes } = getDaysUntilEndOfMonth();
-  const entries = 0; // real grand draw entries not yet available via API
-  const total = grandDraw.totalEntries;
-  const oddsIn = Math.round(total / entries);
-  const entriesPercent = Math.round((entries / total) * 100);
-  const fund = grandDraw.fund;
+
+  const month = new Date().toLocaleString('default', { month: 'long' });
+
+  // Derived values — API data with mock fallback
+  const config = apiData?.config ?? {
+    prize: mockGrandDraw.prize,
+    value: mockGrandDraw.value,
+    totalEntries: mockGrandDraw.totalEntries,
+    emoji: mockGrandDraw.emoji,
+  };
+  const userEntries = apiData?.userEntries ?? 0;
+  const streak = apiData?.streak ?? 0;
+  const loginDays = apiData?.loginDays ?? [];
+  const claimedToday = claimed || (apiData?.claimedToday ?? false);
+
+  const totalEntries = config.totalEntries;
+  const oddsIn = userEntries > 0 ? Math.round(totalEntries / userEntries) : null;
+  const entriesPercent = totalEntries > 0 ? Math.round((userEntries / totalEntries) * 100) : 0;
+
+  const fetchData = useCallback(() => {
+    apiGet<GrandDrawData>('/grand-draw')
+      .then(d => {
+        setApiData(d);
+        setClaimed(d.claimedToday);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleClaim = async () => {
+    setClaimLoading(true);
+    try {
+      await apiPost('/grand-draw/claim', {});
+      setClaimed(true);
+      // Refresh to get updated userEntries
+      apiGet<GrandDrawData>('/grand-draw')
+        .then(d => setApiData(d))
+        .catch(() => {});
+    } catch {
+      // 409 already claimed or network error — mark button as claimed
+      setClaimed(true);
+    } finally {
+      setClaimLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>DRAWN</Text>
-          <Text style={styles.monthLabel}>{grandDraw.month}</Text>
+          <Text style={styles.logo}>bedrawn</Text>
+          <Text style={styles.monthLabel}>{month}</Text>
         </View>
 
-        {/* Prize card */}
-        <View style={styles.prizeCard}>
-          <View style={styles.grandBadge}>
-            <LiveDot />
-            <Text style={styles.grandBadgeText}>GRAND DRAW</Text>
-          </View>
-          <Text style={styles.prizeName}>{grandDraw.prize}</Text>
-          <View style={styles.valueRow}>
-            <View style={styles.valueBadge}>
-              <Text style={styles.valueText}>Worth £{grandDraw.value.toLocaleString()}</Text>
-            </View>
-            <View style={styles.valueBadge}>
-              <Text style={styles.valueText}>Fund: £{fund.toLocaleString()}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Countdown card */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Draw resolves in</Text>
-          <View style={styles.countdownRow}>
-            <View style={styles.countdownUnit}>
-              <Text style={styles.countdownNum}>{String(days).padStart(2, '0')}</Text>
-              <Text style={styles.countdownLabel}>days</Text>
-            </View>
-            <Text style={styles.countdownSep}>:</Text>
-            <View style={styles.countdownUnit}>
-              <Text style={styles.countdownNum}>{String(hours).padStart(2, '0')}</Text>
-              <Text style={styles.countdownLabel}>hours</Text>
-            </View>
-            <Text style={styles.countdownSep}>:</Text>
-            <View style={styles.countdownUnit}>
-              <Text style={styles.countdownNum}>{String(minutes).padStart(2, '0')}</Text>
-              <Text style={styles.countdownLabel}>mins</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Entries card */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Your entries</Text>
-          <Text style={styles.entriesNum}>{entries}</Text>
-          <Text style={styles.oddsText}>Your odds: 1 in {oddsIn}</Text>
-          <ProgressBar percent={entriesPercent} height={6} />
-          <Text style={styles.totalEntries}>{total.toLocaleString()} total entries</Text>
-        </View>
-
-        {/* Claim button */}
-        <TouchableOpacity
-          style={[styles.claimBtn, claimed && styles.claimBtnClaimed]}
-          onPress={() => setClaimed(true)}
-          disabled={claimed}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.claimBtnText}>
-            {claimed ? '+1 ticket claimed ✓' : "Claim today's ticket"}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Streak card */}
-        <View style={styles.card}>
-          <View style={styles.streakRow}>
-            <Text style={styles.streakNum}>3</Text>
-            <Text style={styles.streakSub}>day streak</Text>
-          </View>
-          <View style={styles.streakStats}>
-            <View style={styles.streakStat}>
-              <Text style={styles.streakStatVal}>7</Text>
-              <Text style={styles.streakStatLabel}>Longest streak</Text>
-            </View>
-            <View style={styles.streakStat}>
-              <Text style={styles.streakStatVal}>45</Text>
-              <Text style={styles.streakStatLabel}>All-time earned</Text>
-            </View>
-          </View>
-          {/* Achievement badges */}
-          <View style={styles.achievementRow}>
-            {ACHIEVEMENTS_BADGES.map(badge => (
-              <View
-                key={badge.label}
-                style={[styles.achievementBadge, badge.locked && styles.achievementLocked]}
-              >
-                <Text style={[styles.achievementLabel, { color: badge.locked ? C.MUTED : badge.color }]}>
-                  {badge.label}
-                </Text>
+        {loading ? (
+          <ActivityIndicator color={C.PURPLE} style={{ marginTop: S.xxl }} />
+        ) : (
+          <>
+            {/* Prize card */}
+            <View style={styles.prizeCard}>
+              <View style={styles.grandBadge}>
+                <LiveDot />
+                <Text style={styles.grandBadgeText}>GRAND DRAW</Text>
               </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Login calendar */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Login calendar — {grandDraw.month}</Text>
-          <Text style={styles.calSubtitle}>Log in daily to earn free entries</Text>
-          <LoginCalendar />
-        </View>
-
-        {/* Past draw card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Last month's winner</Text>
-          <View style={styles.pastDrawRow}>
-            <View style={[styles.pastDrawThumb, { backgroundColor: '#4A3728' }]} />
-            <View style={styles.pastDrawInfo}>
-              <Text style={styles.pastDrawMonth}>May · Grand Draw</Text>
-              <Text style={styles.pastDrawPrize}>{grandDraw.pastPrize}</Text>
-              <Text style={styles.pastDrawValue}>Worth £{grandDraw.pastValue.toLocaleString()}</Text>
-              <Text style={styles.pastDrawWinner}>Won by {grandDraw.pastWinner}</Text>
+              <Text style={styles.prizeName}>{config.prize}</Text>
+              <View style={styles.valueRow}>
+                <View style={styles.valueBadge}>
+                  <Text style={styles.valueText}>Worth £{config.value.toLocaleString()}</Text>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
+
+            {/* Countdown card */}
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Draw resolves in</Text>
+              <View style={styles.countdownRow}>
+                <View style={styles.countdownUnit}>
+                  <Text style={styles.countdownNum}>{String(days).padStart(2, '0')}</Text>
+                  <Text style={styles.countdownLabel}>days</Text>
+                </View>
+                <Text style={styles.countdownSep}>:</Text>
+                <View style={styles.countdownUnit}>
+                  <Text style={styles.countdownNum}>{String(hours).padStart(2, '0')}</Text>
+                  <Text style={styles.countdownLabel}>hours</Text>
+                </View>
+                <Text style={styles.countdownSep}>:</Text>
+                <View style={styles.countdownUnit}>
+                  <Text style={styles.countdownNum}>{String(minutes).padStart(2, '0')}</Text>
+                  <Text style={styles.countdownLabel}>mins</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Entries card */}
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>Your entries</Text>
+              <Text style={styles.entriesNum}>{userEntries}</Text>
+              {oddsIn !== null && (
+                <Text style={styles.oddsText}>Your odds: 1 in {oddsIn}</Text>
+              )}
+              {userEntries === 0 && (
+                <Text style={styles.oddsText}>Log in daily to earn free entries</Text>
+              )}
+              <ProgressBar percent={entriesPercent} height={6} />
+              <Text style={styles.totalEntries}>{totalEntries.toLocaleString()} total entries</Text>
+            </View>
+
+            {/* Claim button */}
+            <TouchableOpacity
+              style={[styles.claimBtn, claimedToday && styles.claimBtnClaimed]}
+              onPress={handleClaim}
+              disabled={claimedToday || claimLoading}
+              activeOpacity={0.85}
+            >
+              {claimLoading
+                ? <ActivityIndicator color={C.WHITE} />
+                : (
+                  <Text style={styles.claimBtnText}>
+                    {claimedToday ? '+1 ticket claimed ✓' : "Claim today's ticket"}
+                  </Text>
+                )
+              }
+            </TouchableOpacity>
+
+            {/* Streak card */}
+            <View style={styles.card}>
+              <View style={styles.streakRow}>
+                <Text style={styles.streakNum}>{streak}</Text>
+                <Text style={styles.streakSub}>day streak</Text>
+              </View>
+              {/* Achievement badges */}
+              <View style={styles.achievementRow}>
+                {ACHIEVEMENTS_BADGES.map(badge => (
+                  <View
+                    key={badge.label}
+                    style={[styles.achievementBadge, badge.locked && styles.achievementLocked]}
+                  >
+                    <Text style={[styles.achievementLabel, { color: badge.locked ? C.MUTED : badge.color }]}>
+                      {badge.label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Login calendar */}
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Login calendar — {month}</Text>
+              <Text style={styles.calSubtitle}>Log in daily to earn free entries</Text>
+              <LoginCalendar loginDays={loginDays} />
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -297,10 +349,6 @@ const styles = StyleSheet.create({
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: S.sm, marginBottom: S.md },
   streakNum: { fontSize: 40, fontWeight: '800', color: C.TEXT, fontFamily: 'serif' },
   streakSub: { color: C.GREY, fontSize: 13 },
-  streakStats: { flexDirection: 'row', gap: S.xl, marginBottom: S.md },
-  streakStat: {},
-  streakStatVal: { color: C.TEXT, fontWeight: '700', fontSize: 18 },
-  streakStatLabel: { color: C.GREY, fontSize: 11 },
   achievementRow: { flexDirection: 'row', gap: S.sm, flexWrap: 'wrap' },
   achievementBadge: {
     flexDirection: 'row',
@@ -344,11 +392,4 @@ const styles = StyleSheet.create({
   calDayTextGold: { color: C.GOLD, fontWeight: '700' },
   calDayTextToday: { color: C.PINK, fontWeight: '800' },
   calDayTextMissed: { color: C.RED },
-  pastDrawRow: { flexDirection: 'row', gap: S.md, marginTop: S.sm },
-  pastDrawThumb: { width: 60, height: 60, borderRadius: 10 },
-  pastDrawInfo: { flex: 1 },
-  pastDrawMonth: { color: C.MUTED, fontSize: 11, marginBottom: 2 },
-  pastDrawPrize: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
-  pastDrawValue: { color: C.GOLD, fontSize: 12, marginTop: 2 },
-  pastDrawWinner: { color: C.PURPLE, fontSize: 12, marginTop: 2 },
 });

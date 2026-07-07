@@ -140,7 +140,7 @@ export function PurchaseSuccessScreen({ route, navigation }: Props) {
         <View style={styles.countdownCard}>
           <Text style={styles.countdownLabel}>Draw closes in</Text>
           <CountdownTimer style={styles.countdownTime} />
-          <Text style={styles.countdownSub}>Tonight at 9pm · Watch live on DRAWN</Text>
+          <Text style={styles.countdownSub}>Tonight at 9pm · Watch live on bedrawn</Text>
         </View>
 
         {/* CTA buttons */}

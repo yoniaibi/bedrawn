@@ -32,7 +32,7 @@ export function LandingScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         {/* Logo */}
-        <Text style={styles.logo}>DRAWN</Text>
+        <Text style={styles.logo}>bedrawn</Text>
         <Text style={styles.tagline}>Win designer things for pennies.</Text>
 
         {/* Countdown pill */}

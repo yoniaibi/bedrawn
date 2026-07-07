@@ -141,7 +141,7 @@ export function LiveScreen() {
               ))}
               {/* Center overlay */}
               <View style={styles.wheelCenter}>
-                <Text style={styles.wheelCenterText}>DRAWN</Text>
+                <Text style={styles.wheelCenterText}>bedrawn</Text>
               </View>
             </Animated.View>
 

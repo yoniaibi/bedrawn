@@ -14,7 +14,7 @@ import { S } from '../../theme/spacing';
 const SECTIONS = [
   {
     heading: '1. Who We Are',
-    body: 'DRAWN ("we", "us", "our") is a trading name of Drawn Ltd, registered in England and Wales. We operate the DRAWN mobile application ("the App"). This Privacy Policy explains how we collect, use, store, and protect your personal data when you use our App.',
+    body: 'bedrawn ("we", "us", "our") is a trading name of Drawn Ltd, registered in England and Wales. We operate the bedrawn mobile application ("the App"). This Privacy Policy explains how we collect, use, store, and protect your personal data when you use our App.',
   },
   {
     heading: '2. Data We Collect',
@@ -34,11 +34,11 @@ const SECTIONS = [
   },
   {
     heading: '6. Data Retention',
-    body: 'We retain your account data for as long as your account is active, plus 7 years for financial records (legal requirement). Usage data is retained for 24 months. You can request deletion of your account and associated data at any time by contacting privacy@drawn.app.',
+    body: 'We retain your account data for as long as your account is active, plus 7 years for financial records (legal requirement). Usage data is retained for 24 months. You can request deletion of your account and associated data at any time by contacting privacy@bedrawn.app.',
   },
   {
     heading: '7. Your Rights',
-    body: 'Under UK GDPR, you have the right to:\n\n• Access: request a copy of the data we hold about you.\n• Rectification: correct inaccurate data.\n• Erasure: request deletion of your data ("right to be forgotten").\n• Portability: receive your data in a structured, machine-readable format.\n• Objection: object to processing based on legitimate interests.\n• Restriction: request limited processing of your data.\n\nTo exercise any right, contact privacy@drawn.app.',
+    body: 'Under UK GDPR, you have the right to:\n\n• Access: request a copy of the data we hold about you.\n• Rectification: correct inaccurate data.\n• Erasure: request deletion of your data ("right to be forgotten").\n• Portability: receive your data in a structured, machine-readable format.\n• Objection: object to processing based on legitimate interests.\n• Restriction: request limited processing of your data.\n\nTo exercise any right, contact privacy@bedrawn.app.',
   },
   {
     heading: '8. Cookies and Tracking',
@@ -58,7 +58,7 @@ const SECTIONS = [
   },
   {
     heading: '12. Contact and Complaints',
-    body: 'For privacy-related queries, contact: privacy@drawn.app or write to our Data Protection Officer at Drawn Ltd, 100 Oxford Street, London, W1D 1LL.\n\nIf you are not satisfied with our response, you have the right to lodge a complaint with the Information Commissioner\'s Office (ICO) at ico.org.uk.',
+    body: 'For privacy-related queries, contact: privacy@bedrawn.app or write to our Data Protection Officer at Drawn Ltd, 100 Oxford Street, London, W1D 1LL.\n\nIf you are not satisfied with our response, you have the right to lodge a complaint with the Information Commissioner\'s Office (ICO) at ico.org.uk.',
   },
 ];
 

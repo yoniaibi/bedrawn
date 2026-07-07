@@ -44,7 +44,7 @@ export function BecomeSellerScreen() {
 
           {!submitted ? (
             <>
-              <Text style={styles.title}>Become a DRAWN seller</Text>
+              <Text style={styles.title}>Become a bedrawn seller</Text>
               <Text style={styles.subtitle}>
                 List your luxury items as draws and sell to thousands of buyers — while giving everyone a chance to win at a fraction of retail.
               </Text>
