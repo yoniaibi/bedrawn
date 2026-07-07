@@ -5,7 +5,8 @@ import { Resend } from 'resend';
 const { decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT);
 const ssmClient = new SSMClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
 
-const FROM = 'BeDrawn <verification@bedrawn.app>';
+const FROM_VERIFICATION = 'BeDrawn <verification@bedrawn.app>';
+const FROM_SUPPORT = 'BeDrawn Support <support@bedrawn.app>';
 
 let _resend: Resend | null = null;
 async function getResend(): Promise<Resend> {
@@ -66,7 +67,7 @@ export const handler = async (event: any): Promise<any> => {
   try {
     if (triggerSource === 'CustomEmailSender_SignUp' || triggerSource === 'CustomEmailSender_ResendCode') {
       await resend.emails.send({
-        from: FROM,
+        from: FROM_VERIFICATION,
         to: toEmail,
         subject: `Your BeDrawn verification code: ${code}`,
         html: brandedLayout(`
@@ -80,7 +81,7 @@ export const handler = async (event: any): Promise<any> => {
       });
     } else if (triggerSource === 'CustomEmailSender_ForgotPassword') {
       await resend.emails.send({
-        from: FROM,
+        from: FROM_SUPPORT,
         to: toEmail,
         subject: `Reset your BeDrawn password`,
         html: brandedLayout(`
@@ -98,7 +99,7 @@ export const handler = async (event: any): Promise<any> => {
       triggerSource === 'CustomEmailSender_VerifyUserAttribute'
     ) {
       await resend.emails.send({
-        from: FROM,
+        from: FROM_VERIFICATION,
         to: toEmail,
         subject: `Your BeDrawn verification code: ${code}`,
         html: brandedLayout(`

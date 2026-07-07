@@ -14,6 +14,7 @@ async function getResend(): Promise<Resend> {
 }
 
 export const FROM = 'BeDrawn <noreply@bedrawn.app>';
+export const FROM_SUPPORT = 'BeDrawn Support <support@bedrawn.app>';
 
 export async function sendWinnerEmail(to: string, drawTitle: string, drawId: string): Promise<void> {
   const resend = await getResend();
@@ -86,7 +87,7 @@ export async function sendSellerResolvedEmail(
 export async function sendCancelledEmail(to: string, drawTitle: string, refundPounds: string): Promise<void> {
   const resend = await getResend();
   await resend.emails.send({
-    from: FROM,
+    from: FROM_SUPPORT,
     to,
     subject: `Draw cancelled — refund issued for ${drawTitle}`,
     html: `
