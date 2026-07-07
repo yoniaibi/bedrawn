@@ -90,6 +90,12 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       } else {
         setPurchased(true);
         setWalletPence(prev => prev !== null ? prev - qty * draw.ticketPrice : null);
+        // Re-fetch draw so progress bar and soldTickets reflect the purchase
+        const drawId = getRealId(idProp);
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${drawId}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => { if (d?.draw) setDraw(d.draw as Draw); })
+          .catch(() => {});
       }
     } catch {
       setPurchaseError('Network error — please try again');
