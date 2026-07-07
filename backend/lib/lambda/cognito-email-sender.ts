@@ -5,8 +5,8 @@ import { Resend } from 'resend';
 const { decrypt } = buildClient(CommitmentPolicy.REQUIRE_ENCRYPT_ALLOW_DECRYPT);
 const ssmClient = new SSMClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
 
-const FROM_VERIFICATION = 'BeDrawn <verification@bedrawn.app>';
-const FROM_SUPPORT = 'BeDrawn Support <support@bedrawn.app>';
+const FROM_VERIFICATION = 'bedrawn <verification@bedrawn.app>';
+const FROM_SUPPORT = 'bedrawn Support <support@bedrawn.app>';
 
 let _resend: Resend | null = null;
 async function getResend(): Promise<Resend> {
@@ -29,14 +29,14 @@ function brandedLayout(content: string): string {
   return `
     <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0D0B14;color:#fff;border-radius:12px;overflow:hidden">
       <div style="background:linear-gradient(135deg,#FF2356 0%,#FF4E6A 100%);padding:28px 40px;display:flex;align-items:center;gap:12px">
-        <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#fff">BeDrawn</span>
+        <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;color:#fff">bedrawn</span>
       </div>
       <div style="padding:32px 40px">
         ${content}
       </div>
       <div style="padding:16px 40px;border-top:1px solid #2A2440">
         <p style="font-size:12px;color:#4B5563;margin:0">
-          BeDrawn · Every night at 9pm ·
+          bedrawn · Every night at 9pm ·
           <a href="https://bedrawn.app" style="color:#FF2356;text-decoration:none">bedrawn.app</a>
         </p>
       </div>
@@ -69,24 +69,24 @@ export const handler = async (event: any): Promise<any> => {
       await resend.emails.send({
         from: FROM_VERIFICATION,
         to: toEmail,
-        subject: `Your BeDrawn verification code: ${code}`,
+        subject: `Your bedrawn verification code: ${code}`,
         html: brandedLayout(`
           <h2 style="margin:0 0 8px;font-size:22px;font-weight:700">Verify your email</h2>
-          <p style="color:#9CA3AF;margin:0 0 28px;font-size:15px">Hi ${name}, welcome to BeDrawn. Enter this code to confirm your account:</p>
+          <p style="color:#9CA3AF;margin:0 0 28px;font-size:15px">Hi ${name}, welcome to bedrawn. Enter this code to confirm your account:</p>
           <div style="background:#1A1628;border:1px solid #2A2440;border-radius:12px;padding:24px;text-align:center;margin-bottom:28px">
             <span style="font-size:36px;font-weight:800;letter-spacing:12px;color:#FF2356">${code}</span>
           </div>
-          <p style="color:#4B5563;font-size:13px;margin:0">This code expires in 24 hours. If you didn't create a BeDrawn account, you can safely ignore this email.</p>
+          <p style="color:#4B5563;font-size:13px;margin:0">This code expires in 24 hours. If you didn't create a bedrawn account, you can safely ignore this email.</p>
         `),
       });
     } else if (triggerSource === 'CustomEmailSender_ForgotPassword') {
       await resend.emails.send({
         from: FROM_SUPPORT,
         to: toEmail,
-        subject: `Reset your BeDrawn password`,
+        subject: `Reset your bedrawn password`,
         html: brandedLayout(`
           <h2 style="margin:0 0 8px;font-size:22px;font-weight:700">Reset your password</h2>
-          <p style="color:#9CA3AF;margin:0 0 28px;font-size:15px">Hi ${name}, use this code to set a new password for your BeDrawn account:</p>
+          <p style="color:#9CA3AF;margin:0 0 28px;font-size:15px">Hi ${name}, use this code to set a new password for your bedrawn account:</p>
           <div style="background:#1A1628;border:1px solid #2A2440;border-radius:12px;padding:24px;text-align:center;margin-bottom:28px">
             <span style="font-size:36px;font-weight:800;letter-spacing:12px;color:#FF2356">${code}</span>
           </div>
@@ -101,7 +101,7 @@ export const handler = async (event: any): Promise<any> => {
       await resend.emails.send({
         from: FROM_VERIFICATION,
         to: toEmail,
-        subject: `Your BeDrawn verification code: ${code}`,
+        subject: `Your bedrawn verification code: ${code}`,
         html: brandedLayout(`
           <h2 style="margin:0 0 8px;font-size:22px;font-weight:700">Verify your new email</h2>
           <p style="color:#9CA3AF;margin:0 0 28px;font-size:15px">Hi ${name}, enter this code to verify your updated email address:</p>

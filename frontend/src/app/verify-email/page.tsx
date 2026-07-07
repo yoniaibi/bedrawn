@@ -91,7 +91,7 @@ function VerifyEmailContent() {
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
+          <img src="/logo-ticket.svg" alt="bedrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
 
         <div style={{ width: 56, height: 56, borderRadius: 12, background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(124,58,237,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 26, color: 'var(--purple)' }}>✉</div>

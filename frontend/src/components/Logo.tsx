@@ -12,7 +12,7 @@ export default function Logo({ width = 160, bg = '#FFFFFF' }: LogoProps) {
       viewBox="0 0 400 140"
       width={width}
       height={height}
-      aria-label="BeDrawn"
+      aria-label="bedrawn"
     >
       <defs>
         <clipPath id="ticket-clip">
@@ -56,7 +56,7 @@ export default function Logo({ width = 160, bg = '#FFFFFF' }: LogoProps) {
           fontFamily="Georgia, 'Times New Roman', serif"
           fontSize="46" fontWeight="bold" fontStyle="italic"
           letterSpacing="-1.5" fill="#1C1917" textAnchor="middle"
-        >BeDrawn</text>
+        >bedrawn</text>
         {/* Winner dot in stub */}
         <circle cx="341" cy="70" r="17" fill="#FFFFFF" />
       </g>

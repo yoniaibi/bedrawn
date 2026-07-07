@@ -49,7 +49,7 @@ function LoginContent() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
+          <img src="/logo-ticket.svg" alt="bedrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
 
         {justVerified && (

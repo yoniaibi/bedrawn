@@ -22,7 +22,10 @@ import { injectAuth, injectAdminAuth, mockApi } from './helpers';
 // ─── Shared mock data ────────────────────────────────────────────────────────
 
 const DRAW = {
-  id: '8df1fe4b-1109-4f21-afeb-1cf7eea6011d',
+  // '2' is one of the FALLBACK_IDS in /draw/[id]/page.tsx generateStaticParams —
+  // required so the dev server (output: export) accepts the route param.
+  // The API responses for it are fully mocked below.
+  id: '2',
   title: 'Gucci Dionysus GG Supreme Shoulder Bag',
   seller: 'drawnofficial',
   sellerEmoji: '',
@@ -243,7 +246,8 @@ test.describe('Draw detail — view and enter', () => {
     });
     await page.locator('button').filter({ hasText: 'Enter draw' }).first().click();
     await page.waitForTimeout(800);
-    const confirmBtn = page.locator('button').filter({ hasText: /confirm|buy|enter/i }).first();
+    // Scope to the purchase sheet — the sticky-bar "Enter draw" button sits behind the modal overlay
+    const confirmBtn = page.locator('.purchase-sheet').locator('button').filter({ hasText: /confirm/i }).first();
     if (await confirmBtn.isEnabled()) {
       await confirmBtn.click();
       await page.waitForTimeout(2000);
@@ -353,8 +357,9 @@ test.describe('Tickets — my entries', () => {
   });
 
   test('shows My Tickets header', async ({ page }) => {
+    // Scope to main — the hidden desktop top-nav also contains a "Tickets" link
     await expect(
-      page.locator('text=My Tickets').or(page.locator('text=Tickets')).first()
+      page.locator('main').locator('text=My Tickets').first()
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -388,8 +393,9 @@ test.describe('Orders — history', () => {
   });
 
   test('shows Orders or Entries header', async ({ page }) => {
+    // Scope to main — the hidden desktop top-nav also matches "Tickets"
     await expect(
-      page.locator('text=Orders').or(page.locator('text=My Entries')).or(page.locator('text=Tickets')).first()
+      page.locator('main').locator('text=Orders').or(page.locator('main').locator('text=My Entries')).first()
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -407,6 +413,7 @@ test.describe('Notifications', () => {
     title: '🎉 You won!',
     body: 'You won the draw for: Gucci Dionysus',
     drawId: DRAW.id,
+    drawTitle: DRAW.title, // the notifications page renders drawTitle as the body line
     read: false,
     createdAt: new Date().toISOString(),
   };
@@ -591,18 +598,22 @@ test.describe('Seller — list item (5-step wizard)', () => {
   });
 
   test('advancing to Details step shows Condition + Category', async ({ page }) => {
-    // Click a type then click through Photos to reach Details (step 2)
-    const singleBtn = page.locator('button').filter({ hasText: 'Single item' }).first();
-    if (await singleBtn.count() > 0) {
-      await singleBtn.click();
-      const nextBtn = page.locator('button').filter({ hasText: 'Next' }).first();
-      if (await nextBtn.count() > 0) {
-        await nextBtn.click(); // → Photos
-        await nextBtn.click(); // → Details
-        await page.waitForTimeout(500);
-        await expect(page.locator('text=Condition').or(page.locator('text=Category')).first()).toBeVisible({ timeout: 3000 });
-      }
-    }
+    // Photos step requires an uploaded hero image before advancing — mock the upload flow
+    await mockApi(page, '/upload-url', { uploadUrl: 'https://mock-s3.local/upload', publicUrl: 'https://mock-s3.local/photo.jpg' });
+    await page.route('https://mock-s3.local/**', route => route.fulfill({ status: 200, body: '' }));
+
+    // Click a type then upload a photo to reach Details (step 2)
+    await page.locator('button').filter({ hasText: 'Single item' }).first().click();
+    const nextBtn = page.locator('button').filter({ hasText: 'Next' }).first();
+    await nextBtn.click(); // → Photos
+    await page.waitForTimeout(400);
+    await page.locator('input[type="file"]').first().setInputFiles({
+      name: 'photo.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('fake-image-bytes'),
+    });
+    await page.waitForTimeout(800);
+    await nextBtn.click(); // → Details
+    await page.waitForTimeout(500);
+    await expect(page.locator('text=Condition').or(page.locator('text=Category')).first()).toBeVisible({ timeout: 3000 });
   });
 
   test('shows pricing step with Retail value input', async ({ page }) => {
@@ -631,10 +642,19 @@ test.describe('Seller — dashboard', () => {
       onboardingUrl: null,
     });
     await mockApi(page, '/seller/stats', {
-      totalRevenuePence: 50000,
-      activeDraws: 2,
-      soldTickets: 300,
-      totalDraws: 5,
+      totalEarningsPence: 50000,
+      pendingPayoutPence: 12000,
+      draws: [
+        {
+          id: DRAW.id,
+          title: DRAW.title,
+          soldTickets: DRAW.soldTickets,
+          totalTickets: DRAW.totalTickets,
+          closingDate: DRAW.closingDate,
+          sellerRevenuePence: 25000,
+          status: 'open',
+        },
+      ],
     });
     await page.goto('/seller/dashboard');
     await page.waitForTimeout(3000);
@@ -841,7 +861,8 @@ test.describe('Navigation — bottom tab bar', () => {
   });
 
   test('Tickets tab navigates to /tickets', async ({ page }) => {
-    const ticketsTab = page.locator('a[href="/tickets"]').or(page.locator('nav').locator('text=Tickets')).first();
+    // :visible — desktop top-nav link is hidden on the mobile viewport (BottomNav is used there)
+    const ticketsTab = page.locator('a[href="/tickets"]:visible').first();
     if (await ticketsTab.count() > 0) {
       await ticketsTab.click();
       await page.waitForTimeout(1000);
@@ -900,8 +921,9 @@ test.describe('Live page', () => {
   });
 
   test('shows LIVE header and 9pm Draw', async ({ page }) => {
+    // Scope to main — the hidden desktop top-nav also contains a "Live" link
     await expect(
-      page.locator('text=LIVE').or(page.locator('text=9pm Draw')).or(page.locator('text=9pm')).first()
+      page.locator('main').locator('text=9pm Draw').or(page.locator('main').locator('text=LIVE')).first()
     ).toBeVisible({ timeout: 8000 });
   });
 });
@@ -928,8 +950,9 @@ test.describe('Landing page', () => {
   });
 
   test('shows How it works nav link', async ({ page }) => {
+    // :visible — the header nav link is hidden on mobile; the footer link is always shown
     await expect(
-      page.locator('a[href="#how"]').or(page.locator('text=How it works')).first()
+      page.locator('a[href="#how"]:visible').first()
     ).toBeVisible({ timeout: 5000 });
   });
 

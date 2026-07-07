@@ -1,6 +1,32 @@
 import { test, expect } from '@playwright/test';
 import { injectAuth, mockApi } from './helpers';
 
+// The live API is seeded with UUID draws, so /draws/1 no longer exists —
+// mock the detail payload for the static fallback route /draw/1.
+const CHANEL_DRAW = {
+  id: '1',
+  title: 'Chanel Classic Flap Bag — Black Caviar',
+  seller: 'luxe_closet',
+  sellerEmoji: '💎',
+  ticketPrice: 50,     // pence → "50p"
+  retailValue: 6800,   // pounds → "£6,800"
+  totalTickets: 13600,
+  soldTickets: 11220,
+  category: 'Bags',
+  style: 'Womenswear',
+  condition: 'Like New',
+  isBundle: false,
+  isClosingTonight: true,
+  isVerified: true,
+  reserveTickets: 9520,
+  description: 'Iconic Chanel Classic Flap in black caviar leather with gold hardware.',
+  imageUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop',
+  tags: ['Chanel', 'Designer'],
+  status: 'open',
+  closingDate: '2026-12-31',
+  userTickets: 0,
+};
+
 test.describe('Draw static routes', () => {
   test('/draw/1 returns 200', async ({ page }) => {
     expect((await page.request.get('/draw/1')).status()).not.toBe(404);
@@ -31,6 +57,7 @@ test.describe('Draw detail — unauthenticated redirect', () => {
 test.describe('Draw detail — authenticated', () => {
   test.beforeEach(async ({ page }) => {
     await injectAuth(page);
+    await mockApi(page, '/draws/1', { draw: CHANEL_DRAW });
     await page.goto('/draw/1');
     await page.waitForTimeout(2000);
   });
@@ -73,6 +100,7 @@ test.describe('Draw detail — authenticated', () => {
 test.describe('Purchase page — authenticated', () => {
   test.beforeEach(async ({ page }) => {
     await injectAuth(page);
+    await mockApi(page, '/draws/1', { draw: CHANEL_DRAW });
     await mockApi(page, '/wallet/balance', { balancePence: 5000 });
     await page.goto('/draw/1/purchase');
     await page.waitForTimeout(2500);

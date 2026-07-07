@@ -28,7 +28,7 @@ export default function GrandDrawPage() {
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p className="serif" style={{ fontSize: 24, color: 'var(--gold)', margin: 0 }}>BeDrawn</p>
+          <p className="serif" style={{ fontSize: 24, color: 'var(--gold)', margin: 0 }}>bedrawn</p>
           <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--white)' }}>{monthName}</p>
         </div>
 

@@ -5,39 +5,39 @@ import Link from 'next/link';
 const sections = [
   {
     title: '1. Introduction',
-    body: 'Welcome to BeDrawn. By accessing or using our platform, you agree to be bound by these Terms of Service. BeDrawn is a luxury goods raffle platform operated from London, United Kingdom. These terms govern your use of the platform as a buyer, seller, or guest.',
+    body: 'Welcome to bedrawn. By accessing or using our platform, you agree to be bound by these Terms of Service. bedrawn is a luxury goods raffle platform operated from London, United Kingdom. These terms govern your use of the platform as a buyer, seller, or guest.',
   },
   {
     title: '2. Eligibility',
-    body: 'You must be at least 18 years of age to participate in draws on BeDrawn. By creating an account, you confirm that you meet this requirement. Draws on BeDrawn are available to residents of the United Kingdom only, unless otherwise stated.',
+    body: 'You must be at least 18 years of age to participate in draws on bedrawn. By creating an account, you confirm that you meet this requirement. Draws on bedrawn are available to residents of the United Kingdom only, unless otherwise stated.',
   },
   {
     title: '3. How Draws Work',
-    body: 'Each draw on BeDrawn operates on a ticket raffle basis. Buyers purchase tickets at a fixed price per ticket. All draws close at 9pm GMT each night. Winners are selected randomly from all eligible ticket holders at close of draw. The probability of winning is proportional to the number of tickets held.',
+    body: 'Each draw on bedrawn operates on a ticket raffle basis. Buyers purchase tickets at a fixed price per ticket. All draws close at 9pm GMT each night. Winners are selected randomly from all eligible ticket holders at close of draw. The probability of winning is proportional to the number of tickets held.',
   },
   {
     title: '4. Free Postal Entry',
-    body: 'In compliance with UK gambling regulations, every draw on BeDrawn offers a free method of entry by post. Instructions for postal entry are available on each draw\'s detail page. Postal entries are entered into the same pool as paid ticket holders and have an equal chance of winning.',
+    body: 'In compliance with UK gambling regulations, every draw on bedrawn offers a free method of entry by post. Instructions for postal entry are available on each draw\'s detail page. Postal entries are entered into the same pool as paid ticket holders and have an equal chance of winning.',
   },
   {
     title: '5. Wallet & Payments',
-    body: 'BeDrawn operates a prepaid wallet system. Funds added to your wallet are used to purchase draw tickets. Wallet top-ups are non-refundable except where required by law. Unused wallet balances can be withdrawn upon account closure, subject to identity verification.',
+    body: 'bedrawn operates a prepaid wallet system. Funds added to your wallet are used to purchase draw tickets. Wallet top-ups are non-refundable except where required by law. Unused wallet balances can be withdrawn upon account closure, subject to identity verification.',
   },
   {
     title: '6. Seller Terms',
-    body: 'Sellers on BeDrawn must complete identity verification before any listings go live. Sellers agree that items listed accurately represent the item\'s condition and authenticity. Misrepresentation may result in listing removal, account suspension, and liability for liquidated damages. Sellers receive approximately 77% of total ticket revenue from their draw upon close.',
+    body: 'Sellers on bedrawn must complete identity verification before any listings go live. Sellers agree that items listed accurately represent the item\'s condition and authenticity. Misrepresentation may result in listing removal, account suspension, and liability for liquidated damages. Sellers receive approximately 77% of total ticket revenue from their draw upon close.',
   },
   {
     title: '7. Intellectual Property',
-    body: 'All content on BeDrawn, including logos, design, and copy, is the property of BeDrawn and may not be reproduced without written permission. User-generated content uploaded to the platform (including photos) grants BeDrawn a licence to display and promote that content in connection with the platform.',
+    body: 'All content on bedrawn, including logos, design, and copy, is the property of bedrawn and may not be reproduced without written permission. User-generated content uploaded to the platform (including photos) grants bedrawn a licence to display and promote that content in connection with the platform.',
   },
   {
     title: '8. Limitation of Liability',
-    body: 'BeDrawn is not liable for losses arising from technical issues, delayed delivery of prizes, or third-party seller conduct. Our liability to you in any circumstances is limited to the amount you paid for tickets in the relevant draw. Nothing in these terms limits liability for fraud or death or personal injury caused by negligence.',
+    body: 'bedrawn is not liable for losses arising from technical issues, delayed delivery of prizes, or third-party seller conduct. Our liability to you in any circumstances is limited to the amount you paid for tickets in the relevant draw. Nothing in these terms limits liability for fraud or death or personal injury caused by negligence.',
   },
   {
     title: '9. Changes to Terms',
-    body: 'BeDrawn reserves the right to update these terms at any time. Continued use of the platform after changes constitutes acceptance. We will notify you of material changes via email or in-app notification.',
+    body: 'bedrawn reserves the right to update these terms at any time. Continued use of the platform after changes constitutes acceptance. We will notify you of material changes via email or in-app notification.',
   },
 ];
 

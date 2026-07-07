@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { injectAuth, mockApi } from './helpers';
+import { injectAuth, mockApi, API_BASE } from './helpers';
 
 const MOCK_DRAWS = [
   {
@@ -69,8 +69,8 @@ test.describe('Home page — API-connected draws', () => {
   });
 
   test('tonight strip shows correct count', async ({ page }) => {
-    // Both mock draws have isClosingTonight=true → "2 draws closing tonight"
-    await expect(page.locator('text=draws closing tonight').first()).toBeVisible({ timeout: 5000 });
+    // Both mock draws have isClosingTonight=true → "2 draws drawing tonight at 9pm"
+    await expect(page.locator('text=draws drawing tonight at 9pm').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('category pill filters work', async ({ page }) => {
@@ -96,12 +96,17 @@ test.describe('Home page — API-connected draws', () => {
 });
 
 test.describe('Draw detail — real API draw UUID', () => {
-  const DRAW_ID = '8df1fe4b-1109-4f21-afeb-1cf7eea6011d';
-
+  // With `output: export`, the dev server only accepts /draw/[id] params returned by
+  // generateStaticParams (live API ids + numeric fallbacks). The live seed data changes,
+  // so grab a real UUID at runtime and mock its detail payload with our fixture.
   test.beforeEach(async ({ page }) => {
     await injectAuth(page);
-    await mockApi(page, `/draws/${DRAW_ID}`, { draw: { ...MOCK_DRAWS[0], userTickets: 0 } });
-    await page.goto(`/draw/${DRAW_ID}`);
+    const res = await page.request.get(`${API_BASE}/draws`);
+    const data = res.ok() ? await res.json() : { draws: [] };
+    const drawId: string | undefined = data.draws?.[0]?.id;
+    test.skip(!drawId, 'live API returned no draws — cannot exercise a UUID route');
+    await mockApi(page, `/draws/${drawId}`, { draw: { ...MOCK_DRAWS[0], id: drawId, userTickets: 0 } });
+    await page.goto(`/draw/${drawId}`);
     await page.waitForTimeout(2500);
   });
 
@@ -117,10 +122,9 @@ test.describe('Draw detail — real API draw UUID', () => {
     await expect(page.locator('text=1,850').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('shows CLOSING TONIGHT badge', async ({ page }) => {
-    await expect(
-      page.locator('text=CLOSING TONIGHT').or(page.locator('text=closing tonight')).first()
-    ).toBeVisible({ timeout: 5000 });
+  test('shows Drawing Tonight badge', async ({ page }) => {
+    // Detail page badge is "Drawing Tonight 9pm" when isClosingTonight=true
+    await expect(page.locator('text=Drawing Tonight').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('shows Enter draw CTA with price', async ({ page }) => {

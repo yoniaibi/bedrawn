@@ -30,7 +30,7 @@ export function TopNav() {
         display: 'flex', alignItems: 'center', gap: 0,
       }}>
         {/* Logo */}
-        <Link href="/home" aria-label="BeDrawn home" style={{ textDecoration: 'none', flexShrink: 0, marginRight: 40, display: 'flex', alignItems: 'center' }}>
+        <Link href="/home" aria-label="bedrawn home" style={{ textDecoration: 'none', flexShrink: 0, marginRight: 40, display: 'flex', alignItems: 'center' }}>
           <Logo width={126} bg="#FAFAF8" />
         </Link>
 

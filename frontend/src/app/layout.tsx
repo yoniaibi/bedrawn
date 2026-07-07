@@ -18,7 +18,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: 'BeDrawn — Win luxury items for pennies',
+  title: 'bedrawn — Win luxury items for pennies',
   description: 'Luxury raffle platform. Real items. Verified sellers. Every night at 9pm.',
 };
 

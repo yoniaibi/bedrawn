@@ -56,7 +56,7 @@ export default function InterestsPage() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
+          <img src="/logo-ticket.svg" alt="bedrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
 
         <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', textAlign: 'center', margin: '0 0 8px' }}>What are you into?</p>

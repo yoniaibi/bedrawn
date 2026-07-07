@@ -115,7 +115,7 @@ export async function injectAdminAuth(page: Page) {
   await setupAuth(page, ADMIN_ACCESS_TOKEN, 'adminuser', 'yoniaibi@gmail.com');
 }
 
-const API_BASE = 'https://uctmxxb939.execute-api.eu-west-1.amazonaws.com';
+export const API_BASE = 'https://uctmxxb939.execute-api.eu-west-1.amazonaws.com';
 
 /** Mock an API call — intercepts only the real API host to avoid capturing page navigations */
 export async function mockApi(page: Page, path: string, body: unknown, status = 200) {

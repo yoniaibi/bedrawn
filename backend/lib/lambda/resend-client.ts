@@ -13,8 +13,8 @@ async function getResend(): Promise<Resend> {
   return _resend;
 }
 
-export const FROM = 'BeDrawn <noreply@bedrawn.app>';
-export const FROM_SUPPORT = 'BeDrawn Support <support@bedrawn.app>';
+export const FROM = 'bedrawn <noreply@bedrawn.app>';
+export const FROM_SUPPORT = 'bedrawn <support@bedrawn.app>';
 
 export async function sendWinnerEmail(to: string, drawTitle: string, drawId: string): Promise<void> {
   const resend = await getResend();
@@ -28,14 +28,14 @@ export async function sendWinnerEmail(to: string, drawTitle: string, drawId: str
           <h1 style="margin:0;font-size:28px">You won! 🎉</h1>
         </div>
         <div style="padding:32px 40px">
-          <p style="font-size:16px;line-height:1.6">Congratulations — you've been selected as the winner of the <strong>${drawTitle}</strong> draw on BeDrawn.</p>
+          <p style="font-size:16px;line-height:1.6">Congratulations — you've been selected as the winner of the <strong>${drawTitle}</strong> draw on bedrawn.</p>
           <p style="font-size:15px;color:#9CA3AF">The seller has been notified and will be in touch within 24 hours to arrange delivery.</p>
           <a href="https://bedrawn.app/draw/${drawId}/winner" style="display:inline-block;margin-top:24px;padding:14px 28px;background:#EC4899;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">
             View your win →
           </a>
         </div>
         <div style="padding:16px 40px;border-top:1px solid #2A2440">
-          <p style="font-size:12px;color:#4B5563;margin:0">BeDrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#EC4899">bedrawn.app</a></p>
+          <p style="font-size:12px;color:#4B5563;margin:0">bedrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#EC4899">bedrawn.app</a></p>
         </div>
       </div>
     `,
@@ -77,7 +77,7 @@ export async function sendSellerResolvedEmail(
           </a>
         </div>
         <div style="padding:16px 40px;border-top:1px solid #2A2440">
-          <p style="font-size:12px;color:#4B5563;margin:0">BeDrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#8B5CF6">bedrawn.app</a></p>
+          <p style="font-size:12px;color:#4B5563;margin:0">bedrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#8B5CF6">bedrawn.app</a></p>
         </div>
       </div>
     `,
@@ -97,13 +97,13 @@ export async function sendCancelledEmail(to: string, drawTitle: string, refundPo
         </div>
         <div style="padding:32px 40px">
           <p style="font-size:16px;line-height:1.6">The draw for <strong>${drawTitle}</strong> did not reach its reserve and has been cancelled.</p>
-          <p style="font-size:16px">A refund of <strong style="color:#10B981">£${refundPounds}</strong> has been added to your BeDrawn wallet.</p>
+          <p style="font-size:16px">A refund of <strong style="color:#10B981">£${refundPounds}</strong> has been added to your bedrawn wallet.</p>
           <a href="https://bedrawn.app/account/wallet" style="display:inline-block;margin-top:24px;padding:14px 28px;background:#EC4899;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">
             View wallet →
           </a>
         </div>
         <div style="padding:16px 40px;border-top:1px solid #2A2440">
-          <p style="font-size:12px;color:#4B5563;margin:0">BeDrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#EC4899">bedrawn.app</a></p>
+          <p style="font-size:12px;color:#4B5563;margin:0">bedrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#EC4899">bedrawn.app</a></p>
         </div>
       </div>
     `,

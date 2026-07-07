@@ -56,7 +56,7 @@ export default function SignupPage() {
       <div style={{ width: '100%', maxWidth: 400 }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-ticket.svg" alt="BeDrawn" style={{ height: 48, width: 'auto' }} />
+          <img src="/logo-ticket.svg" alt="bedrawn" style={{ height: 48, width: 'auto' }} />
         </Link>
         <p style={{ textAlign: 'center', color: 'var(--grey)', fontSize: 15, margin: '0 0 32px' }}>Create your account</p>
 
@@ -104,7 +104,7 @@ export default function SignupPage() {
               {agreed && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>✓</span>}
             </button>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)', lineHeight: 1.4 }}>
-              I agree to BeDrawn&apos;s{' '}
+              I agree to bedrawn&apos;s{' '}
               <Link href="/legal/terms" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Terms of Service</Link>
               {' '}and{' '}
               <Link href="/legal/privacy" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Privacy Policy</Link>
