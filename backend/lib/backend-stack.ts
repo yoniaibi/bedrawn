@@ -396,6 +396,7 @@ export class BackendStack extends cdk.Stack {
     // Admin — manual draw resolution
     const adminResolveDrawFn = new nodejs.NodejsFunction(this, 'AdminResolveDraw', {
       ...commonProps,
+      timeout: cdk.Duration.seconds(15),
       environment: { ...commonEnv, ADMIN_EMAILS: adminEmails, RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full', USER_POOL_ID: userPool.userPoolId },
       entry: path.join(__dirname, 'lambda/admin-resolve-draw.ts'),
     });
