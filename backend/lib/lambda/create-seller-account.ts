@@ -14,6 +14,28 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   catch { return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Invalid JSON body' }) }; }
   const { returnUrl, statusCheck } = body as { returnUrl?: string; statusCheck?: boolean };
 
+  // DEV_SEED: skip Stripe entirely and auto-approve the seller. Remove before go-live.
+  if (process.env.DEV_SEED === 'true') {
+    await db.send(new PutCommand({
+      TableName: process.env.TABLE_NAME,
+      Item: {
+        PK: `USER#${userId}`,
+        SK: 'STRIPE_ACCOUNT',
+        stripeAccountId: 'dev_auto_approved',
+        chargesEnabled: true,
+        payoutsEnabled: true,
+        status: 'dev_approved',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+    return {
+      statusCode: 200,
+      headers: cors,
+      body: JSON.stringify({ stripeAccountId: 'dev_auto_approved', chargesEnabled: true, payoutsEnabled: true, onboardingUrl: null }),
+    };
+  }
+
   // Fetch existing DB record first
   const existing = await db.send(new GetCommand({
     TableName: process.env.TABLE_NAME,

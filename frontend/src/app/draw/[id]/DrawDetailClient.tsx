@@ -294,13 +294,25 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
           </div>
 
           {/* Free postal entry info */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
-            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Free postal entry</p>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
-              One postcard = one entry, equal odds to paid tickets. Write your name, email, and this draw&apos;s title on a postcard and send to our postal address.<br />
-              <strong style={{ color: 'var(--gold)' }}>Postal address coming soon — will be published before launch.</strong>
-            </p>
-          </div>
+          {draw.status === 'open' && (
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Free postal entry</p>
+                <Link href={`/draw/${draw.id}/postal`} style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 12 }}>
+                  Print form →
+                </Link>
+              </div>
+              <p style={{ margin: '0 0 6px', fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
+                No purchase necessary. One postal entry = equal odds to a paid ticket.
+              </p>
+              {draw.postalDeadline && (
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
+                  Postal deadline: {new Date(draw.postalDeadline + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {draw.earlyClose && <span style={{ color: 'var(--grey)', fontWeight: 400 }}> (early close)</span>}
+                </p>
+              )}
+            </div>
+          )}
 
         </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Draw } from '@/lib/mockData';
@@ -20,6 +21,26 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
 
   const sellerInitial = (draw.sellerName || draw.seller || '?').charAt(0).toUpperCase();
   const sellerDisplayName = draw.sellerName ? draw.sellerName.split(' ')[0] : `@${draw.seller}`;
+
+  // Threshold countdown helpers
+  const reserveAbs = (draw as any).reserveTickets ?? Math.ceil(draw.totalTickets * ((draw as any).minThreshold ?? 0.5));
+  const ticketsNeeded = Math.max(0, reserveAbs - draw.soldTickets);
+  const reserveMet = ticketsNeeded === 0;
+  const soldOut = draw.soldTickets >= draw.totalTickets;
+  const urgentThreshold = ticketsNeeded > 0 && ticketsNeeded <= 100;
+
+  let thresholdLine: React.ReactNode;
+  if (soldOut) {
+    thresholdLine = <p style={{ margin: '0 0 5px', fontSize: 10, color: '#8B5CF6', fontWeight: 600 }}>Sold out · resolves soon</p>;
+  } else if (reserveMet) {
+    thresholdLine = <p style={{ margin: '0 0 5px', fontSize: 10, color: '#059669', fontWeight: 600 }}>✓ Draw confirmed</p>;
+  } else {
+    thresholdLine = (
+      <p style={{ margin: '0 0 5px', fontSize: 10, color: urgentThreshold ? '#FF2356' : '#A8A29E', fontWeight: urgentThreshold ? 700 : 400 }}>
+        {ticketsNeeded.toLocaleString()} more tickets needed to confirm
+      </p>
+    );
+  }
 
   return (
     <Link href={`/draw/${draw.id}`} style={{ textDecoration: 'none', display: 'block', width: fullWidth ? '100%' : undefined }}>
@@ -81,7 +102,20 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
             )}
           </div>
 
-          {draw.isVerified && (
+          {(draw as any).auth?.status === 'passed' ? (
+            <span style={{
+              position: 'absolute', top: 8, right: 8,
+              background: 'rgba(139,92,246,0.22)',
+              border: '1px solid rgba(139,92,246,0.45)',
+              color: '#FFFFFF',
+              fontSize: 9, fontWeight: 700, padding: '3px 8px',
+              borderRadius: 999, letterSpacing: '0.06em',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}>
+              ✓ AUTH
+            </span>
+          ) : draw.isVerified ? (
             <span style={{
               position: 'absolute', top: 8, right: 8,
               background: 'rgba(139,92,246,0.22)',
@@ -94,7 +128,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
             }}>
               ✓ verified
             </span>
-          )}
+          ) : null}
 
           {scarce && (
             <span style={{
@@ -155,6 +189,9 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
               transition: 'width 500ms ease-out',
             }} />
           </div>
+          {/* Threshold countdown */}
+          {thresholdLine}
+
           {/* Meta row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
             {/* Seller pill — navigates to seller profile */}

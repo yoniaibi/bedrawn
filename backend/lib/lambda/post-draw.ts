@@ -29,9 +29,9 @@ async function submitToLegitApp(drawId: string, legitCategory: string, imageUrls
   if (!res.ok) throw new Error(`LegitApp ${res.status}: ${await res.text()}`);
   const data: any = await res.json();
   const submissionId: string = data.id ?? data.submission_id ?? '';
-  const db2 = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-  await db2.send(new UpdateCommand({
-    TableName: process.env.TABLE_NAME!,
+  // Reuse module-level db — avoids opening a second TCP connection pool per invocation
+  await db.send(new UpdateCommand({
+    TableName: TABLE,
     Key: { PK: `DRAW#${drawId}`, SK: 'META' },
     UpdateExpression: 'SET legitSubmissionId = :id, updatedAt = :now',
     ExpressionAttributeValues: { ':id': submissionId, ':now': new Date().toISOString() },
@@ -55,6 +55,11 @@ function getUKClosingDate(): string {
     .split('/').reverse().join('-');
 }
 
+function ukDatePlusDays(days: number): string {
+  const d = new Date(Date.now() + days * 86_400_000);
+  return d.toLocaleDateString('en-GB', { timeZone: 'Europe/London' }).split('/').reverse().join('-');
+}
+
 function parseTicketPricePence(raw: unknown): number {
   const s = String(raw ?? '').trim();
   if (s.endsWith('p')) return parseInt(s, 10);
@@ -73,18 +78,42 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   const sellerHandle = email.split('@')[0] || userId.slice(0, 8);
 
   // Seller must have a verified Stripe account
-  const sellerRecord = await db.send(new GetCommand({
+  let sellerRecord = await db.send(new GetCommand({
     TableName: TABLE,
     Key: { PK: `USER#${userId}`, SK: 'STRIPE_ACCOUNT' },
   }));
+
   if (!sellerRecord.Item?.chargesEnabled) {
-    return {
-      statusCode: 403, headers: cors,
-      body: JSON.stringify({ error: 'Complete Stripe seller verification before listing.' }),
-    };
+    // DEV_SEED: auto-approve seller so listing works without KYC. Remove before go-live.
+    if (process.env.DEV_SEED === 'true') {
+      try {
+        await db.send(new PutCommand({
+          TableName: TABLE,
+          Item: {
+            PK: `USER#${userId}`,
+            SK: 'STRIPE_ACCOUNT',
+            stripeAccountId: 'dev_auto_approved',
+            chargesEnabled: true,
+            payoutsEnabled: true,
+            status: 'dev_approved',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          ConditionExpression: 'attribute_not_exists(PK)',
+        }));
+      } catch { /* already exists — fine */ }
+      sellerRecord = { Item: { stripeAccountId: 'dev_auto_approved', chargesEnabled: true }, $metadata: {} } as typeof sellerRecord;
+    } else {
+      return {
+        statusCode: 403, headers: cors,
+        body: JSON.stringify({ error: 'Complete Stripe seller verification before listing.' }),
+      };
+    }
   }
 
-  const body = JSON.parse(event.body ?? '{}');
+  let body: Record<string, unknown>;
+  try { body = JSON.parse(event.body ?? '{}'); }
+  catch { return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Invalid JSON body' }) }; }
   const {
     title,
     description = '',
@@ -98,6 +127,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     reservePct,        // seller-chosen reserve: 25 | 50 | 75 | 100 (default 25)
     imageUrls = [],
     verificationRequested = false,
+    drawDurationDays = 30, // seller-chosen: 14 / 21 / 30 / 60
   } = body;
 
   if (!title || !ticketPrice || !totalTickets || !retailValue) {
@@ -121,8 +151,16 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   const drawId = randomUUID();
   const now = new Date().toISOString();
 
+  // Enforce minimum 7-day listing period; clamp seller choice to valid options
+  const durationDays = Math.max(7, [14, 21, 30, 60].includes(Number(drawDurationDays)) ? Number(drawDurationDays) : 30);
+  const endsAt = ukDatePlusDays(durationDays);
+  const postalDeadline = ukDatePlusDays(durationDays - 4); // 4-day postal buffer before close
+
   const legitInfo = LEGIT_FEE_MAP[String(category)];
-  const needsVerification = !!verificationRequested && !!legitInfo;
+  // Require at least one image — draw can't be submitted for verification without photos,
+  // and we must not write pending_verification if no submission will be sent.
+  const hasImages = Array.isArray(imageUrls) && (imageUrls as string[]).length > 0;
+  const needsVerification = !!verificationRequested && !!legitInfo && hasImages;
 
   const draw: Record<string, unknown> = {
     PK: `DRAW#${drawId}`,
@@ -140,10 +178,12 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     minTickets: Math.ceil(totalTicketsNum * (Math.min(100, Math.max(25, Number(reservePct) || 25)) / 100)),
     retailValuePence,
     imageUrls: Array.isArray(imageUrls) ? imageUrls.slice(0, 6) : [],
-    // No closingDate at listing time — set automatically by enter-draw when reserve is hit
+    endsAt,
+    closingDate: endsAt,
+    postalDeadline,
     sellerId: userId,
     sellerHandle,
-    sellerStripeAccountId: sellerRecord.Item.stripeAccountId,
+    sellerStripeAccountId: sellerRecord.Item?.stripeAccountId ?? '',
     status: needsVerification ? 'pending_verification' : 'open',
     soldTickets: 0,
     totalRevenuePence: 0,
@@ -160,10 +200,15 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   await db.send(new PutCommand({ TableName: TABLE, Item: draw }));
 
   // Fire LegitApp submission non-blocking — draw is already in pending_verification state
-  if (needsVerification && (imageUrls as string[]).length > 0) {
-    void submitToLegitApp(drawId, legitInfo.legitCategory, imageUrls as string[]).catch(err => {
+  // Await the LegitApp submission before returning — Lambda freezes the execution context
+  // when the handler promise resolves, so fire-and-forget would be silently abandoned.
+  if (needsVerification) {
+    try {
+      await submitToLegitApp(drawId, legitInfo.legitCategory, imageUrls as string[]);
+    } catch (err: any) {
       console.warn('[legit] submission failed for draw', drawId, err?.message);
-    });
+      // Draw is already in pending_verification; it will require manual admin activation.
+    }
   }
 
   return {

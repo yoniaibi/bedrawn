@@ -54,7 +54,6 @@ export async function sendSellerResolvedEmail(
   const platformFeePounds = ((soldTickets * ticketPricePence * 0.12) / 100).toFixed(2);
   const legitFeePounds = (verificationFeePence / 100).toFixed(2);
   const netPounds = ((soldTickets * ticketPricePence * 0.88 - verificationFeePence) / 100).toFixed(2);
-  const revenuePounds = grossPounds;
   await resend.emails.send({
     from: FROM,
     to,

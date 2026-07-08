@@ -80,6 +80,7 @@ export default function ListItemPage() {
   const [reservePct, setReservePct] = useState(25);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [drawDurationDays, setDrawDurationDays] = useState(30);
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -145,6 +146,11 @@ export default function ListItemPage() {
   const STEPS = isDesigner ? STEPS_FULL : STEPS_SHORT;
   // Map physical step (0-5) to display progress index
   const displayStep = (!isDesigner && step >= 3) ? step - 1 : step;
+
+  function addDays(n: number) {
+    const d = new Date(Date.now() + n * 86400000);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
 
   const resolvedTicketPricePence = ticketPrice === 'Custom' ? parseFloat(customPrice || '0') : parseTicketPricePence(ticketPrice);
   const grossEarnings = retailValue && ticketPrice && totalTickets && resolvedTicketPricePence > 0
@@ -508,7 +514,29 @@ export default function ListItemPage() {
                 <input type="number" value={totalTickets} onChange={e => setTotalTickets(e.target.value)} placeholder="e.g. 13600" />
               </div>
               <div>
-                <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Reserve — minimum tickets to proceed</label>
+                <div>
+                <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Draw duration</label>
+                <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
+                  Minimum 7 days. If tickets sell out early (after 7 days), the draw closes automatically with 4 days&apos; notice for postal entries.
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[14, 21, 30, 60].map(d => (
+                    <button key={d} onClick={() => setDrawDurationDays(d)} style={{
+                      flex: '1 1 80px', padding: '10px 4px', borderRadius: 10, cursor: 'pointer', textAlign: 'center', fontSize: 12,
+                      background: drawDurationDays === d ? 'rgba(124,58,237,0.08)' : 'var(--card)',
+                      border: `1.5px solid ${drawDurationDays === d ? 'var(--purple)' : 'var(--border)'}`,
+                      color: drawDurationDays === d ? 'var(--purple)' : 'var(--grey)',
+                    }}>
+                      <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: 13 }}>{d} days</p>
+                      <p style={{ margin: '0 0 1px', fontSize: 10 }}>Closes {addDays(d)}</p>
+                      <p style={{ margin: 0, fontSize: 9, color: drawDurationDays === d ? 'var(--purple)' : 'var(--muted)' }}>
+                        Postal by {addDays(d - 4)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Reserve — minimum tickets to proceed</label>
                 <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
                   If fewer than this many tickets are sold, the draw cancels and buyers are fully refunded.
                 </p>
@@ -618,6 +646,7 @@ export default function ListItemPage() {
                         totalTickets, retailValue, reservePct,
                         imageUrls: photoUrls.filter(Boolean),
                         verificationRequested,
+                        drawDurationDays,
                       }),
                     });
                     if (!res.ok) {

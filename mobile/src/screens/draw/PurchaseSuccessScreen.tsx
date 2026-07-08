@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -9,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CountdownTimer } from '../../components/CountdownTimer';
+import { isEnabled } from '../../config/featureFlags';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
@@ -143,6 +145,30 @@ export function PurchaseSuccessScreen({ route, navigation }: Props) {
           <Text style={styles.countdownSub}>Tonight at 9pm · Watch live on bedrawn</Text>
         </View>
 
+        {/* Winner share module */}
+        {isEnabled('WINNER_SHARE') && (
+          <View style={styles.shareCard}>
+            <Text style={styles.shareHeadline}>👑 Tell your friends · get £10 credit</Text>
+            <Text style={styles.shareSub}>
+              If a friend signs up from your share, you get £10 added to your wallet
+            </Text>
+            <TouchableOpacity
+              style={styles.shareBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                const priceStr = draw.ticketPrice >= 100
+                  ? `£${(draw.ticketPrice / 100).toFixed(2)}`
+                  : `${draw.ticketPrice}p`;
+                Share.share({
+                  message: `I just entered the ${draw.title} draw on bedrawn — tickets from ${priceStr} each. Join me! https://bedrawn.co.uk`,
+                });
+              }}
+            >
+              <Text style={styles.shareBtnText}>Share this draw 🎉</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* CTA buttons */}
         <TouchableOpacity
           style={styles.liveBtn}
@@ -229,6 +255,38 @@ const styles = StyleSheet.create({
   countdownLabel: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
   countdownTime: { fontSize: 36, color: C.TEXT, fontFamily: 'serif', fontWeight: '800' },
   countdownSub: { color: C.MUTED, fontSize: 12, marginTop: S.sm },
+  shareCard: {
+    backgroundColor: C.CARD2,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.30)',
+    padding: S.lg,
+    marginBottom: S.lg,
+    width: '100%',
+    alignItems: 'center',
+    gap: S.sm,
+  },
+  shareHeadline: {
+    color: C.TEXT,
+    fontWeight: '700',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  shareSub: {
+    color: C.GREY,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  shareBtn: {
+    backgroundColor: C.PURPLE,
+    borderRadius: 999,
+    paddingVertical: S.md,
+    paddingHorizontal: S.xxl,
+    width: '100%',
+    alignItems: 'center',
+  },
+  shareBtnText: { color: C.WHITE, fontWeight: '700', fontSize: 15 },
   liveBtn: {
     backgroundColor: C.PURPLE,
     borderRadius: 999,

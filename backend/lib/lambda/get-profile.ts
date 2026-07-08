@@ -17,14 +17,15 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   }));
 
   const profile = result.Item ?? {};
-  const username = claims.username ?? claims['cognito:username'] ?? '';
+  // Fallback to email prefix — claims['cognito:username'] is a raw UUID for email-based accounts
+  const emailPrefix = (claims.email as string | undefined)?.split('@')[0] ?? userId.slice(0, 8);
 
   return {
     statusCode: 200,
     headers: cors,
     body: JSON.stringify({
-      handle: profile.handle ?? username,
-      name: profile.name ?? '',
+      handle: profile.handle ?? emailPrefix,
+      name: profile.name ?? (claims.name as string | undefined) ?? '',
       createdAt: profile.createdAt ?? null,
     }),
   };

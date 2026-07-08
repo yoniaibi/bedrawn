@@ -8,110 +8,184 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAuthToken } from '../../lib/api';
+import { LAUNCH_BRANDS, BAG_MODELS, BrandId, MIN_RETAIL_VALUE_PENCE } from '../../config/brands';
+import { computeValuation, formatPence, formatTicketPrice, ValuationResult, Condition } from '../../services/valuation';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
 
-// LegitApp cheapest tier fees (sourced from legitapp.com/pricing, pence)
-const LEGIT_FEE_MAP: Record<string, { feePence: number; turnaround: string; hints: string[] }> = {
-  Bags:       { feePence: 800,  turnaround: '3 hours', hints: ['Front of bag', 'Back of bag', 'Interior lining', 'Serial / date code stamp', 'Hardware closeup', 'Logo closeup'] },
-  Trainers:   { feePence: 250,  turnaround: '30 min',  hints: ['Both shoes from front', 'Side profile (both)', 'Sole (both)', 'Tongue label with size', 'Box with label'] },
-  Watches:    { feePence: 1200, turnaround: '4 hours', hints: ['Dial (front)', 'Side (both sides)', 'Caseback', 'Crown', 'Serial engraving', 'Box & papers if present'] },
-  Jewellery:  { feePence: 800,  turnaround: '3 hours', hints: ['Front', 'Back', 'Hallmark / stamp', 'Clasp / closure', 'Brand markings'] },
-  Streetwear: { feePence: 320,  turnaround: '4 hours', hints: ['Front full garment', 'Back full garment', 'Inside neck label', 'Size tag', 'Logo closeup'] },
-  Fashion:    { feePence: 800,  turnaround: '3 hours', hints: ['Front full', 'Back full', 'Care label', 'Size label', 'Brand tag', 'Logo / stitching closeup'] },
-};
-const DESIGNER_CATEGORIES = new Set(Object.keys(LEGIT_FEE_MAP));
+// Step layout: 1=Brand & model, 2=Photos, 3=Auth photos, 4=Valuation, 5=Pricing, 6=Review
+const TOTAL_STEPS = 6;
 
-// Step layout: 1=Type, 2=Details, 3=Auth(designer), 4=Photos, 5=Pricing, 6=Review
-const TOTAL_STEPS_DESIGNER = 6;
-const TOTAL_STEPS_SHORT = 5;
-
-const ITEM_TYPES = [
-  { label: 'Bag / Purse' },
-  { label: 'Watch' },
-  { label: 'Trainers' },
-  { label: 'Clothing' },
-  { label: 'Jewellery' },
-  { label: 'Bundle' },
+const CONDITIONS: { value: Condition; label: string; desc: string }[] = [
+  { value: 'pristine',  label: 'Pristine',  desc: 'Unused or worn once, flawless' },
+  { value: 'excellent', label: 'Excellent', desc: 'Light use, minimal signs of wear' },
+  { value: 'good',      label: 'Good',      desc: 'Visible wear, well maintained' },
+  { value: 'fair',      label: 'Fair',      desc: 'Heavy use, visible marks/scuffs' },
 ];
 
-const CONDITIONS = ['Brand New', 'Excellent', 'Very Good', 'Good', 'Fair'];
-const CATEGORIES = ['Bags', 'Trainers', 'Watches', 'Jewellery', 'Streetwear', 'Fashion', 'Tech', 'Other'];
-const TICKET_PRICE_OPTIONS = [10, 20, 50, 100]; // pence
+const AUTH_PHOTO_REQUIREMENTS = [
+  'Logo stamp close-up',
+  'Hardware engraving',
+  'Serial number / date code',
+  'Stitching detail',
+  'Interior label',
+  'Dust bag (if present)',
+];
+
+const INCLUDES_OPTIONS: { key: 'hasBox' | 'hasDustBag' | 'hasReceipt' | 'hasAuthCard'; label: string }[] = [
+  { key: 'hasBox',      label: 'Original box' },
+  { key: 'hasDustBag',  label: 'Dust bag' },
+  { key: 'hasReceipt',  label: 'Receipt / proof of purchase' },
+  { key: 'hasAuthCard', label: 'Authenticity card' },
+];
+
+const TICKET_PRICE_OPTIONS = [10, 20, 30, 50, 100, 200]; // pence
 const RESERVE_OPTIONS = [25, 50, 75, 100];
 
 export function ListItemScreen() {
   const navigation = useNavigation();
   const [step, setStep] = useState(1);
-  const [itemType, setItemType] = useState('');
-  const [title, setTitle] = useState('');
+  // Step 1 state
+  const [brandId, setBrandId] = useState<BrandId | ''>('');
+  const [model, setModel] = useState('');
+  const [modelSuggestions, setModelSuggestions] = useState<string[]>([]);
+  const [condition, setCondition] = useState<Condition | ''>('');
+  const [yearPurchased, setYearPurchased] = useState('');
+  const [hasBox, setHasBox] = useState(false);
+  const [hasDustBag, setHasDustBag] = useState(false);
+  const [hasReceipt, setHasReceipt] = useState(false);
+  const [hasAuthCard, setHasAuthCard] = useState(false);
+  // Step 3 state
+  const [authPhotoCaptured, setAuthPhotoCaptured] = useState<Record<string, boolean>>({});
+  // Step 4 state
+  const [valuation, setValuation] = useState<ValuationResult | null>(null);
+  const [useValuationSuggestion, setUseValuationSuggestion] = useState(true);
+  // Step 5 state
   const [description, setDescription] = useState('');
-  const [condition, setCondition] = useState('');
-  const [category, setCategory] = useState('');
-  const [retailValue, setRetailValue] = useState('');
   const [ticketPrice, setTicketPrice] = useState(10);
-  const [totalTickets, setTotalTickets] = useState('100');
+  const [totalTickets, setTotalTickets] = useState('');
   const [reservePct, setReservePct] = useState(25);
-  const [verificationRequested, setVerificationRequested] = useState(false);
+  const [drawDurationDays, setDrawDurationDays] = useState(14); // default 14 days per spec
   const [liquidated, setLiquidated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const isDesigner = DESIGNER_CATEGORIES.has(category);
-  const legitInfo = LEGIT_FEE_MAP[category];
-  const TOTAL_STEPS = isDesigner ? TOTAL_STEPS_DESIGNER : TOTAL_STEPS_SHORT;
+  const includesState = { hasBox, hasDustBag, hasReceipt, hasAuthCard };
+  const includesSetters = {
+    hasBox: setHasBox,
+    hasDustBag: setHasDustBag,
+    hasReceipt: setHasReceipt,
+    hasAuthCard: setHasAuthCard,
+  };
 
-  // Map physical step to display step (auth step is step 3 but only counts for designer)
-  const displayStep = (!isDesigner && step >= 3) ? step - 1 : step;
+  const brandLabel = LAUNCH_BRANDS.find(b => b.id === brandId)?.label ?? '';
+  const conditionLabel = CONDITIONS.find(c => c.value === condition)?.label ?? '';
+
+  function addDays(n: number): string {
+    const d = new Date(Date.now() + n * 86_400_000);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  function handleModelInput(text: string) {
+    setModel(text);
+    if (brandId && text.length >= 2) {
+      const allModels = BAG_MODELS[brandId as BrandId] ?? [];
+      const matches = allModels.filter(m => m.toLowerCase().includes(text.toLowerCase())).slice(0, 5);
+      setModelSuggestions(matches);
+    } else {
+      setModelSuggestions([]);
+    }
+  }
 
   function goNext() {
-    if (step === 1 && !itemType) { Alert.alert('Select a type', 'Please select an item type to continue.'); return; }
-    if (step === 2) {
-      if (!title.trim()) { Alert.alert('Add a title', 'Please enter a title for your item.'); return; }
-      if (!condition) { Alert.alert('Select condition', 'Please select the condition of your item.'); return; }
-      if (!category) { Alert.alert('Select a category', 'Please select a category.'); return; }
-      // Jump over auth step if not designer
-      setStep(isDesigner ? 3 : 4);
+    // Step 1 validation
+    if (step === 1) {
+      if (!brandId) { Alert.alert('Select a brand', 'Choose one of the five launch brands.'); return; }
+      if (!model.trim()) { Alert.alert('Enter model', 'Type or select the bag model.'); return; }
+      if (!condition) { Alert.alert('Select condition', 'Choose the condition grade.'); return; }
+      // Validate minimum retail value hint — not enforced here (enforced in step 5 via valuation)
+      // Compute valuation when moving to step 4
+      const result = computeValuation({
+        brandId: brandId as BrandId,
+        model,
+        condition: condition as Condition,
+        hasBox, hasDustBag, hasReceipt, hasAuthCard,
+      });
+      setValuation(result);
+      if (useValuationSuggestion || !totalTickets) {
+        setTicketPrice(result.suggestedTicketPricePence);
+        setTotalTickets(String(result.suggestedTotalTickets));
+      }
+      setStep(2);
       return;
     }
-    if (step === 4 && !title) { /* photos — no required validation in mobile (no real upload yet) */ }
-    const next = step + 1;
-    if (next > TOTAL_STEPS_DESIGNER) { handleSubmit(); return; }
-    setStep(next);
+    if (step === 2) { setStep(3); return; } // photos → auth photos
+    if (step === 3) { setStep(4); return; } // auth photos → valuation
+    if (step === 4) {
+      // Apply valuation suggestion if chosen
+      if (useValuationSuggestion && valuation) {
+        setTicketPrice(valuation.suggestedTicketPricePence);
+        setTotalTickets(String(valuation.suggestedTotalTickets));
+      }
+      setStep(5);
+      return;
+    }
+    if (step === 5) { setStep(6); return; }
+    if (step === 6) { handleSubmit(); return; }
+  }
+
+  function chooseSuggestion() {
+    if (valuation) {
+      setTicketPrice(valuation.suggestedTicketPricePence);
+      setTotalTickets(String(valuation.suggestedTotalTickets));
+    }
+    setUseValuationSuggestion(true);
+    setStep(5);
+  }
+
+  function chooseOwnPrice() {
+    setUseValuationSuggestion(false);
+    setStep(5);
   }
 
   function goBack() {
     if (step <= 1) { navigation.goBack(); return; }
-    // Jump over auth step backwards if not designer
-    if (step === 4) { setStep(isDesigner ? 3 : 2); return; }
     setStep(s => s - 1);
   }
 
   async function handleSubmit() {
-    if (!liquidated) { Alert.alert('Please agree', 'Please confirm the terms before submitting.'); return; }
+    if (!liquidated) { Alert.alert('Please agree', 'Confirm the terms before submitting.'); return; }
     setSubmitting(true);
     try {
       const token = await getAuthToken();
       if (!token) throw new Error('Not logged in');
+      const tickets = parseInt(totalTickets, 10) || 0;
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/draws`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          title, description, category, condition,
-          type: itemType.toLowerCase().replace(' / ', '-'),
+          title: `${LAUNCH_BRANDS.find(b => b.id === brandId)?.label} ${model}`,
+          description,
+          category: 'Bags',
+          brandId,
+          model,
+          condition,
+          type: 'single',
           ticketPrice: `${ticketPrice}p`,
-          totalTickets, retailValue, reservePct,
-          verificationRequested,
+          totalTickets: tickets,
+          retailValue: valuation ? Math.round(valuation.estimatedValuePence / 100) : 0,
+          reservePct,
+          verificationRequested: true, // always request auth for bags
+          drawDurationDays,
+          hasBox, hasDustBag, hasReceipt, hasAuthCard,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `Error ${res.status}`);
-      const message = data.pendingVerification
-        ? `Your item has been sent to LegitApp for authentication. This takes ${legitInfo?.turnaround ?? 'a few hours'}. We'll email you once verified.`
-        : "Your listing is being reviewed and will be live shortly.";
-      Alert.alert('Submitted!', message, [{ text: 'OK', onPress: () => navigation.goBack() }]);
+      Alert.alert('Submitted!', 'Your bag has been sent to LEGIT APP for photo authentication. This usually takes under 24 hours. We\'ll notify you once it passes.', [{ text: 'OK', onPress: () => navigation.goBack() }]);
     } catch (err: any) {
       Alert.alert('Error', err.message ?? 'Submission failed. Please try again.');
     } finally {
@@ -120,11 +194,13 @@ export function ListItemScreen() {
   }
 
   const tickets = parseInt(totalTickets, 10) || 0;
-  const gross = ((tickets * ticketPrice) / 100).toFixed(2);
-  const platformFee = ((tickets * ticketPrice * 0.12) / 100).toFixed(2);
-  const legitFee = verificationRequested && legitInfo ? (legitInfo.feePence / 100).toFixed(2) : '0.00';
-  const net = ((tickets * ticketPrice * 0.88) / 100 - (verificationRequested && legitInfo ? legitInfo.feePence / 100 : 0)).toFixed(2);
+  const grossPence = tickets * ticketPrice;
+  const netPence = Math.round(grossPence * 0.88);
+  const gross = (grossPence / 100).toFixed(2);
+  const platformFee = ((grossPence * 0.12) / 100).toFixed(2);
+  const net = (netPence / 100).toFixed(2);
   const reserveTickets = Math.ceil((tickets * reservePct) / 100);
+  const showLowPayoutHint = !!valuation && tickets > 0 && netPence < valuation.estimatedValuePence * 0.85;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -135,190 +211,224 @@ export function ListItemScreen() {
         </TouchableOpacity>
         <View style={styles.progressDots}>
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <View key={i} style={[styles.progressDot, i < displayStep && styles.progressDotActive]} />
+            <View key={i} style={[styles.progressDot, i < step && styles.progressDotActive]} />
           ))}
         </View>
-        <Text style={styles.stepLabel}>{displayStep} / {TOTAL_STEPS}</Text>
+        <Text style={styles.stepLabel}>{step} / {TOTAL_STEPS}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-        {/* Step 1: Type */}
+        {/* Step 1: Brand & model */}
         {step === 1 && (
           <View>
-            <Text style={styles.stepTitle}>What are you listing?</Text>
-            <Text style={styles.stepSub}>Choose the type that best describes your item.</Text>
-            <View style={styles.typeGrid}>
-              {ITEM_TYPES.map(t => (
-                <TouchableOpacity
-                  key={t.label}
-                  style={[styles.typeCard, itemType === t.label && styles.typeCardActive]}
-                  onPress={() => setItemType(t.label)}
-                >
-                  <Text style={[styles.typeLabel, itemType === t.label && styles.typeLabelActive]}>{t.label}</Text>
+            <Text style={styles.stepTitle}>What's your bag?</Text>
+            <Text style={styles.stepSub}>We'll estimate its value and suggest a ticket price.</Text>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Brand</Text>
+              <View style={styles.brandGrid}>
+                {LAUNCH_BRANDS.map(b => (
+                  <TouchableOpacity
+                    key={b.id}
+                    style={[styles.brandChip, brandId === b.id && styles.brandChipActive]}
+                    onPress={() => {
+                      setBrandId(b.id);
+                      setModelSuggestions([]);
+                    }}
+                  >
+                    <Text style={[styles.brandLabel, brandId === b.id && styles.brandLabelActive]}>{b.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Model</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={brandId ? `e.g. ${(BAG_MODELS[brandId as BrandId] ?? [])[0] ?? 'Model name'}` : 'Select a brand first'}
+                placeholderTextColor={C.MUTED}
+                value={model}
+                onChangeText={handleModelInput}
+                editable={!!brandId}
+              />
+              {modelSuggestions.length > 0 && (
+                <View style={styles.suggestionsBox}>
+                  <FlatList
+                    data={modelSuggestions}
+                    keyExtractor={m => m}
+                    scrollEnabled={false}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={styles.suggestionItem}
+                        onPress={() => {
+                          setModel(item);
+                          setModelSuggestions([]);
+                        }}
+                      >
+                        <Text style={styles.suggestionText}>{item}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              )}
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Condition</Text>
+              <View style={styles.conditionGrid}>
+                {CONDITIONS.map(c => (
+                  <TouchableOpacity
+                    key={c.value}
+                    style={[styles.conditionCard, condition === c.value && styles.conditionCardActive]}
+                    onPress={() => setCondition(c.value)}
+                  >
+                    <Text style={styles.conditionLabel}>{c.label}</Text>
+                    <Text style={styles.conditionDesc}>{c.desc}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Year purchased (optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. 2022"
+                placeholderTextColor={C.MUTED}
+                value={yearPurchased}
+                onChangeText={setYearPurchased}
+                keyboardType="number-pad"
+                maxLength={4}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Includes</Text>
+              {INCLUDES_OPTIONS.map(opt => {
+                const checked = includesState[opt.key];
+                return (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={styles.includesRow}
+                    onPress={() => includesSetters[opt.key](v => !v)}
+                  >
+                    <View style={[styles.includesCheck, checked && styles.includesCheckActive]}>
+                      {checked && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.includesLabel}>{opt.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Step 2: Photos */}
+        {step === 2 && (
+          <View>
+            <Text style={styles.stepTitle}>Add photos</Text>
+            <Text style={styles.stepSub}>Add up to 6 photos. First photo is the cover.</Text>
+            <View style={styles.photoGrid}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <TouchableOpacity key={i} style={styles.photoSlot}>
+                  <Text style={styles.photoSlotIcon}>+</Text>
+                  <Text style={styles.photoSlotText}>{i === 0 ? 'Cover' : 'Photo'}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         )}
 
-        {/* Step 2: Details */}
-        {step === 2 && (
+        {/* Step 3: Auth photos */}
+        {step === 3 && (
           <View>
-            <Text style={styles.stepTitle}>Item details</Text>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Title</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Chanel Classic Flap — Black Caviar, M"
-                placeholderTextColor={C.MUTED}
-                value={title}
-                onChangeText={setTitle}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Description</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Describe your item honestly — authentication, size, any defects…"
-                placeholderTextColor={C.MUTED}
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Condition</Text>
-              <View style={styles.chipRow}>
-                {CONDITIONS.map(c => (
+            <Text style={styles.stepTitle}>Authentication photos</Text>
+            <Text style={[styles.stepSub, styles.stepSubItalic]}>
+              These photos go to our independent authenticator, LEGIT APP. Your listing goes live once it passes — usually within 24 hours.
+            </Text>
+            <View style={styles.authPhotoGrid}>
+              {AUTH_PHOTO_REQUIREMENTS.map(req => {
+                const done = !!authPhotoCaptured[req];
+                return (
                   <TouchableOpacity
-                    key={c}
-                    style={[styles.chip, condition === c && styles.chipActive]}
-                    onPress={() => setCondition(c)}
+                    key={req}
+                    style={[styles.authPhotoSlot, done && styles.authPhotoSlotDone]}
+                    onPress={() => setAuthPhotoCaptured(prev => ({ ...prev, [req]: !prev[req] }))}
                   >
-                    <Text style={[styles.chipText, condition === c && styles.chipTextActive]}>{c}</Text>
+                    {done
+                      ? <Text style={styles.authPhotoDoneIcon}>✓</Text>
+                      : <Text style={styles.authPhotoIcon}>+</Text>}
+                    <Text style={styles.authPhotoText}>{req}</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.field}>
-              <Text style={styles.label}>Category</Text>
-              <View style={styles.chipRow}>
-                {CATEGORIES.map(cat => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[styles.chip, category === cat && styles.chipActive]}
-                    onPress={() => setCategory(cat)}
-                  >
-                    <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>{cat}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              {category && DESIGNER_CATEGORIES.has(category) && (
-                <Text style={styles.authHint}>✓ Authentication available — you'll choose on the next step</Text>
-              )}
+                );
+              })}
             </View>
           </View>
         )}
 
-        {/* Step 3: Authentication (designer only) */}
-        {step === 3 && legitInfo && (
+        {/* Step 4: Valuation result */}
+        {step === 4 && valuation && (
           <View>
-            <Text style={styles.stepTitle}>Authenticate this item?</Text>
-            <Text style={styles.stepSub}>
-              LegitApp expert authenticators verify your {category.toLowerCase()}. Verified listings earn a trust badge that increases buyer confidence and ticket sales.
-            </Text>
-
-            <TouchableOpacity
-              style={[styles.authOption, !verificationRequested && styles.authOptionSelected]}
-              onPress={() => setVerificationRequested(false)}
-            >
-              <View style={styles.authOptionHeader}>
-                <Text style={[styles.authOptionTitle, !verificationRequested && { color: C.PURPLE }]}>No authentication</Text>
-                {!verificationRequested && <Text style={styles.selectedBadge}>✓ Selected</Text>}
-              </View>
-              <Text style={styles.authOptionDesc}>List immediately. No badge. Buyer trust based on photos and description alone.</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.authOption, styles.authOptionGold, verificationRequested && styles.authOptionGoldSelected]}
-              onPress={() => setVerificationRequested(true)}
-            >
-              <View style={styles.authOptionHeader}>
-                <Text style={[styles.authOptionTitle, verificationRequested && { color: C.GOLD }]}>LegitApp authentication</Text>
-                <View style={styles.feeBadge}>
-                  <Text style={styles.feeBadgeText}>£{(legitInfo.feePence / 100).toFixed(2)}</Text>
-                </View>
-              </View>
-              <Text style={styles.authOptionDesc}>
-                Two experts review your photos. Result in {legitInfo.turnaround}. Listing goes live only after passing. Fee deducted from your payout.
+            <View style={styles.valuationCard}>
+              <Text style={styles.valuationEyebrow}>ESTIMATED VALUE</Text>
+              <Text style={styles.valuationAmount}>{formatPence(valuation.estimatedValuePence)}</Text>
+              <Text style={styles.valuationRange}>
+                Range: {formatPence(valuation.rangeLowPence)} – {formatPence(valuation.rangeHighPence)}
               </Text>
-              <View style={styles.authFeatures}>
-                {['Expert reviewed', 'Certificate issued', 'Verified badge', 'From payout'].map(f => (
-                  <View key={f} style={styles.authFeaturePill}>
-                    <Text style={styles.authFeaturePillText}>{f}</Text>
-                  </View>
-                ))}
+              <Text style={styles.valuationContext}>
+                Based on recent UK resale prices for {brandLabel} {model} in {conditionLabel.toLowerCase()} condition
+              </Text>
+              <View style={styles.valuationDivider} />
+              <Text style={styles.valuationSuggestionLabel}>OUR SUGGESTION</Text>
+              <Text style={styles.valuationSuggestion}>
+                {formatTicketPrice(valuation.suggestedTicketPricePence)} per ticket · {valuation.suggestedTotalTickets.toLocaleString()} tickets
+              </Text>
+              <Text style={styles.valuationPayout}>
+                Your payout if it sells through: {formatPence(valuation.projectedSellerPayoutPence)}
+              </Text>
+              <Text style={styles.valuationDisclaimer}>
+                Estimate based on recent UK resale prices. Actual value may vary.
+              </Text>
+              <View style={styles.valuationBtnRow}>
+                <TouchableOpacity style={styles.valuationBtnPrimary} onPress={chooseSuggestion}>
+                  <Text style={styles.nextButtonText}>Use suggestion</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.valuationBtnSecondary} onPress={chooseOwnPrice}>
+                  <Text style={styles.backButtonText}>Set my own price</Text>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-
-            {verificationRequested && (
-              <View style={styles.authNote}>
-                <Text style={styles.authNoteText}>
-                  £{(legitInfo.feePence / 100).toFixed(2)} will be deducted from your payout when the draw resolves. No upfront payment required.
+            </View>
+            {valuation.estimatedValuePence < MIN_RETAIL_VALUE_PENCE && (
+              <View style={styles.pricingHint}>
+                <Text style={styles.pricingHintText}>
+                  Heads up — bags typically need an estimated value of at least {formatPence(MIN_RETAIL_VALUE_PENCE)} to perform well on bedrawn.
                 </Text>
               </View>
             )}
           </View>
         )}
 
-        {/* Step 4: Photos */}
-        {step === 4 && (
-          <View>
-            <Text style={styles.stepTitle}>Add photos</Text>
-            {verificationRequested && legitInfo ? (
-              <View style={styles.photoHintsBox}>
-                <Text style={styles.photoHintsTitle}>LegitApp requires these shots for {category.toLowerCase()}:</Text>
-                {legitInfo.hints.map((hint, i) => (
-                  <Text key={hint} style={styles.photoHint}>  {i + 1}. {hint}</Text>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.stepSub}>Add up to 6 photos. First photo is the cover image.</Text>
-            )}
-            <View style={styles.photoGrid}>
-              {Array.from({ length: 6 }, (_, i) => (
-                <TouchableOpacity key={i} style={styles.photoSlot}>
-                  <Text style={styles.photoSlotIcon}>+</Text>
-                  <Text style={styles.photoSlotText}>
-                    {verificationRequested && legitInfo ? (legitInfo.hints[i] ?? `Photo ${i + 1}`) : (i === 0 ? 'Cover' : 'Photo')}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
-
         {/* Step 5: Pricing */}
         {step === 5 && (
           <View>
-            <Text style={styles.stepTitle}>Set your pricing</Text>
+            <Text style={styles.stepTitle}>Pricing</Text>
+            {useValuationSuggestion && valuation && (
+              <Text style={styles.reserveHint}>Based on our estimate: {formatPence(valuation.estimatedValuePence)}</Text>
+            )}
 
             <View style={styles.field}>
-              <Text style={styles.label}>Retail / market value (£)</Text>
+              <Text style={styles.label}>Description</Text>
               <TextInput
-                style={styles.input}
-                placeholder="e.g. 1200"
+                style={[styles.input, styles.textArea]}
+                placeholder="Describe your bag honestly — colour, hardware, any wear or marks…"
                 placeholderTextColor={C.MUTED}
-                value={retailValue}
-                onChangeText={setRetailValue}
-                keyboardType="decimal-pad"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
               />
             </View>
 
@@ -331,7 +441,10 @@ export function ListItemScreen() {
                     style={[styles.pricePill, ticketPrice === p && styles.pricePillActive]}
                     onPress={() => setTicketPrice(p)}
                   >
-                    <Text style={[styles.priceText, ticketPrice === p && styles.priceTextActive]}>{p}p</Text>
+                    <Text style={[styles.priceText, ticketPrice === p && styles.priceTextActive]}>{formatTicketPrice(p)}</Text>
+                    {valuation?.suggestedTicketPricePence === p && (
+                      <Text style={styles.priceSuggested}>suggested</Text>
+                    )}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -341,12 +454,30 @@ export function ListItemScreen() {
               <Text style={styles.label}>Total tickets</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. 100"
+                placeholder="e.g. 2000"
                 placeholderTextColor={C.MUTED}
                 value={totalTickets}
                 onChangeText={setTotalTickets}
                 keyboardType="number-pad"
               />
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Draw duration</Text>
+              <Text style={styles.reserveHint}>Minimum 7 days. Postal entries close 4 days before your draw ends.</Text>
+              <View style={styles.durationGrid}>
+                {[14, 21, 30, 60].map(d => (
+                  <TouchableOpacity
+                    key={d}
+                    style={[styles.durationPill, drawDurationDays === d && styles.durationPillActive]}
+                    onPress={() => setDrawDurationDays(d)}
+                  >
+                    <Text style={[styles.durationDays, drawDurationDays === d && styles.durationDaysActive]}>{d} days</Text>
+                    <Text style={styles.durationClose}>Closes {addDays(d)}</Text>
+                    <Text style={[styles.durationPostal, drawDurationDays === d && styles.durationPostalActive]}>Post by {addDays(d - 4)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <View style={styles.field}>
@@ -368,6 +499,14 @@ export function ListItemScreen() {
               )}
             </View>
 
+            {showLowPayoutHint && (
+              <View style={styles.pricingHint}>
+                <Text style={styles.pricingHintText}>
+                  At this price, a full sell-through pays you £{net} — below your bag's estimated value.
+                </Text>
+              </View>
+            )}
+
             <View style={styles.earningsCard}>
               <Text style={styles.earningsTitle}>Earnings preview (full sell-out)</Text>
               <View style={styles.earningsRow}>
@@ -378,12 +517,6 @@ export function ListItemScreen() {
                 <Text style={styles.earningsLabel}>Platform fee (12%)</Text>
                 <Text style={styles.earningsNeg}>−£{platformFee}</Text>
               </View>
-              {verificationRequested && legitInfo && (
-                <View style={styles.earningsRow}>
-                  <Text style={styles.earningsLabel}>LegitApp authentication</Text>
-                  <Text style={[styles.earningsNeg, { color: C.GOLD }]}>−£{legitFee}</Text>
-                </View>
-              )}
               <View style={[styles.earningsRow, styles.earningsTotalRow]}>
                 <Text style={styles.earningsTotalLabel}>You receive</Text>
                 <Text style={styles.earningsTotalValue}>£{net}</Text>
@@ -403,20 +536,20 @@ export function ListItemScreen() {
 
             <View style={styles.reviewCard}>
               {[
-                ['Item', title || '(not set)'],
-                ['Type', itemType || '(not set)'],
-                ['Condition', condition || '(not set)'],
-                ['Category', category || '(not set)'],
-                ['Authentication', verificationRequested && legitInfo ? `LegitApp (£${(legitInfo.feePence / 100).toFixed(2)} from payout)` : 'None'],
-                ['RRP', `£${retailValue || '0'}`],
-                ['Ticket price', `${ticketPrice}p`],
-                ['Total tickets', totalTickets],
+                ['Brand', brandLabel || '(not set)'],
+                ['Model', model || '(not set)'],
+                ['Condition', conditionLabel || '(not set)'],
+                ['Authentication', 'LEGIT APP photo check'],
+                ['Duration', `${drawDurationDays} days (closes ${addDays(drawDurationDays)})`],
+                ['Ticket price', formatTicketPrice(ticketPrice)],
+                ['Tickets', tickets.toLocaleString()],
                 ['Reserve', `${reservePct}% (${reserveTickets.toLocaleString()} tickets)`],
-                ["You'll earn", `£${net} (if sold out)`],
+                ['Estimated value', valuation ? formatPence(valuation.estimatedValuePence) : '—'],
+                ['Payout (if sold out)', `£${net}`],
               ].map(([label, value]) => (
                 <View key={label} style={styles.reviewRow}>
                   <Text style={styles.reviewLabel}>{label}</Text>
-                  <Text style={[styles.reviewValue, label === 'Authentication' && verificationRequested ? { color: C.GOLD } : {}]}>{value}</Text>
+                  <Text style={[styles.reviewValue, label === 'Authentication' ? { color: C.LILAC } : {}]}>{value}</Text>
                 </View>
               ))}
             </View>
@@ -426,10 +559,7 @@ export function ListItemScreen() {
                 {liquidated && <Text style={styles.checkmark}>✓</Text>}
               </View>
               <Text style={styles.checkboxText}>
-                I confirm the item is as described and agree to the bedrawn seller terms.
-                {verificationRequested && legitInfo
-                  ? ` I agree that £${(legitInfo.feePence / 100).toFixed(2)} will be deducted from my payout for LegitApp authentication.`
-                  : ''}
+                I confirm the bag is authentic and as described, and agree to the bedrawn seller terms. I understand my listing goes live only after it passes LEGIT APP photo authentication.
               </Text>
             </TouchableOpacity>
           </View>
@@ -444,18 +574,20 @@ export function ListItemScreen() {
             <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity
-          style={[
-            styles.nextButton,
-            (step === 6 && (!liquidated || submitting)) && styles.nextButtonDisabled,
-          ]}
-          onPress={step === 6 ? handleSubmit : goNext}
-          disabled={step === 6 && (!liquidated || submitting)}
-        >
-          <Text style={styles.nextButtonText}>
-            {step === 6 ? (submitting ? 'Submitting…' : 'Submit listing') : 'Next →'}
-          </Text>
-        </TouchableOpacity>
+        {step !== 4 && (
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              (step === 6 && (!liquidated || submitting)) && styles.nextButtonDisabled,
+            ]}
+            onPress={step === 6 ? handleSubmit : goNext}
+            disabled={step === 6 && (!liquidated || submitting)}
+          >
+            <Text style={styles.nextButtonText}>
+              {step === 6 ? (submitting ? 'Submitting…' : 'Submit listing') : 'Next →'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -480,14 +612,7 @@ const styles = StyleSheet.create({
   content: { padding: S.xl, paddingBottom: 120 },
   stepTitle: { fontSize: 22, fontWeight: '800', color: C.TEXT, marginBottom: S.sm },
   stepSub: { color: C.GREY, fontSize: 14, marginBottom: S.xl, lineHeight: 20 },
-  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
-  typeCard: {
-    width: '30%', flexGrow: 1, backgroundColor: C.CARD, borderRadius: 14,
-    padding: S.lg, alignItems: 'center', borderWidth: 1.5, borderColor: C.BORDER, gap: S.xs,
-  },
-  typeCardActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
-  typeLabel: { color: C.GREY, fontSize: 12, fontWeight: '600', textAlign: 'center' },
-  typeLabelActive: { color: C.PURPLE },
+  stepSubItalic: { fontStyle: 'italic', color: C.MUTED },
   field: { marginBottom: S.lg },
   label: { color: C.GREY, fontSize: 12, fontWeight: '600', marginBottom: S.xs, letterSpacing: 0.5 },
   input: {
@@ -495,48 +620,36 @@ const styles = StyleSheet.create({
     borderRadius: 10, padding: S.lg, color: C.TEXT, fontSize: 15,
   },
   textArea: { height: 100, textAlignVertical: 'top' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
-  chip: {
-    borderRadius: 999, paddingHorizontal: S.md, paddingVertical: S.xs,
-    borderWidth: 1, borderColor: C.BORDER, backgroundColor: C.CARD,
+  // Step 1: brand & model
+  brandGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm, marginBottom: S.xl },
+  brandChip: {
+    flexGrow: 1, minWidth: '28%', borderRadius: 10, paddingVertical: S.md, paddingHorizontal: S.sm,
+    backgroundColor: C.CARD, borderWidth: 1.5, borderColor: C.BORDER, alignItems: 'center',
   },
-  chipActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
-  chipText: { color: C.GREY, fontSize: 13 },
-  chipTextActive: { color: C.PURPLE, fontWeight: '600' },
-  authHint: { color: C.GOLD, fontSize: 12, marginTop: S.sm },
-  authOption: {
-    borderRadius: 12, borderWidth: 2, borderColor: C.BORDER,
-    backgroundColor: C.CARD, padding: S.lg, marginBottom: S.md,
+  brandChipActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
+  brandLabel: { color: C.GREY, fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  brandLabelActive: { color: C.PURPLE },
+  suggestionsBox: {
+    backgroundColor: C.CARD, borderWidth: 1, borderColor: C.BORDER, borderRadius: 8, marginTop: -8, zIndex: 10,
   },
-  authOptionSelected: { borderColor: C.PURPLE, backgroundColor: 'rgba(139,92,246,0.06)' },
-  authOptionGold: { borderColor: C.BORDER },
-  authOptionGoldSelected: { borderColor: C.GOLD, backgroundColor: 'rgba(245,158,11,0.06)' },
-  authOptionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: S.xs },
-  authOptionTitle: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
-  selectedBadge: { color: C.PURPLE, fontSize: 12, fontWeight: '600' },
-  feeBadge: {
-    backgroundColor: 'rgba(245,158,11,0.2)', borderWidth: 1, borderColor: C.GOLD,
-    borderRadius: 999, paddingHorizontal: S.sm, paddingVertical: 2,
+  suggestionItem: { padding: S.md, borderBottomWidth: 1, borderBottomColor: C.BORDER },
+  suggestionText: { color: C.TEXT, fontSize: 14 },
+  conditionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
+  conditionCard: {
+    flex: 1, minWidth: '45%', backgroundColor: C.CARD, borderRadius: 12, padding: S.md,
+    borderWidth: 1.5, borderColor: C.BORDER, gap: S.xs,
   },
-  feeBadgeText: { color: C.GOLD, fontSize: 11, fontWeight: '700' },
-  authOptionDesc: { color: C.GREY, fontSize: 12, lineHeight: 17, marginBottom: S.sm },
-  authFeatures: { flexDirection: 'row', flexWrap: 'wrap', gap: S.xs },
-  authFeaturePill: {
-    backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.3)', borderRadius: 999, paddingHorizontal: S.sm, paddingVertical: 2,
+  conditionCardActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
+  conditionLabel: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
+  conditionDesc: { color: C.GREY, fontSize: 11, lineHeight: 16 },
+  includesRow: { flexDirection: 'row', alignItems: 'center', gap: S.md, paddingVertical: S.sm },
+  includesCheck: {
+    width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: C.BORDER,
+    alignItems: 'center', justifyContent: 'center',
   },
-  authFeaturePillText: { color: C.GOLD, fontSize: 10 },
-  authNote: {
-    backgroundColor: 'rgba(245,158,11,0.06)', borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.3)', borderRadius: 10, padding: S.md,
-  },
-  authNoteText: { color: C.GOLD, fontSize: 12, lineHeight: 17 },
-  photoHintsBox: {
-    backgroundColor: 'rgba(245,158,11,0.06)', borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.3)', borderRadius: 10, padding: S.md, marginBottom: S.lg,
-  },
-  photoHintsTitle: { color: C.GOLD, fontWeight: '700', fontSize: 13, marginBottom: S.sm },
-  photoHint: { color: C.GREY, fontSize: 12, lineHeight: 20 },
+  includesCheckActive: { backgroundColor: C.PURPLE, borderColor: C.PURPLE },
+  includesLabel: { color: C.TEXT, fontSize: 14 },
+  // Step 2: photos
   photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
   photoSlot: {
     width: '30%', aspectRatio: 1, flexGrow: 1, backgroundColor: C.CARD,
@@ -545,16 +658,59 @@ const styles = StyleSheet.create({
   },
   photoSlotIcon: { fontSize: 24, color: C.MUTED },
   photoSlotText: { color: C.MUTED, fontSize: 9, textAlign: 'center' },
-  ticketPriceRow: { flexDirection: 'row', gap: S.md },
+  // Step 3: auth photos
+  authPhotoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.md },
+  authPhotoSlot: {
+    width: '30%', aspectRatio: 1, flexGrow: 1, backgroundColor: C.CARD, borderRadius: 12,
+    borderWidth: 1.5, borderColor: C.BORDER, borderStyle: 'dashed', alignItems: 'center',
+    justifyContent: 'center', gap: S.xs, padding: S.xs, position: 'relative',
+  },
+  authPhotoSlotDone: { borderColor: C.GREEN, borderStyle: 'solid', backgroundColor: C.GREEN_LIGHT ?? 'rgba(5,150,105,0.08)' },
+  authPhotoIcon: { fontSize: 22, color: C.MUTED },
+  authPhotoText: { color: C.MUTED, fontSize: 9, textAlign: 'center' },
+  authPhotoDoneIcon: { fontSize: 22, color: C.GREEN },
+  // Step 4: valuation
+  valuationCard: {
+    backgroundColor: C.CARD, borderRadius: 16, borderWidth: 1, borderColor: C.BORDER,
+    padding: S.xl, marginBottom: S.xl, alignItems: 'center',
+  },
+  valuationEyebrow: { color: C.MUTED, fontSize: 10, fontWeight: '700', letterSpacing: 1.2, marginBottom: S.xs },
+  valuationAmount: { fontFamily: 'serif', fontStyle: 'italic', fontSize: 40, fontWeight: '800', color: C.TEXT, marginBottom: S.xs },
+  valuationRange: { color: C.GREY, fontSize: 13, marginBottom: S.xs },
+  valuationContext: { color: C.MUTED, fontSize: 11, textAlign: 'center', lineHeight: 16, marginBottom: S.lg },
+  valuationDivider: { width: '100%', height: 1, backgroundColor: C.BORDER, marginBottom: S.lg },
+  valuationSuggestionLabel: { color: C.MUTED, fontSize: 10, fontWeight: '700', letterSpacing: 1.2, marginBottom: S.xs },
+  valuationSuggestion: { color: C.TEXT, fontWeight: '700', fontSize: 16, marginBottom: S.xs },
+  valuationPayout: { color: C.GREEN, fontWeight: '700', fontSize: 14, marginBottom: S.lg },
+  valuationDisclaimer: { color: C.MUTED, fontSize: 10, textAlign: 'center', lineHeight: 15, marginBottom: S.xl },
+  valuationBtnRow: { flexDirection: 'row', gap: S.md, width: '100%' },
+  valuationBtnPrimary: { flex: 1, backgroundColor: C.PURPLE, borderRadius: 999, paddingVertical: S.lg, alignItems: 'center' },
+  valuationBtnSecondary: { flex: 1, backgroundColor: C.CARD, borderRadius: 999, paddingVertical: S.lg, alignItems: 'center', borderWidth: 1, borderColor: C.BORDER },
+  // Step 5: pricing
+  pricingHint: { backgroundColor: C.WARNING_BG ?? 'rgba(245,158,11,0.10)', borderRadius: 8, padding: S.md, marginBottom: S.md },
+  pricingHintText: { color: C.WARNING ?? C.GOLD, fontSize: 12, lineHeight: 17 },
+  ticketPriceRow: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
   pricePill: {
-    flex: 1, borderRadius: 10, paddingVertical: S.md, alignItems: 'center',
+    flexGrow: 1, minWidth: '14%', borderRadius: 10, paddingVertical: S.md, alignItems: 'center',
     backgroundColor: C.CARD, borderWidth: 1, borderColor: C.BORDER,
   },
   pricePillActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
   priceText: { color: C.GREY, fontSize: 16, fontWeight: '700' },
   priceTextActive: { color: C.PURPLE },
+  priceSuggested: { color: C.GREEN, fontSize: 9, fontWeight: '700', marginTop: 2 },
   reserveHint: { color: C.MUTED, fontSize: 12, lineHeight: 17, marginBottom: S.sm },
   reserveNote: { color: C.MUTED, fontSize: 12, marginTop: S.sm },
+  durationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: S.sm },
+  durationPill: {
+    width: '47%', borderRadius: 10, paddingVertical: S.md, paddingHorizontal: S.sm,
+    backgroundColor: C.CARD, borderWidth: 1, borderColor: C.BORDER, alignItems: 'center',
+  },
+  durationPillActive: { borderColor: C.PURPLE, backgroundColor: C.PURPLE_LIGHT },
+  durationDays: { color: C.GREY, fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  durationDaysActive: { color: C.PURPLE },
+  durationClose: { color: C.MUTED, fontSize: 11 },
+  durationPostal: { color: C.MUTED, fontSize: 10, marginTop: 1 },
+  durationPostalActive: { color: C.PURPLE },
   earningsCard: {
     backgroundColor: C.CARD, borderRadius: 14, borderWidth: 1,
     borderColor: C.BORDER, padding: S.lg, gap: S.sm,
@@ -568,6 +724,7 @@ const styles = StyleSheet.create({
   earningsTotalLabel: { color: C.TEXT, fontWeight: '700', fontSize: 14 },
   earningsTotalValue: { color: C.GREEN, fontWeight: '800', fontSize: 16 },
   earningsReserve: { color: C.GOLD, fontSize: 12, fontWeight: '600', marginTop: S.xs, lineHeight: 17 },
+  // Step 6: review
   reviewCard: {
     backgroundColor: C.CARD, borderRadius: 14, borderWidth: 1,
     borderColor: C.BORDER, padding: S.lg, marginBottom: S.xl,

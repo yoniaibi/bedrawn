@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { isEnabled } from '../../config/featureFlags';
 import { useAuth } from '../../navigation/RootNavigator';
 import { AccountStackParamList } from '../../navigation/TabNavigator';
 import { apiGet } from '../../lib/api';
@@ -86,6 +87,7 @@ const MENU_ITEMS = [
   { label: 'My Orders', screen: 'Orders' as const },
   { label: 'Saved Draws', screen: 'SavedDraws' as const },
   { label: 'Notifications', screen: 'Notifications' as const },
+  { label: 'Past draws', screen: 'DrawsHistory' as const },
   { label: 'Become a Seller', screen: 'BecomeSeller' as const },
   { label: 'Settings', screen: 'Settings' as const },
   { label: 'Privacy Policy', screen: 'Privacy' as const },
@@ -179,31 +181,37 @@ export function AccountScreen() {
         </TouchableOpacity>
 
         {/* Achievements */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
-        </View>
-        <View style={styles.achievementGrid}>
-          {ACHIEVEMENTS.map(ach => (
-            <View key={ach.label} style={[styles.achievementCard, !ach.unlocked && styles.achievementLocked]}>
-              <Text style={styles.achievementEmoji}>{ach.emoji}</Text>
-              <Text style={[styles.achievementLabel, !ach.unlocked && styles.achievementLabelLocked]}>
-                {ach.label}
-              </Text>
-              {ach.progress && (
-                <Text style={styles.achievementProgress}>{ach.progress}</Text>
-              )}
+        {isEnabled('ACHIEVEMENTS') && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Achievements</Text>
             </View>
-          ))}
-        </View>
+            <View style={styles.achievementGrid}>
+              {ACHIEVEMENTS.map(ach => (
+                <View key={ach.label} style={[styles.achievementCard, !ach.unlocked && styles.achievementLocked]}>
+                  <Text style={styles.achievementEmoji}>{ach.emoji}</Text>
+                  <Text style={[styles.achievementLabel, !ach.unlocked && styles.achievementLabelLocked]}>
+                    {ach.label}
+                  </Text>
+                  {ach.progress && (
+                    <Text style={styles.achievementProgress}>{ach.progress}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
         {/* Referral card */}
-        <View style={styles.referralCard}>
-          <Text style={styles.referralTitle}>Refer a friend, earn £1</Text>
-          <Text style={styles.referralSub}>Your code: <Text style={styles.referralCode}>{referralCode}</Text></Text>
-          <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
-            <Text style={styles.copyBtnText}>{copied ? 'Copied! ✓' : 'Copy code'}</Text>
-          </TouchableOpacity>
-        </View>
+        {isEnabled('REFERRALS') && (
+          <View style={styles.referralCard}>
+            <Text style={styles.referralTitle}>Refer a friend, earn £1</Text>
+            <Text style={styles.referralSub}>Your code: <Text style={styles.referralCode}>{referralCode}</Text></Text>
+            <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
+              <Text style={styles.copyBtnText}>{copied ? 'Copied! ✓' : 'Copy code'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Menu */}
         <View style={styles.menuSection}>

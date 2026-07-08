@@ -124,10 +124,21 @@ export class BackendStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, BUCKET_REGION: this.region };
+    // DEV_SEED: gives new users a free £50 balance and bypasses Stripe KYC for sellers.
+    // Remove before go-live — just delete the DEV_SEED key and redeploy.
+    const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, BUCKET_REGION: this.region, DEV_SEED: 'true' };
     const commonProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: commonEnv };
     const stripeEnv = { ...commonEnv, STRIPE_WEBHOOK_SECRET: '' }; // webhook secret added after first deploy
     const stripeProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: stripeEnv };
+
+    // Post-confirmation trigger — writes PROFILE + seeds WALLET the moment a user verifies their email
+    const postConfirmationFn = new nodejs.NodejsFunction(this, 'PostConfirmation', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/post-confirmation.ts'),
+      timeout: cdk.Duration.seconds(10),
+    });
+    table.grantReadWriteData(postConfirmationFn);
+    userPool.addTrigger(cognito.UserPoolOperation.POST_CONFIRMATION, postConfirmationFn);
 
     const getItemsFn = new nodejs.NodejsFunction(this, 'GetItems', {
       ...commonProps,
@@ -227,7 +238,7 @@ export class BackendStack extends cdk.Stack {
     table.grantWriteData(deleteItemFn);
     bucket.grantPut(getUploadUrlFn);
     table.grantReadWriteData(waitlistFn);
-    table.grantReadData(walletBalanceFn);
+    table.grantReadWriteData(walletBalanceFn); // write needed for DEV_SEED wallet creation
     table.grantReadWriteData(enterDrawFn);
     table.grantReadWriteData(resolveDrawsFn);
     resolveDrawsFn.addToRolePolicy(new iam.PolicyStatement({
@@ -500,7 +511,9 @@ export class BackendStack extends cdk.Stack {
         ...commonEnv,
         USER_POOL_ID: userPool.userPoolId,
         RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full',
-        LEGIT_WEBHOOK_SECRET: '', // set after first deploy: aws ssm put-parameter --name /bedrawn/legit/webhook-secret
+        // LEGIT_WEBHOOK_SECRET absent = dev mode (HMAC skipped with a warning).
+        // To harden: aws ssm put-parameter --name /bedrawn/legit/webhook-secret --value <secret> --type SecureString
+        // then populate here via cdk.SecretValue.ssmSecure() and redeploy.
       },
       entry: path.join(__dirname, 'lambda/legit-webhook.ts'),
     });

@@ -139,7 +139,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   }));
 
   const soldTickets = entries.reduce((s, e) => s + e.ticketCount, 0);
-  const minTickets = (draw.minTickets as number) ?? 0;
+  // Cast via unknown to avoid TS treating the cast as a no-op; default to 1 so a missing
+  // attribute doesn't bypass the reserve and force an unintended resolution.
+  const minTickets = (draw.minTickets as unknown as number | undefined) ?? 1;
   const ticketPricePence = (draw.ticketPricePence as number) ?? 0;
   const drawTitle = draw.title as string;
   const now = new Date().toISOString();

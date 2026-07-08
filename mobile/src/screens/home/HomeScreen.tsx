@@ -3,6 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +15,8 @@ import { ActivityTicker } from '../../components/ActivityTicker';
 import { DrawCard } from '../../components/DrawCard';
 import { LiveDot } from '../../components/LiveDot';
 import { ProgressBar } from '../../components/ProgressBar';
+import { LAUNCH_BRANDS } from '../../config/brands';
+import { isEnabled } from '../../config/featureFlags';
 import { Draw, activityMessages } from '../../data/mockData';
 import { apiGet, apiGetPublic } from '../../lib/api';
 import { HomeStackParamList } from '../../navigation/TabNavigator';
@@ -22,16 +25,16 @@ import { S } from '../../theme/spacing';
 
 type Nav = NativeStackNavigationProp<HomeStackParamList>;
 
-const CATEGORIES = [
-  { label: 'Fashion' },
-  { label: 'Watches' },
-  { label: 'Trainers' },
-  { label: 'Bags' },
-  { label: 'Luxury' },
-  { label: 'Streetwear' },
+const BRAND_CHIPS = [
+  { id: 'tonight', label: 'Tonight' },
+  { id: 'chanel', label: 'Chanel' },
+  { id: 'lv', label: 'Louis Vuitton' },
+  { id: 'bottega', label: 'Bottega Veneta' },
+  { id: 'prada', label: 'Prada' },
+  { id: 'celine', label: 'Celine' },
+  { id: 'high_value', label: 'High value' },
+  { id: 'just_listed', label: 'Just listed' },
 ];
-
-const FILTERS = ['Drawing Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
 
 const IMAGE_COLORS = [
   '#1a1a2e', '#16213e', '#0f3460', '#1e1e2e', '#2d1b69',
@@ -82,7 +85,8 @@ function adaptDraw(d: ApiDraw, index: number): Draw {
 
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
-  const [activeFilter, setActiveFilter] = useState('Drawing Tonight');
+  const [activeFilter, setActiveFilter] = useState('tonight');
+  const [brandSheetVisible, setBrandSheetVisible] = useState(false);
   const [allDraws, setAllDraws] = useState<Draw[]>([]);
   const [drawsLoaded, setDrawsLoaded] = useState(false);
   const [balancePence, setBalancePence] = useState<number | null>(null);
@@ -115,10 +119,19 @@ export function HomeScreen() {
 
   const heroDrawItem = allDraws.find(d => d.isClosingTonight) ?? allDraws[0];
   const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
+
+  // Filter draws based on active brand chip
+  const filteredDraws = allDraws.filter(d => {
+    if (activeFilter === 'tonight') return d.isClosingTonight;
+    if (activeFilter === 'high_value') return d.retailValue >= 1000;
+    if (activeFilter === 'just_listed') return true; // no date available in mock
+    // brand filter
+    return (d as any).brandId === activeFilter;
+  });
+
   const drawingTonight = allDraws.filter(d => d.isClosingTonight).slice(0, 8);
-  const womenswear = allDraws.filter(d => d.style === 'Womenswear' || d.category === 'Bags').slice(0, 4);
-  const menswear = allDraws.filter(d => d.style === 'Menswear' || d.category === 'Streetwear').slice(0, 4);
-  const unisex = allDraws.filter(d => d.style === 'Unisex').slice(0, 4);
+  // Gate style rows
+  const bagDraws = allDraws.filter(d => d.category === 'Bags').slice(0, 6);
 
   const goToDetail = (draw: Draw) => {
     navigation.navigate('DrawDetail', { draw });
@@ -133,14 +146,22 @@ export function HomeScreen() {
         <View style={styles.navbar}>
           <Text style={styles.logo}>bedrawn</Text>
           <View style={styles.navRight}>
-            <Animated.View style={[styles.streakBadge, { transform: [{ scale: streakScale }] }]}>
-              <Text style={styles.streakText}>3 day streak</Text>
-            </Animated.View>
+            {isEnabled('LOGIN_STREAK') && (
+              <Animated.View style={[styles.streakBadge, { transform: [{ scale: streakScale }] }]}>
+                <Text style={styles.streakText}>3 day streak</Text>
+              </Animated.View>
+            )}
             <TouchableOpacity
               style={styles.walletPill}
-              onPress={() => navigation.navigate('Search')}
+              onPress={() => {
+                if (!isEnabled('SEARCH_SCREEN')) {
+                  setBrandSheetVisible(true);
+                } else {
+                  navigation.navigate('Search');
+                }
+              }}
             >
-              <Text style={styles.searchIcon}>Search</Text>
+              <Text style={styles.searchIcon}>Browse</Text>
             </TouchableOpacity>
             <View style={styles.walletPill}>
               <Text style={styles.walletText}>{balanceLabel}</Text>
@@ -234,34 +255,20 @@ export function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Category pills */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.catRow}
-          style={styles.section}
-        >
-          {CATEGORIES.map(cat => (
-            <TouchableOpacity key={cat.label} style={styles.catPill}>
-              <Text style={styles.catLabel}>{cat.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Filter chips */}
+        {/* Brand chips */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterRow}
         >
-          {FILTERS.map(f => (
+          {BRAND_CHIPS.map(chip => (
             <TouchableOpacity
-              key={f}
-              style={[styles.filterChip, activeFilter === f && styles.filterChipActive]}
-              onPress={() => setActiveFilter(f)}
+              key={chip.id}
+              style={[styles.filterChip, activeFilter === chip.id && styles.filterChipActive]}
+              onPress={() => setActiveFilter(chip.id)}
             >
-              <Text style={[styles.filterText, activeFilter === f && styles.filterTextActive]}>
-                {f}{f === 'Drawing Tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
+              <Text style={[styles.filterText, activeFilter === chip.id && styles.filterTextActive]}>
+                {chip.label}{chip.id === 'tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
               </Text>
             </TouchableOpacity>
           ))}
@@ -293,11 +300,11 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* Curated row: Womenswear */}
-        {womenswear.length > 0 && (
+        {/* Bags row — replaces Womenswear/Menswear/Unisex when STYLE_CATEGORIES is off */}
+        {!isEnabled('STYLE_CATEGORIES') && bagDraws.length > 0 && (
           <View style={styles.section}>
             <View style={styles.rowHeader}>
-              <Text style={styles.rowTitle}>Womenswear & Accessories</Text>
+              <Text style={styles.rowTitle}>Designer bags</Text>
               <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
             </View>
             <ScrollView
@@ -305,49 +312,7 @@ export function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalCards}
             >
-              {womenswear.map(draw => (
-                <View key={draw.id} style={styles.horizontalCardWrapper}>
-                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Curated row: Menswear */}
-        {menswear.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.rowHeader}>
-              <Text style={styles.rowTitle}>Menswear & Streetwear</Text>
-              <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalCards}
-            >
-              {menswear.map(draw => (
-                <View key={draw.id} style={styles.horizontalCardWrapper}>
-                  <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
-                </View>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Curated row: Unisex */}
-        {unisex.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.rowHeader}>
-              <Text style={styles.rowTitle}>Unisex & Everything Else</Text>
-              <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalCards}
-            >
-              {unisex.map(draw => (
+              {bagDraws.map(draw => (
                 <View key={draw.id} style={styles.horizontalCardWrapper}>
                   <DrawCard draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} fullWidth />
                 </View>
@@ -357,11 +322,16 @@ export function HomeScreen() {
         )}
 
         {/* 2-col grid */}
-        {allDraws.length > 0 && (
+        {filteredDraws.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.rowTitle}>All draws</Text>
+            <Text style={styles.rowTitle}>
+              {activeFilter === 'tonight' ? 'Drawing tonight' :
+               activeFilter === 'high_value' ? 'High value draws' :
+               activeFilter === 'just_listed' ? 'All draws' :
+               LAUNCH_BRANDS.find(b => b.id === activeFilter)?.label ?? 'All draws'}
+            </Text>
             <View style={styles.grid}>
-              {allDraws.map(draw => (
+              {filteredDraws.map(draw => (
                 <DrawCard key={draw.id} draw={draw} onPress={() => goToDetail(draw)} onSellerPress={() => draw.sellerId && navigation.navigate("SellerProfile", { sellerId: draw.sellerId })} />
               ))}
             </View>
@@ -376,6 +346,37 @@ export function HomeScreen() {
           <Text style={styles.footerSub}>Winners announced live on bedrawn</Text>
         </View>
       </ScrollView>
+
+      {/* Brand Sheet — replaces search screen for MVP */}
+      <Modal
+        visible={brandSheetVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setBrandSheetVisible(false)}
+      >
+        <TouchableOpacity style={styles.sheetOverlay} activeOpacity={1} onPress={() => setBrandSheetVisible(false)}>
+          <View style={styles.sheetContainer}>
+            <Text style={styles.sheetTitle}>Browse by brand</Text>
+            {LAUNCH_BRANDS.map(brand => {
+              const count = allDraws.filter(d => (d as any).brandId === brand.id).length;
+              return (
+                <TouchableOpacity
+                  key={brand.id}
+                  style={styles.sheetRow}
+                  onPress={() => { setActiveFilter(brand.id); setBrandSheetVisible(false); }}
+                >
+                  <View style={styles.sheetRowLeft}>
+                    <Text style={styles.sheetBrandName}>{brand.label}</Text>
+                    <Text style={styles.sheetBrandCount}>{count} draw{count !== 1 ? 's' : ''} live</Text>
+                  </View>
+                  <Text style={styles.sheetChevron}>›</Text>
+                </TouchableOpacity>
+              );
+            })}
+            <Text style={styles.sheetFooter}>More brands coming soon. Follow @bedrawn for announcements.</Text>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -538,4 +539,13 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: S.xl, paddingVertical: S.xxl, alignItems: 'center' },
   footerText: { color: C.MUTED, fontSize: 12, textAlign: 'center', lineHeight: 18 },
   footerSub: { color: C.MUTED, fontSize: 11, marginTop: S.xs },
+  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  sheetContainer: { backgroundColor: C.CARD, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: S.xl, paddingBottom: S.xxxl },
+  sheetTitle: { fontSize: 18, fontWeight: '800', color: C.TEXT, marginBottom: S.xl },
+  sheetRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: S.lg, borderBottomWidth: 1, borderBottomColor: C.BORDER },
+  sheetRowLeft: { flex: 1 },
+  sheetBrandName: { fontSize: 16, fontWeight: '700', color: C.TEXT },
+  sheetBrandCount: { fontSize: 12, color: C.GREY, marginTop: 2 },
+  sheetChevron: { fontSize: 22, color: C.MUTED },
+  sheetFooter: { color: C.MUTED, fontSize: 12, textAlign: 'center', marginTop: S.xl, lineHeight: 18 },
 });

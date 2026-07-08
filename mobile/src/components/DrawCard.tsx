@@ -48,10 +48,12 @@ export function DrawCard({ draw, onPress, onSellerPress, fullWidth }: Props) {
           <Text style={styles.bookmarkIcon}>☆</Text>
         </TouchableOpacity>
 
-        {/* Verified */}
-        {draw.isVerified && (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>✓</Text>
+        {/* Auth / verified badge */}
+        {((draw as any).auth?.status === 'passed' || draw.isVerified) && (
+          <View style={(draw as any).auth?.status === 'passed' ? styles.authBadge : styles.verifiedBadge}>
+            <Text style={(draw as any).auth?.status === 'passed' ? styles.authText : styles.verifiedText}>
+              {(draw as any).auth?.status === 'passed' ? '✓ AUTH' : '✓'}
+            </Text>
           </View>
         )}
       </View>
@@ -83,6 +85,21 @@ export function DrawCard({ draw, onPress, onSellerPress, fullWidth }: Props) {
         </View>
 
         <ProgressBar percent={percent} height={3} />
+
+        {/* Threshold line */}
+        {draw.soldTickets >= draw.totalTickets ? (
+          <Text style={styles.thresholdSoldOut}>Sold out · resolves soon 9pm</Text>
+        ) : (() => {
+          const reserveAbs = draw.reserveTickets ?? Math.ceil(draw.totalTickets * ((draw as any).minThreshold ?? 0.5));
+          const ticketsNeeded = Math.max(0, reserveAbs - draw.soldTickets);
+          return ticketsNeeded === 0 ? (
+            <Text style={styles.thresholdConfirmed}>✓ Draw confirmed</Text>
+          ) : (
+            <Text style={[styles.thresholdNeeded, ticketsNeeded <= 100 && styles.thresholdUrgent]}>
+              {ticketsNeeded.toLocaleString()} more tickets needed
+            </Text>
+          );
+        })()}
 
         <Text style={styles.watchCount}>{watching} watching · {percent}% sold</Text>
       </View>
@@ -176,6 +193,23 @@ const styles = StyleSheet.create({
     color: C.WHITE,
     fontWeight: '700',
   },
+  authBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 36,
+    backgroundColor: 'rgba(139,92,246,0.18)',
+    borderWidth: 1,
+    borderColor: C.LILAC,
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  authText: {
+    fontSize: 8,
+    color: C.LILAC,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
   content: {
     padding: S.md,
     gap: S.xs,
@@ -233,5 +267,25 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: C.MUTED,
     marginTop: 4,
+  },
+  thresholdSoldOut: {
+    fontSize: 10,
+    color: C.LILAC,
+    marginTop: 3,
+  },
+  thresholdConfirmed: {
+    fontSize: 10,
+    color: C.GREEN,
+    marginTop: 3,
+    fontWeight: '600',
+  },
+  thresholdNeeded: {
+    fontSize: 10,
+    color: C.MUTED,
+    marginTop: 3,
+  },
+  thresholdUrgent: {
+    color: C.PINK,
+    fontWeight: '600',
   },
 });

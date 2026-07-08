@@ -59,8 +59,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   const costPence = draw.ticketPricePence * ticketCount;
 
-  // 25% per-user cap: one buyer can hold at most 25% of total tickets
-  const perUserCap = Math.floor((draw.totalTickets as number) * 0.25);
+  // 25% per-user cap: one buyer can hold at most 25% of total tickets.
+  // Math.max(1,...) prevents cap of 0 on draws with fewer than 4 total tickets.
+  const perUserCap = Math.max(1, Math.floor((draw.totalTickets as number) * 0.25));
   if (ticketCount > perUserCap) {
     return { statusCode: 400, headers: cors, body: JSON.stringify({ error: `Maximum ${perUserCap} tickets per user (25% of ${draw.totalTickets} total)` }) };
   }
@@ -168,9 +169,49 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     throw err;
   }
 
-  // After purchase: check if this sale tipped the draw over its reserve.
-  // If so, schedule it for the next 9pm by setting closingDate (once only).
-  if (!draw.closingDate) {
+  // Post-purchase: check for close triggers
+  if (draw.endsAt) {
+    // NEW draws with a fixed end date: trigger early close if fully sold out
+    // Re-read fresh state to avoid acting on stale soldTickets from before the transaction
+    const freshDraw = await db.send(new GetCommand({
+      TableName: TABLE,
+      Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+    }));
+    const fresh = freshDraw.Item;
+    if (fresh && (fresh.soldTickets as number) >= (fresh.totalTickets as number)) {
+      // Fully sold out. Compute early close: at least 7 days from listing AND 4 days from now
+      const listed = new Date(draw.createdAt as string);
+      const sevenDaysFromListing = new Date(listed.getTime() + 7 * 86_400_000);
+      const fourDaysFromNow = new Date(Date.now() + 4 * 86_400_000);
+      const earlyClose = new Date(Math.max(sevenDaysFromListing.getTime(), fourDaysFromNow.getTime()));
+      const earlyCloseDateStr = earlyClose.toLocaleDateString('en-GB', { timeZone: 'Europe/London' }).split('/').reverse().join('-');
+      const postalDeadlineStr = new Date(earlyClose.getTime() - 4 * 86_400_000)
+        .toLocaleDateString('en-GB', { timeZone: 'Europe/London' }).split('/').reverse().join('-');
+
+      if (earlyCloseDateStr < (draw.endsAt as string)) {
+        try {
+          await db.send(new UpdateCommand({
+            TableName: TABLE,
+            Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+            UpdateExpression: 'SET closingDate = :close, postalDeadline = :postal, earlyClose = :ec',
+            // Only bring the close date forward — never push it out
+            // Move close date forward only — also fires when closingDate is absent (new draw just sold out before first update)
+            ConditionExpression: 'attribute_not_exists(closingDate) OR closingDate > :close',
+            ExpressionAttributeValues: {
+              ':close': earlyCloseDateStr,
+              ':postal': postalDeadlineStr,
+              ':ec': true,
+            },
+          }));
+          console.log('[enter-draw] early close set for', drawId, 'at', earlyCloseDateStr, '(sold out)');
+        } catch (err: any) {
+          if (err.name !== 'ConditionalCheckFailedException') throw err;
+          // Already at an earlier date — fine
+        }
+      }
+    }
+  } else if (!draw.closingDate) {
+    // OLD draws without a fixed end date: reserve-triggered close (backward compat)
     const freshDraw = await db.send(new GetCommand({
       TableName: TABLE,
       Key: { PK: `DRAW#${drawId}`, SK: 'META' },
@@ -187,7 +228,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         }));
       } catch (err: any) {
         if (err.name !== 'ConditionalCheckFailedException') throw err;
-        // Concurrent purchase already scheduled it — fine
       }
     }
   }

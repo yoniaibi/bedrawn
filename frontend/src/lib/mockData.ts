@@ -20,10 +20,27 @@ export interface Draw {
   imageUrl: string;
   tags: string[];
   closingDate?: string; // ISO date string YYYY-MM-DD
-  status?: 'open' | 'resolved' | 'cancelled';
+  endsAt?: string;
+  postalDeadline?: string;
+  earlyClose?: boolean;
+  status?: 'open' | 'pending_verification' | 'rejected' | 'resolved' | 'cancelled' | 'pending_auth' | 'auth_failed' | 'sold_out_pending' | 'drawing' | 'complete';
   winnerHandle?: string;
   resolvedAt?: string;
   reserveTickets?: number;
+  certificateUrl?: string;
+  verificationProvider?: string;
+  userTickets?: number;
+  imageUrls?: string[];
+  brandId?: 'chanel' | 'lv' | 'bottega' | 'prada' | 'celine';
+  auth?: {
+    provider: 'legit_app';
+    tier: 'photo' | 'photo_plus_physical';
+    status: 'pending' | 'passed' | 'failed';
+    certificateRef: string | null;
+    checkedAt: string | null;
+  };
+  sellerTier?: 'founding' | 'trusted' | 'top' | null;
+  minThreshold?: number;
 }
 
 const UNS = 'https://images.unsplash.com';
@@ -50,6 +67,10 @@ export const draws: Draw[] = [
     description: 'Iconic Chanel Classic Flap in black caviar leather with gold hardware. Carried twice, comes with original box, authenticity card, and dustbag. Purchased from Chanel Selfridges.',
     imageUrl: `${UNS}/photo-1548036328-c9fa89d128fa?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Chanel', 'Designer', 'Handbag'],
+    brandId: 'chanel' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0001', checkedAt: '2026-06-01T10:00:00Z' },
+    sellerTier: 'founding' as const,
+    minThreshold: 0.7,
   },
   {
     id: '2',
@@ -114,6 +135,10 @@ export const draws: Draw[] = [
     description: 'Bottega Veneta The Pouch in cream intrecciato leather. Brand new with tags and full packaging. Gift from a client — never used.',
     imageUrl: `${UNS}/photo-1584917865442-de89df76afd3?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Bottega', 'Designer', 'Clutch'],
+    brandId: 'bottega' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0004', checkedAt: '2026-06-04T12:00:00Z' },
+    sellerTier: 'trusted' as const,
+    minThreshold: 0.5,
   },
   {
     id: '5',
@@ -198,6 +223,10 @@ export const draws: Draw[] = [
     description: 'Prada Re-Nylon backpack in black. Used three times. Full packaging included. Prada triangle logo intact and firm.',
     imageUrl: `${UNS}/photo-1553062407-98eeb64c6a62?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Prada', 'Backpack', 'Designer'],
+    brandId: 'prada' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0008', checkedAt: '2026-06-08T09:30:00Z' },
+    sellerTier: null,
+    minThreshold: 0.4,
   },
   {
     id: '9',
@@ -240,6 +269,8 @@ export const draws: Draw[] = [
     description: 'Christian Dior Saddle Bag in tan grained calfskin. Purchased 2021. Light wear on corners, all hardware gold and intact.',
     imageUrl: `${UNS}/photo-1566150905458-1bf1fc113f0d?w=600&h=600&fit=crop&q=80&auto=format`,
     tags: ['Dior', 'Saddle', 'Handbag'],
+    brandId: undefined,
+    minThreshold: 0.8,
   },
   {
     id: '11',
@@ -355,4 +386,10 @@ export const recentWinners = [
   { handle: '@emily_w', item: 'Louis Vuitton Neverfull', paid: 120, value: 1200 },
   { handle: '@luxe_fan', item: 'Air Jordan 1 Chicago', paid: 50, value: 450 },
   { handle: '@watchguy', item: 'Omega Speedmaster', paid: 200, value: 4800 },
+];
+
+export const MOCK_PAST_WINNERS = [
+  { drawId: 'pw1', brand: 'Chanel', model: 'Classic Flap Black Caviar', winnerHandle: '@sar***', ticketPrice: 50, totalEntries: 11220, wonAt: '2026-06-20', certificateRef: 'LGA-2026-0001', randomOrgRef: 'RO-2026-06-20-001' },
+  { drawId: 'pw2', brand: 'Bottega Veneta', model: 'The Pouch Cream', winnerHandle: '@eli***', ticketPrice: 50, totalEntries: 2880, wonAt: '2026-06-22', certificateRef: 'LGA-2026-0004', randomOrgRef: 'RO-2026-06-22-002' },
+  { drawId: 'pw3', brand: 'Prada', model: 'Re-Nylon Backpack Black', winnerHandle: '@tom***', ticketPrice: 25, totalEntries: 1760, wonAt: '2026-06-24', certificateRef: 'LGA-2026-0008', randomOrgRef: 'RO-2026-06-24-001' },
 ];

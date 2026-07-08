@@ -7,24 +7,24 @@ import DrawCard from '@/components/DrawCard';
 import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
+import { isEnabled } from '@/config/featureFlags';
+import { LAUNCH_BRANDS } from '@/config/brands';
 
 import type { Draw } from '@/lib/mockData';
 
-const categories = [
-  { id: 'all',         label: 'All' },
-  { id: 'Fashion',     label: 'Fashion' },
-  { id: 'Watches',     label: 'Watches' },
-  { id: 'Trainers',    label: 'Trainers' },
-  { id: 'Bags',        label: 'Bags' },
-  { id: 'Jewellery',   label: 'Jewellery' },
-  { id: 'Streetwear',  label: 'Streetwear' },
+const BRAND_CHIPS = [
+  { id: 'tonight',    label: 'Drawing Tonight' },
+  { id: 'chanel',     label: 'Chanel' },
+  { id: 'lv',         label: 'Louis Vuitton' },
+  { id: 'bottega',    label: 'Bottega Veneta' },
+  { id: 'prada',      label: 'Prada' },
+  { id: 'celine',     label: 'Celine' },
+  { id: 'high_value', label: 'High Value' },
+  { id: 'just_listed', label: 'Just Listed' },
 ];
 
-const filters = ['Drawing Tonight', 'Womenswear', 'Menswear', 'High Value', 'Bundles', 'Just Listed'];
-
 export default function HomePage() {
-  const [category, setCategory] = useState('all');
-  const [filter, setFilter] = useState('');
+  const [activeChip, setActiveChip] = useState('tonight');
   const [allDraws, setAllDraws] = useState<Draw[]>([]);
   const [drawsLoading, setDrawsLoading] = useState(true);
   const [drawsError, setDrawsError] = useState(false);
@@ -40,12 +40,10 @@ export default function HomePage() {
   }, []);
 
   const filtered = allDraws.filter(d => {
-    if (category !== 'all' && d.category !== category) return false;
-    if (filter === 'Drawing Tonight') return d.isClosingTonight;
-    if (filter === 'Womenswear') return d.style === 'Womenswear';
-    if (filter === 'Menswear') return d.style === 'Menswear';
-    if (filter === 'High Value') return d.retailValue >= 1000;
-    if (filter === 'Bundles') return d.isBundle;
+    if (activeChip === 'tonight') return d.isClosingTonight;
+    if (activeChip === 'high_value') return d.retailValue >= 1000;
+    if (activeChip === 'just_listed') return true;
+    if (['chanel', 'lv', 'bottega', 'prada', 'celine'].includes(activeChip)) return (d as any).brandId === activeChip;
     return true;
   });
 
@@ -55,8 +53,6 @@ export default function HomePage() {
   const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
 
   const drawingTonight = allDraws.filter(d => d.isClosingTonight).slice(0, 8);
-  const womenswear = allDraws.filter(d => d.style === 'Womenswear').slice(0, 8);
-  const menswear = allDraws.filter(d => d.style === 'Menswear').slice(0, 8);
 
   if (drawsLoading) return (
     <AppShell>
@@ -192,28 +188,17 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* ── Filter chips (category + filter combined) ── */}
+        {/* ── Brand filter chips ── */}
         <div style={{ overflowX: 'auto', marginBottom: 24 }} className="scrollbar-hide">
           <div style={{ display: 'flex', gap: 8, width: 'max-content', paddingBottom: 4 }}>
-            {categories.map(cat => (
+            {BRAND_CHIPS.map(chip => (
               <button
-                key={cat.id}
-                onClick={() => { setCategory(cat.id); setFilter(''); }}
-                className={`chip${category === cat.id && !filter ? ' active' : ''}`}
+                key={chip.id}
+                onClick={() => setActiveChip(chip.id)}
+                className={`chip${activeChip === chip.id ? ' active' : ''}`}
                 style={{ fontFamily: 'inherit' }}
               >
-                {cat.label}
-              </button>
-            ))}
-            <div style={{ width: 1, background: 'var(--border-subtle)', margin: '0 4px' }} />
-            {filters.map(f => (
-              <button
-                key={f}
-                onClick={() => { setFilter(filter === f ? '' : f); setCategory('all'); }}
-                className={`chip${filter === f ? ' active' : ''}`}
-                style={{ fontFamily: 'inherit' }}
-              >
-                {f}{f === 'Drawing Tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
+                {chip.label}{chip.id === 'tonight' && tonightCount > 0 ? ` · ${tonightCount}` : ''}
               </button>
             ))}
           </div>
@@ -239,32 +224,15 @@ export default function HomePage() {
         </section>
         )}
 
-        {/* ── Womenswear row ── */}
-        {womenswear.length > 0 && (
+        {/* ── Designer Bags row ── */}
+        {!isEnabled('STYLE_CATEGORIES') && (
         <section style={{ marginBottom: 32 }}>
           <div className="section-header">
-            <h2 className="section-title" style={{ marginBottom: 0 }}>Womenswear</h2>
-            <Link href="/categories" className="section-link">See all</Link>
+            <h2 className="section-title" style={{ marginBottom: 0 }}>Designer Bags</h2>
+            <a href="/sell-your-bag" style={{ color: 'var(--accent-coral)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Sell yours →</a>
           </div>
           <div className="scroll-strip" style={{ margin: '0 -16px' }}>
-            {womenswear.map(d => (
-              <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
-                <DrawCard draw={d} />
-              </div>
-            ))}
-          </div>
-        </section>
-        )}
-
-        {/* ── Menswear row ── */}
-        {menswear.length > 0 && (
-        <section style={{ marginBottom: 32 }}>
-          <div className="section-header">
-            <h2 className="section-title" style={{ marginBottom: 0 }}>Menswear</h2>
-            <Link href="/categories" className="section-link">See all</Link>
-          </div>
-          <div className="scroll-strip" style={{ margin: '0 -16px' }}>
-            {menswear.map(d => (
+            {allDraws.filter(d => d.category === 'Bags').slice(0, 8).map(d => (
               <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
                 <DrawCard draw={d} />
               </div>
@@ -277,8 +245,13 @@ export default function HomePage() {
         <section>
           <div className="section-header">
             <h2 className="section-title" style={{ marginBottom: 0 }}>
-              {category === 'all' ? 'All draws' : category}
-              {filter ? <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>{filter}</span> : null}
+              {activeChip === 'tonight'
+                ? 'Drawing Tonight'
+                : activeChip === 'high_value'
+                ? 'High Value Bags'
+                : activeChip === 'just_listed'
+                ? 'Just Listed'
+                : BRAND_CHIPS.find(c => c.id === activeChip)?.label ?? 'All Bags'}
             </h2>
             <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{filtered.length} draws</span>
           </div>

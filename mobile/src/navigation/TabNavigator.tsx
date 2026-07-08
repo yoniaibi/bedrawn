@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { isEnabled } from '../config/featureFlags';
 import { Draw } from '../data/mockData';
 import { AccountScreen } from '../screens/account/AccountScreen';
 import { NotificationsScreen } from '../screens/account/NotificationsScreen';
@@ -12,6 +13,7 @@ import { SettingsScreen } from '../screens/account/SettingsScreen';
 import { WalletScreen } from '../screens/account/WalletScreen';
 import { CategoriesScreen } from '../screens/categories/CategoriesScreen';
 import { DrawDetailScreen } from '../screens/draw/DrawDetailScreen';
+import { DrawsHistoryScreen } from '../screens/draw/DrawsHistoryScreen';
 import { PurchaseScreen } from '../screens/draw/PurchaseScreen';
 import { PurchaseSuccessScreen } from '../screens/draw/PurchaseSuccessScreen';
 import { GrandDrawScreen } from '../screens/grand-draw/GrandDrawScreen';
@@ -63,6 +65,7 @@ export type AccountStackParamList = {
   Orders: undefined;
   SavedDraws: undefined;
   Notifications: undefined;
+  DrawsHistory: undefined;
   BecomeSeller: undefined;
   ListItem: undefined;
   SellerDashboard: undefined;
@@ -146,6 +149,7 @@ function AccountStackNav() {
       <AccountStack.Screen name="Profile" component={ProfileScreen} />
       <AccountStack.Screen name="Terms" component={TermsScreen} />
       <AccountStack.Screen name="Privacy" component={PrivacyScreen} />
+      <AccountStack.Screen name="DrawsHistory" component={DrawsHistoryScreen} />
       <AccountStack.Screen name="DrawDetail" component={DrawDetailScreen} />
       <AccountStack.Screen name="Purchase" component={PurchaseScreen} />
       <AccountStack.Screen name="PurchaseSuccess" component={PurchaseSuccessScreen} />
@@ -208,11 +212,13 @@ export function TabNavigator() {
         component={TicketsStackNav}
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Tickets" focused={focused} /> }}
       />
-      <Tab.Screen
-        name="Grand Draw"
-        component={GrandDrawStackNav}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon label="GrandDraw" focused={focused} /> }}
-      />
+      {isEnabled('GRAND_DRAW') && (
+        <Tab.Screen
+          name="Grand Draw"
+          component={GrandDrawStackNav}
+          options={{ tabBarIcon: ({ focused }) => <TabIcon label="GrandDraw" focused={focused} /> }}
+        />
+      )}
       <Tab.Screen
         name="Account"
         component={AccountStackNav}

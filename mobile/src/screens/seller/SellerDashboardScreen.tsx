@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ProgressBar } from '../../components/ProgressBar';
+import { isEnabled } from '../../config/featureFlags';
 import { apiGet } from '../../lib/api';
 import { C } from '../../theme/colors';
 import { S } from '../../theme/spacing';
@@ -39,12 +41,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   completed: { label: 'Completed ✓', color: C.GREEN, bg: 'rgba(74,222,128,0.10)' },
   cancelled: { label: 'Cancelled', color: C.MUTED, bg: C.CARD2 },
   pending: { label: 'Pending', color: C.GOLD, bg: 'rgba(252,211,77,0.10)' },
+  pending_auth: { label: 'Auth Pending', color: C.LILAC, bg: 'rgba(139,92,246,0.10)' },
+  auth_failed: { label: 'Auth Failed', color: '#EF4444', bg: 'rgba(239,68,68,0.10)' },
 };
+
+type SellerTier = 'founding' | 'trusted' | 'top' | null;
 
 export function SellerDashboardScreen() {
   const navigation = useNavigation();
   const [stats, setStats] = useState<SellerStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sellerTier] = useState<SellerTier>('founding');
 
   useEffect(() => {
     apiGet<SellerStats>('/seller/stats')
@@ -63,6 +70,21 @@ export function SellerDashboardScreen() {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.title}>My Dashboard</Text>
+            {isEnabled('SELLER_BADGES') && sellerTier != null && (
+              <View style={[
+                styles.tierPill,
+                sellerTier === 'founding'
+                  ? { backgroundColor: 'rgba(245,158,11,0.15)', borderColor: 'rgba(245,158,11,0.40)' }
+                  : { backgroundColor: 'rgba(139,92,246,0.12)', borderColor: 'rgba(139,92,246,0.35)' },
+              ]}>
+                <Text style={[
+                  styles.tierText,
+                  { color: sellerTier === 'founding' ? C.GOLD : C.LILAC },
+                ]}>
+                  {sellerTier === 'founding' ? '⭐ Founding Seller' : sellerTier === 'top' ? '🏆 Top Seller' : '✓ Trusted'}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={{ width: 60 }} />
         </View>
@@ -130,6 +152,14 @@ export function SellerDashboardScreen() {
                       <Text style={styles.drawStats}>
                         {item.soldTickets} / {item.totalTickets} tickets · {pct}% sold
                       </Text>
+                      {isEnabled('LIVE_SHARE_EMBED') && (item.status === 'open' || item.status === 'live') && (
+                        <TouchableOpacity
+                          onPress={() => Share.share({ message: `${item.title} is drawing tonight on bedrawn — enter from 10p a ticket! https://bedrawn.co.uk` })}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.shareLink}>Share this draw →</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   );
                 })}
@@ -235,6 +265,16 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 11, fontWeight: '600' },
   drawEarnings: { color: C.GREEN, fontWeight: '800', fontSize: 16 },
   drawStats: { color: C.MUTED, fontSize: 12 },
+  shareLink: { color: C.PURPLE, fontSize: 12, fontWeight: '600' },
+  tierPill: {
+    alignSelf: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: S.sm,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  tierText: { fontSize: 11, fontWeight: '700' },
   tipsCard: {
     marginHorizontal: S.xl,
     marginBottom: S.xxl,

@@ -16,16 +16,11 @@ import { S } from '../../theme/spacing';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Interests'>;
 
 const INTERESTS = [
-  { label: 'Fashion' },
-  { label: 'Watches' },
-  { label: 'Luxury' },
-  { label: 'Streetwear' },
-  { label: 'Vintage' },
-  { label: 'Bags' },
-  { label: 'Trainers' },
-  { label: 'Jewellery' },
-  { label: 'Accessories' },
-  { label: 'Tech' },
+  { label: 'Chanel', emoji: '🪡' },
+  { label: 'Louis Vuitton', emoji: '🧳' },
+  { label: 'Bottega Veneta', emoji: '✨' },
+  { label: 'Prada', emoji: '🖤' },
+  { label: 'Celine', emoji: '🤍' },
 ];
 
 export function InterestsScreen({ navigation }: Props) {
@@ -48,9 +43,9 @@ export function InterestsScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>What are you into?</Text>
+        <Text style={styles.title}>Which brands do you love?</Text>
         <Text style={styles.subtitle}>
-          We'll personalise your feed based on your interests. You can change this later.
+          We'll show you draws for your favourite designers first. You can change this later.
         </Text>
 
         <View style={styles.grid}>
@@ -64,7 +59,7 @@ export function InterestsScreen({ navigation }: Props) {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>
-                  {item.label}
+                  {(item as any).emoji ? `${(item as any).emoji} ${item.label}` : item.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -78,7 +73,7 @@ export function InterestsScreen({ navigation }: Props) {
         >
           <Text style={styles.btnText}>
             {selected.size > 0
-              ? `Continue with ${selected.size} interest${selected.size > 1 ? 's' : ''}`
+              ? `Continue with ${selected.size} brand${selected.size > 1 ? 's' : ''}`
               : 'Continue'}
           </Text>
         </TouchableOpacity>

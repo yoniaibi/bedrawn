@@ -1,3 +1,13 @@
+export interface AuthRecord {
+  provider: 'legit_app';
+  tier: 'photo' | 'photo_plus_physical';
+  status: 'pending' | 'passed' | 'failed';
+  certificateRef: string | null;
+  checkedAt: string | null;
+}
+
+export type SellerTier = 'founding' | 'trusted' | 'top' | null;
+
 export type Draw = {
   id: string;
   title: string;
@@ -20,6 +30,15 @@ export type Draw = {
   imageColor: string;
   closingDate?: string; // YYYY-MM-DD — only set once the reserve is hit (scheduled for next 9pm)
   reserveTickets?: number; // minimum tickets to confirm the draw
+  minThreshold?: number;    // fraction 0-1 (e.g. 0.5 = 50% reserve). Alternative to reserveTickets.
+  brandId?: 'chanel' | 'lv' | 'bottega' | 'prada' | 'celine';
+  auth?: AuthRecord;
+  sellerTier?: 'founding' | 'trusted' | 'top' | null;
+  drawDurationDays?: number;
+  endsAt?: string;
+  postalDeadline?: string;
+  status?: 'open' | 'pending_auth' | 'auth_failed' | 'pending_verification' | 'sold_out_pending' | 'drawing' | 'complete' | 'cancelled';
+  winnerHandle?: string;
 };
 
 export const draws: Draw[] = [
@@ -42,6 +61,10 @@ export const draws: Draw[] = [
       'Authentic Chanel Classic Flap in black caviar leather with gold hardware. Serial number verified, comes with dustbag, box, and authenticity card. Purchased from Chanel Paris in 2022.',
     imageColor: '#1a1a2e',
     reserveTickets: 250,
+    brandId: 'chanel' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0001', checkedAt: '2026-06-01T10:00:00Z' },
+    sellerTier: 'founding' as const,
+    minThreshold: 0.25,
   },
   {
     id: '2',
@@ -122,6 +145,10 @@ export const draws: Draw[] = [
       'Louis Vuitton Neverfull MM in Damier Ebène canvas with red interior. Comes with pouch, dustbag, and date code 2019. Light wear consistent with age.',
     imageColor: '#4A3728',
     reserveTickets: 450,
+    brandId: 'lv' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0005', checkedAt: '2026-06-05T14:30:00Z' },
+    sellerTier: 'trusted' as const,
+    minThreshold: 0.75,
   },
   {
     id: '6',
@@ -162,6 +189,10 @@ export const draws: Draw[] = [
       'Prada Re-Edition 2000 in Re-Nylon and Saffiano leather in Nior. Silver metal lettering, shoulder strap included. 2022, barely used. Original receipt and dustbag.',
     imageColor: '#2D2D2D',
     reserveTickets: 250,
+    brandId: 'prada' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0007', checkedAt: '2026-06-07T09:00:00Z' },
+    sellerTier: 'founding' as const,
+    minThreshold: 0.5,
   },
   {
     id: '8',
@@ -202,6 +233,10 @@ export const draws: Draw[] = [
       'Bottega Veneta small Intrecciato woven leather clutch in tan. Gold zip. 2020, light use. Signature woven pattern, comes with dustbag.',
     imageColor: '#C49A3C',
     reserveTickets: 300,
+    brandId: 'bottega' as const,
+    auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0009', checkedAt: '2026-06-09T11:15:00Z' },
+    sellerTier: null,
+    minThreshold: 0.75,
   },
   {
     id: '10',
@@ -478,3 +513,21 @@ export const activityMessages = [
 
 // 7 draws for tonight's live screen
 export const tonightDraws = draws.filter(d => d.isClosingTonight);
+
+export interface PastWin {
+  drawId: string;
+  brand: string;
+  model: string;
+  winnerHandle: string; // masked: '@sar***'
+  ticketPrice: number;
+  totalEntries: number;
+  wonAt: string;
+  certificateRef: string;
+  randomOrgRef: string;
+}
+
+export const MOCK_PAST_WINNERS: PastWin[] = [
+  { drawId: 'pw1', brand: 'Chanel', model: 'Classic Flap Medium', winnerHandle: '@sar***', ticketPrice: 10, totalEntries: 847, wonAt: '2026-06-20', certificateRef: 'LGA-2026-0001', randomOrgRef: 'RO-2026-06-20-001' },
+  { drawId: 'pw2', brand: 'Louis Vuitton', model: 'Neverfull MM', winnerHandle: '@lux***', ticketPrice: 10, totalEntries: 441, wonAt: '2026-06-22', certificateRef: 'LGA-2026-0005', randomOrgRef: 'RO-2026-06-22-003' },
+  { drawId: 'pw3', brand: 'Prada', model: 'Re-Edition 2000', winnerHandle: '@mar***', ticketPrice: 10, totalEntries: 389, wonAt: '2026-06-24', certificateRef: 'LGA-2026-0007', randomOrgRef: 'RO-2026-06-24-001' },
+];

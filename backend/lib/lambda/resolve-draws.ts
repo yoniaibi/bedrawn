@@ -272,7 +272,7 @@ export const handler = async (): Promise<void> => {
         // Send seller resolved email
         const sellerEmail = draw.sellerId ? await getUserEmail(draw.sellerId as string) : null;
         if (sellerEmail) {
-          await sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, ticketPricePence).catch(err =>
+          await sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, ticketPricePence, (draw.verificationFeePence as number | undefined) ?? 0).catch(err =>
             console.error(`Failed to send seller email to ${draw.sellerId}:`, err));
         }
       }

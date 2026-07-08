@@ -1,7 +1,9 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
+  Animated,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,14 +24,43 @@ type Props = {
 };
 
 export function DrawDetailScreen({ route, navigation }: Props) {
-  const { draw } = route.params;
+  const { draw: initialDraw } = route.params;
+  const [draw, setDraw] = useState<any>(initialDraw);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [authSheetVisible, setAuthSheetVisible] = useState(false);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Pulse animation for urgent threshold
+  useEffect(() => {
+    const reserveAbs = draw.reserveTickets ?? Math.ceil(draw.totalTickets * (draw.minThreshold ?? 0.5));
+    const ticketsNeeded = Math.max(0, reserveAbs - draw.soldTickets);
+    if (ticketsNeeded > 0 && ticketsNeeded <= 100) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.03, duration: 1100, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.0, duration: 1100, useNativeDriver: true }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [draw.soldTickets, draw.reserveTickets, draw.totalTickets]);
+
+  // Dev simulator — only in __DEV__
+  useEffect(() => {
+    if (!__DEV__) return;
+    const delay = 20000 + Math.random() * 20000;
+    const timer = setTimeout(() => {
+      const increment = Math.floor(Math.random() * 3) + 1;
+      setDraw((prev: any) => ({
+        ...prev,
+        soldTickets: Math.min(prev.totalTickets, prev.soldTickets + increment),
+      }));
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [draw.soldTickets]);
 
   const percent = Math.round((draw.soldTickets / draw.totalTickets) * 100);
-  const reservePct = draw.reserveTickets && draw.totalTickets
-    ? Math.round((draw.reserveTickets / draw.totalTickets) * 100)
-    : null;
-  const reserveHit = reservePct !== null && percent >= reservePct;
   const heroImageUrl: string | undefined = draw.imageUrls?.[0] ?? draw.imageUrl;
   const priceLabel = draw.ticketPrice >= 100
     ? `£${(draw.ticketPrice / 100).toFixed(2)}`
@@ -83,6 +114,20 @@ export function DrawDetailScreen({ route, navigation }: Props) {
             </View>
           </View>
 
+          {/* Auth badge */}
+          {draw.auth?.status === 'passed' && (
+            <TouchableOpacity
+              style={styles.authBadgeRow}
+              onPress={() => setAuthSheetVisible(true)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.authBadge}>
+                <Text style={styles.authBadgeText}>✓ AUTHENTICATED by LEGIT APP</Text>
+              </View>
+              <Text style={styles.authBadgeTap}>Tap for certificate →</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Title */}
           <Text style={styles.title}>{draw.title}</Text>
 
@@ -120,8 +165,8 @@ export function DrawDetailScreen({ route, navigation }: Props) {
             </View>
           </View>
 
-          {/* Progress */}
-          <View style={styles.progressSection}>
+          {/* Threshold module — between progress and postal note */}
+          <View style={styles.thresholdModule}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressText}>{percent}% sold</Text>
               <Text style={styles.progressRemaining}>
@@ -129,19 +174,41 @@ export function DrawDetailScreen({ route, navigation }: Props) {
               </Text>
             </View>
             <ProgressBar percent={percent} height={6} />
-            {reservePct !== null && (
-              <View style={styles.reserveRow}>
-                <View style={[styles.reserveSwatch, { backgroundColor: reserveHit ? C.GREEN : C.GOLD }]} />
-                <Text style={[styles.reserveText, { color: reserveHit ? C.GREEN : C.GOLD }]}>
-                  Reserve {reservePct}%{reserveHit ? ' — reached, draw confirmed!' : ' needed to confirm draw'}
-                </Text>
-              </View>
-            )}
-            <View style={styles.ticketStats}>
-              <Text style={styles.ticketStatText}>
-                {draw.soldTickets.toLocaleString()} / {draw.totalTickets.toLocaleString()} tickets sold
-              </Text>
-            </View>
+
+            <Text style={styles.ticketStatText}>
+              {draw.soldTickets.toLocaleString()} of {draw.totalTickets.toLocaleString()} tickets sold
+            </Text>
+
+            {(() => {
+              const reserveAbs = draw.reserveTickets ?? Math.ceil(draw.totalTickets * (draw.minThreshold ?? 0.5));
+              const ticketsNeeded = Math.max(0, reserveAbs - draw.soldTickets);
+              const thresholdMet = ticketsNeeded === 0;
+
+              if (thresholdMet) {
+                return (
+                  <View style={styles.confirmedRow}>
+                    <Text style={styles.confirmedText}>
+                      ✓ This draw is confirmed. Resolves {draw.closingDate ?? 'tonight'} at 9pm.
+                    </Text>
+                  </View>
+                );
+              }
+
+              return (
+                <>
+                  <Animated.Text style={[
+                    styles.thresholdCount,
+                    ticketsNeeded <= 100 && styles.thresholdCountUrgent,
+                    ticketsNeeded <= 100 && { transform: [{ scale: pulseAnim }] },
+                  ]}>
+                    {ticketsNeeded.toLocaleString()} more tickets to confirm this draw
+                  </Animated.Text>
+                  <Text style={styles.thresholdSub}>
+                    If the threshold isn't met by 9pm on {draw.closingDate ?? 'closing night'}, the draw rolls to the next night and your tickets stay valid.
+                  </Text>
+                </>
+              );
+            })()}
           </View>
 
           {/* Postal entry note */}
@@ -211,6 +278,33 @@ export function DrawDetailScreen({ route, navigation }: Props) {
           <Text style={styles.enterBtnText}>Enter draw · {priceLabel} per ticket</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Auth certificate sheet */}
+      <Modal
+        visible={authSheetVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAuthSheetVisible(false)}
+      >
+        <TouchableOpacity style={styles.sheetOverlay} activeOpacity={1} onPress={() => setAuthSheetVisible(false)}>
+          <View style={styles.sheetContainer}>
+            <Text style={styles.sheetTitle}>Authentication Certificate</Text>
+            <Text style={styles.sheetBody}>
+              This bag passed independent photo authentication by LEGIT APP before listing.{'\n\n'}
+              {draw.retailValue >= 1000 ? 'Items over £1,000 are also physically inspected before delivery.' : 'Photo authentication confirms condition and authenticity from detailed photos submitted by the seller.'}
+            </Text>
+            {draw.auth?.certificateRef && (
+              <View style={styles.certRow}>
+                <Text style={styles.certLabel}>Certificate ref</Text>
+                <Text style={styles.certValue}>{draw.auth.certificateRef}</Text>
+              </View>
+            )}
+            <TouchableOpacity style={styles.sheetClose} onPress={() => setAuthSheetVisible(false)}>
+              <Text style={styles.sheetCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -426,4 +520,118 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   enterBtnText: { color: C.WHITE, fontWeight: '700', fontSize: 16 },
+  thresholdModule: {
+    backgroundColor: C.CARD,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.BORDER,
+    padding: S.lg,
+    marginBottom: S.xl,
+    gap: S.sm,
+  },
+  thresholdCount: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: C.TEXT,
+    fontFamily: 'serif',
+    fontStyle: 'italic',
+    lineHeight: 22,
+  },
+  thresholdCountUrgent: {
+    color: C.PINK,
+  },
+  thresholdSub: {
+    fontSize: 12,
+    color: C.MUTED,
+    lineHeight: 17,
+  },
+  confirmedRow: {
+    backgroundColor: C.GREEN_BG,
+    borderRadius: 8,
+    padding: S.md,
+  },
+  confirmedText: {
+    color: C.GREEN,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  authBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: S.sm,
+    marginBottom: S.md,
+    flexWrap: 'wrap',
+  },
+  authBadge: {
+    backgroundColor: 'rgba(139,92,246,0.10)',
+    borderWidth: 1,
+    borderColor: C.LILAC,
+    borderRadius: 6,
+    paddingHorizontal: S.md,
+    paddingVertical: 5,
+  },
+  authBadgeText: {
+    color: C.LILAC,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  authBadgeTap: {
+    color: C.LILAC,
+    fontSize: 12,
+  },
+  sheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  sheetContainer: {
+    backgroundColor: C.CARD,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: S.xxl,
+    paddingBottom: S.xxxl,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: C.TEXT,
+    marginBottom: S.lg,
+  },
+  sheetBody: {
+    fontSize: 14,
+    color: C.GREY,
+    lineHeight: 22,
+    marginBottom: S.xl,
+  },
+  certRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: C.CARD2,
+    borderRadius: 8,
+    padding: S.md,
+    marginBottom: S.xl,
+  },
+  certLabel: {
+    color: C.GREY,
+    fontSize: 13,
+  },
+  certValue: {
+    color: C.TEXT,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  sheetClose: {
+    backgroundColor: C.CARD2,
+    borderRadius: 999,
+    paddingVertical: S.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: C.BORDER,
+  },
+  sheetCloseText: {
+    color: C.TEXT,
+    fontWeight: '600',
+    fontSize: 15,
+  },
 });
