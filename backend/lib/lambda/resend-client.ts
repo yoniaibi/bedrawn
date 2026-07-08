@@ -47,9 +47,14 @@ export async function sendSellerResolvedEmail(
   drawTitle: string,
   soldTickets: number,
   ticketPricePence: number,
+  verificationFeePence = 0,
 ): Promise<void> {
   const resend = await getResend();
-  const revenuePounds = ((soldTickets * ticketPricePence) / 100).toFixed(2);
+  const grossPounds = ((soldTickets * ticketPricePence) / 100).toFixed(2);
+  const platformFeePounds = ((soldTickets * ticketPricePence * 0.12) / 100).toFixed(2);
+  const legitFeePounds = (verificationFeePence / 100).toFixed(2);
+  const netPounds = ((soldTickets * ticketPricePence * 0.88 - verificationFeePence) / 100).toFixed(2);
+  const revenuePounds = grossPounds;
   await resend.emails.send({
     from: FROM,
     to,
@@ -66,9 +71,22 @@ export async function sendSellerResolvedEmail(
               <td style="padding:10px 0;color:#9CA3AF;font-size:14px">Tickets sold</td>
               <td style="padding:10px 0;text-align:right;font-size:14px">${soldTickets}</td>
             </tr>
+            <tr style="border-bottom:1px solid #2A2440">
+              <td style="padding:10px 0;color:#9CA3AF;font-size:14px">Gross revenue</td>
+              <td style="padding:10px 0;text-align:right;font-size:14px">£${grossPounds}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #2A2440">
+              <td style="padding:10px 0;color:#9CA3AF;font-size:14px">Platform fee (12%)</td>
+              <td style="padding:10px 0;text-align:right;font-size:14px;color:#EF4444">−£${platformFeePounds}</td>
+            </tr>
+            ${verificationFeePence > 0 ? `
+            <tr style="border-bottom:1px solid #2A2440">
+              <td style="padding:10px 0;color:#9CA3AF;font-size:14px">LegitApp authentication</td>
+              <td style="padding:10px 0;text-align:right;font-size:14px;color:#EF4444">−£${legitFeePounds}</td>
+            </tr>` : ''}
             <tr>
-              <td style="padding:10px 0;color:#9CA3AF;font-size:14px">Total revenue</td>
-              <td style="padding:10px 0;text-align:right;font-size:14px;font-weight:700;color:#10B981">£${revenuePounds}</td>
+              <td style="padding:10px 0;color:#fff;font-size:14px;font-weight:700">You receive</td>
+              <td style="padding:10px 0;text-align:right;font-size:14px;font-weight:700;color:#10B981">£${netPounds}</td>
             </tr>
           </table>
           <p style="font-size:14px;color:#9CA3AF">Your payout will be processed within 24 hours of the winner confirming delivery. Check your seller dashboard for updates.</p>
@@ -78,6 +96,33 @@ export async function sendSellerResolvedEmail(
         </div>
         <div style="padding:16px 40px;border-top:1px solid #2A2440">
           <p style="font-size:12px;color:#4B5563;margin:0">bedrawn · Every night at 9pm · <a href="https://bedrawn.app" style="color:#8B5CF6">bedrawn.app</a></p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendVerificationRejectedEmail(to: string, drawTitle: string): Promise<void> {
+  const resend = await getResend();
+  await resend.emails.send({
+    from: FROM_SUPPORT,
+    to,
+    subject: `Authentication update — ${drawTitle}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#0D0B14;color:#fff;border-radius:12px;overflow:hidden">
+        <div style="background:#374151;padding:32px 40px">
+          <h1 style="margin:0;font-size:24px">Authentication result</h1>
+        </div>
+        <div style="padding:32px 40px">
+          <p style="font-size:16px;line-height:1.6">We're sorry — your listing <strong>${drawTitle}</strong> could not be authenticated by LegitApp.</p>
+          <p style="font-size:14px;color:#9CA3AF;line-height:1.6">The authentication fee has been waived and your listing has not gone live.</p>
+          <p style="font-size:14px;color:#9CA3AF;line-height:1.6">You're welcome to relist with clearer photos or contact LegitApp directly at <a href="https://legitapp.com" style="color:#8B5CF6">legitapp.com</a> for more detail on the outcome.</p>
+          <a href="https://bedrawn.app/seller/dashboard" style="display:inline-block;margin-top:24px;padding:14px 28px;background:#8B5CF6;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">
+            View dashboard →
+          </a>
+        </div>
+        <div style="padding:16px 40px;border-top:1px solid #2A2440">
+          <p style="font-size:12px;color:#4B5563;margin:0">bedrawn · <a href="https://bedrawn.app" style="color:#8B5CF6">bedrawn.app</a></p>
         </div>
       </div>
     `,

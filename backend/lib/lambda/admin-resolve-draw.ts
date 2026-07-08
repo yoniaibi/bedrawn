@@ -237,7 +237,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     console.log('[email] winnerEmail:', winnerEmail, 'sellerEmail:', sellerEmail);
     const emailResults = await Promise.allSettled([
       winnerEmail ? sendWinnerEmail(winnerEmail, drawTitle, drawId) : Promise.resolve(),
-      sellerEmail ? sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number) : Promise.resolve(),
+      sellerEmail ? sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number, (draw.verificationFeePence as number | undefined) ?? 0) : Promise.resolve(),
     ]);
     emailResults.forEach((r, i) => {
       const label = i === 0 ? 'winner' : 'seller';

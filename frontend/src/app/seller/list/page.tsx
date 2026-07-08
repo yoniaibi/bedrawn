@@ -6,7 +6,46 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-const STEPS = ['Type', 'Photos', 'Details', 'Pricing', 'Review'];
+// LegitApp cheapest tier fees (sourced from legitapp.com/pricing, GBP pence)
+const LEGIT_FEE_MAP: Record<string, { feePence: number; turnaround: string; hints: string[] }> = {
+  'Bags': {
+    feePence: 800,
+    turnaround: '3 hours',
+    hints: ['Front of bag', 'Back of bag', 'Interior lining', 'Serial / date code stamp', 'Hardware closeup', 'Logo closeup'],
+  },
+  'Trainers': {
+    feePence: 250,
+    turnaround: '30 min',
+    hints: ['Both shoes from front', 'Side profile (both)', 'Sole (both)', 'Tongue label with size', 'Box with label'],
+  },
+  'Watches': {
+    feePence: 1200,
+    turnaround: '4 hours',
+    hints: ['Dial (front)', 'Side (both sides)', 'Caseback', 'Crown', 'Serial engraving', 'Box & papers if present'],
+  },
+  'Jewellery': {
+    feePence: 800,
+    turnaround: '3 hours',
+    hints: ['Front', 'Back', 'Hallmark / stamp', 'Clasp / closure', 'Brand markings'],
+  },
+  'Streetwear': {
+    feePence: 320,
+    turnaround: '4 hours',
+    hints: ['Front full garment', 'Back full garment', 'Inside neck label', 'Size tag', 'Logo closeup'],
+  },
+  'Fashion': {
+    feePence: 800,
+    turnaround: '3 hours',
+    hints: ['Front full', 'Back full', 'Care label', 'Size label', 'Brand tag', 'Logo / stitching closeup'],
+  },
+};
+
+const DESIGNER_CATEGORIES = new Set(Object.keys(LEGIT_FEE_MAP));
+
+// Step layout: 0=Type, 1=Details, 2=Auth (designer only), 3=Photos, 4=Pricing, 5=Review
+const STEPS_FULL = ['Type', 'Details', 'Auth', 'Photos', 'Pricing', 'Review'];
+const STEPS_SHORT = ['Type', 'Details', 'Photos', 'Pricing', 'Review'];
+
 const TYPES = [
   { id: 'single',     label: 'Single item', icon: '◻' },
   { id: 'bundle',     label: 'Bundle',      icon: '◈' },
@@ -41,8 +80,10 @@ export default function ListItemPage() {
   const [reservePct, setReservePct] = useState(25);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [verificationRequested, setVerificationRequested] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [stepError, setStepError] = useState('');
@@ -98,10 +139,47 @@ export default function ListItemPage() {
     }
   };
 
+  const isDesigner = DESIGNER_CATEGORIES.has(category);
+  const legitInfo = LEGIT_FEE_MAP[category];
+
+  const STEPS = isDesigner ? STEPS_FULL : STEPS_SHORT;
+  // Map physical step (0-5) to display progress index
+  const displayStep = (!isDesigner && step >= 3) ? step - 1 : step;
+
   const resolvedTicketPricePence = ticketPrice === 'Custom' ? parseFloat(customPrice || '0') : parseTicketPricePence(ticketPrice);
-  const earnings = retailValue && ticketPrice && totalTickets && resolvedTicketPricePence > 0
+  const grossEarnings = retailValue && ticketPrice && totalTickets && resolvedTicketPricePence > 0
     ? (resolvedTicketPricePence / 100) * parseInt(totalTickets, 10) * 0.88
     : null;
+  const legitFeeDeduction = verificationRequested && legitInfo ? legitInfo.feePence / 100 : 0;
+  const netEarnings = grossEarnings !== null ? grossEarnings - legitFeeDeduction : null;
+
+  function handleNext() {
+    setStepError('');
+    if (step === 0 && !type) { setStepError('Please select a draw type to continue.'); return; }
+    if (step === 1) {
+      if (!title.trim()) { setStepError('Please enter a title for your listing.'); return; }
+      if (!condition) { setStepError('Please select the condition of your item.'); return; }
+      if (!category) { setStepError('Please select a category.'); return; }
+      // Jump over auth step if not a designer category
+      setStep(isDesigner ? 2 : 3);
+      return;
+    }
+    if (step === 3 && !photoUrls[0]) { setStepError('Please upload at least one photo — the hero image is required.'); return; }
+    if (step === 4) {
+      if (!retailValue) { setStepError('Please enter the retail value.'); return; }
+      if (!ticketPrice) { setStepError('Please select a ticket price.'); return; }
+      if (ticketPrice === 'Custom' && (!customPrice || parseFloat(customPrice) <= 0)) { setStepError('Please enter your custom ticket price in pence (e.g. 15 for 15p).'); return; }
+      if (!totalTickets) { setStepError('Please enter the total number of tickets.'); return; }
+    }
+    setStep(s => s + 1);
+  }
+
+  function handleBack() {
+    setStepError('');
+    // Jump over auth step backwards if not a designer category
+    if (step === 3) { setStep(isDesigner ? 2 : 1); return; }
+    setStep(s => s - 1);
+  }
 
   if (kycStatus === 'loading') {
     return (
@@ -137,14 +215,23 @@ export default function ListItemPage() {
         <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center', padding: '60px 24px' }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            background: 'var(--green-light)', border: '2px solid var(--green)',
+            background: pendingVerification ? 'rgba(245,158,11,0.15)' : 'var(--green-light)',
+            border: `2px solid ${pendingVerification ? 'var(--gold)' : 'var(--green)'}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px',
           }}>
-            <span style={{ fontSize: 28, color: 'var(--green)', fontWeight: 700 }}>✓</span>
+            <span style={{ fontSize: 28, color: pendingVerification ? 'var(--gold)' : 'var(--green)', fontWeight: 700 }}>
+              {pendingVerification ? '🔍' : '✓'}
+            </span>
           </div>
-          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>Listing submitted!</p>
-          <p style={{ fontSize: 14, color: 'var(--grey)', margin: '0 0 24px' }}>We&apos;ll review your listing within 24 hours and notify you when it&apos;s live.</p>
+          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>
+            {pendingVerification ? 'Sent for authentication' : 'Listing submitted!'}
+          </p>
+          <p style={{ fontSize: 14, color: 'var(--grey)', margin: '0 0 24px', lineHeight: 1.6 }}>
+            {pendingVerification
+              ? `Your item has been sent to LegitApp for authentication. This typically takes ${legitInfo?.turnaround ?? 'a few hours'}. We'll notify you by email once it's verified and your listing goes live.`
+              : "We'll review your listing within 24 hours and notify you when it's live."}
+          </p>
           <Link href="/seller/dashboard" style={{ textDecoration: 'none' }}>
             <button style={{ padding: '12px 28px', borderRadius: 999, background: 'var(--purple)', border: 'none', color: 'var(--white)', fontSize: 14, fontWeight: 700 }}>
               Go to dashboard
@@ -168,8 +255,8 @@ export default function ListItemPage() {
           <div style={{ display: 'flex', gap: 4 }}>
             {STEPS.map((s, i) => (
               <div key={s} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <div style={{ height: 3, borderRadius: 999, width: '100%', background: i <= step ? 'var(--purple)' : 'var(--border)' }} />
-                <span style={{ fontSize: 9, color: i <= step ? 'var(--purple)' : 'var(--muted)' }}>{s}</span>
+                <div style={{ height: 3, borderRadius: 999, width: '100%', background: i <= displayStep ? 'var(--purple)' : 'var(--border)' }} />
+                <span style={{ fontSize: 9, color: i <= displayStep ? 'var(--purple)' : 'var(--muted)' }}>{s}</span>
               </div>
             ))}
           </div>
@@ -195,45 +282,8 @@ export default function ListItemPage() {
             </div>
           )}
 
-          {/* Step 1: Photos */}
+          {/* Step 1: Details */}
           {step === 1 && (
-            <div>
-              <p style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Add photos</p>
-              <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>Up to 6 photos. First photo is your hero image.</p>
-              {uploading && <p style={{ fontSize: 12, color: 'var(--purple)', marginBottom: 12 }}>Uploading…</p>}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                {Array.from({ length: 6 }, (_, i) => (
-                  <label key={i} style={{ cursor: 'pointer' }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f, i); }}
-                    />
-                    <div style={{
-                      aspectRatio: '1', borderRadius: 10, overflow: 'hidden',
-                      background: photoUrls[i] ? 'transparent' : i === 0 ? 'rgba(124,58,237,0.06)' : 'var(--card)',
-                      border: `2px dashed ${photoUrls[i] ? 'var(--green)' : i === 0 ? 'var(--purple)' : 'var(--border)'}`,
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                      position: 'relative',
-                    }}>
-                      {photoUrls[i] ? (
-                        <img src={photoUrls[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-                      ) : (
-                        <>
-                          <span style={{ fontSize: 22, color: 'var(--muted)' }}>+</span>
-                          <span style={{ fontSize: 10, color: 'var(--muted)' }}>{i === 0 ? 'Hero' : `Photo ${i + 1}`}</span>
-                        </>
-                      )}
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Details */}
-          {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Title</label>
@@ -268,6 +318,11 @@ export default function ListItemPage() {
                     }}>{c}</button>
                   ))}
                 </div>
+                {category && DESIGNER_CATEGORIES.has(category) && (
+                  <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--gold)' }}>
+                    ✓ Authentication available for this category — you&apos;ll choose on the next step
+                  </p>
+                )}
               </div>
               <div>
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 8 }}>Style</label>
@@ -285,8 +340,145 @@ export default function ListItemPage() {
             </div>
           )}
 
-          {/* Step 3: Pricing */}
+          {/* Step 2: Authentication (designer categories only) */}
+          {step === 2 && legitInfo && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Authenticate this item?</p>
+                <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
+                  LegitApp verifies your {category.toLowerCase()} using expert authenticators. Verified items earn a trust badge on the draw page, which increases buyer confidence and ticket sales.
+                </p>
+              </div>
+
+              {/* Skip option */}
+              <button
+                onClick={() => { setVerificationRequested(false); }}
+                style={{
+                  padding: 16, borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+                  background: !verificationRequested ? 'rgba(124,58,237,0.08)' : 'var(--card)',
+                  border: `2px solid ${!verificationRequested ? 'var(--purple)' : 'var(--border)'}`,
+                  width: '100%',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: !verificationRequested ? 'var(--purple)' : 'var(--text)' }}>No authentication</p>
+                  {!verificationRequested && <span style={{ color: 'var(--purple)', fontSize: 12 }}>✓ Selected</span>}
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
+                  List immediately. No badge. Buyer trust is based on your photos and description alone.
+                </p>
+              </button>
+
+              {/* Verify option */}
+              <button
+                onClick={() => { setVerificationRequested(true); }}
+                style={{
+                  padding: 16, borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+                  background: verificationRequested ? 'rgba(245,158,11,0.08)' : 'var(--card)',
+                  border: `2px solid ${verificationRequested ? 'var(--gold)' : 'var(--border)'}`,
+                  width: '100%',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: verificationRequested ? 'var(--gold)' : 'var(--text)' }}>
+                    LegitApp authentication
+                  </p>
+                  <span style={{
+                    background: 'rgba(245,158,11,0.2)', border: '1px solid var(--gold)',
+                    color: 'var(--gold)', fontSize: 11, fontWeight: 700,
+                    padding: '2px 8px', borderRadius: 999,
+                  }}>£{(legitInfo.feePence / 100).toFixed(2)}</span>
+                </div>
+                <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
+                  Two expert authenticators review your photos. Result in {legitInfo.turnaround}. Listing goes live only after passing.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {['Expert reviewed', 'Certificate issued', 'Verified badge on listing', 'Fee deducted from payout'].map(f => (
+                    <span key={f} style={{
+                      fontSize: 10, padding: '3px 8px', borderRadius: 999,
+                      background: 'rgba(245,158,11,0.1)', color: 'var(--gold)', border: '1px solid rgba(245,158,11,0.3)',
+                    }}>{f}</span>
+                  ))}
+                </div>
+              </button>
+
+              {verificationRequested && (
+                <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, padding: '12px 14px' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--gold)', lineHeight: 1.5 }}>
+                    <strong>£{(legitInfo.feePence / 100).toFixed(2)}</strong> will be deducted from your payout when the draw resolves. No upfront payment required.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Photos */}
           {step === 3 && (
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Add photos</p>
+              {verificationRequested && legitInfo ? (
+                <div style={{ marginBottom: 14 }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--gold)', fontWeight: 600 }}>
+                    LegitApp requires these specific shots for {category.toLowerCase()}:
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+                    {legitInfo.hints.map((hint, i) => (
+                      <div key={hint} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{
+                          width: 18, height: 18, borderRadius: '50%', background: photoUrls[i] ? 'var(--green)' : 'var(--border)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 10, color: photoUrls[i] ? '#000' : 'var(--muted)', fontWeight: 700, flexShrink: 0,
+                        }}>{photoUrls[i] ? '✓' : i + 1}</span>
+                        <span style={{ fontSize: 12, color: photoUrls[i] ? 'var(--text)' : 'var(--grey)' }}>{hint}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--grey)' }}>Up to 6 photos. First photo is your hero image.</p>
+              )}
+              {uploading && <p style={{ fontSize: 12, color: 'var(--purple)', marginBottom: 12 }}>Uploading…</p>}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                {Array.from({ length: 6 }, (_, i) => (
+                  <label key={i} style={{ cursor: 'pointer' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f, i); }}
+                    />
+                    <div style={{
+                      aspectRatio: '1', borderRadius: 10, overflow: 'hidden',
+                      background: photoUrls[i] ? 'transparent' : i === 0 ? 'rgba(124,58,237,0.06)' : 'var(--card)',
+                      border: `2px dashed ${photoUrls[i] ? 'var(--green)' : i === 0 ? 'var(--purple)' : 'var(--border)'}`,
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      position: 'relative',
+                    }}>
+                      {photoUrls[i] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={photoUrls[i]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                      ) : (
+                        <>
+                          <span style={{ fontSize: 22, color: 'var(--muted)' }}>+</span>
+                          <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                            {verificationRequested && legitInfo ? (legitInfo.hints[i] ?? `Photo ${i + 1}`) : (i === 0 ? 'Hero' : `Photo ${i + 1}`)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {verificationRequested && !photoUrls[0] && (
+                <p style={{ margin: '12px 0 0', fontSize: 11, color: 'var(--muted)' }}>
+                  Upload all required shots for the best chance of a quick authentication result.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 4: Pricing */}
+          {step === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Retail value (£)</label>
@@ -318,7 +510,7 @@ export default function ListItemPage() {
               <div>
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Reserve — minimum tickets to proceed</label>
                 <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
-                  If fewer than this many tickets are sold, the draw cancels and buyers are fully refunded. Like an auction reserve — set higher to protect your item.
+                  If fewer than this many tickets are sold, the draw cancels and buyers are fully refunded.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[25, 50, 75, 100].map(pct => (
@@ -337,29 +529,35 @@ export default function ListItemPage() {
                 {totalTickets && (
                   <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>
                     Reserve = {Math.ceil(parseInt(totalTickets, 10) * reservePct / 100).toLocaleString()} tickets
-                    {reservePct === 100 ? ' — draw only proceeds at full sell-out' : ''}
                   </p>
                 )}
               </div>
-              {earnings && (
+              {netEarnings !== null && (
                 <div style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid var(--green)', borderRadius: 12, padding: '14px 16px' }}>
-                  <p style={{ margin: 0, fontSize: 14, color: 'var(--text)' }}>
-                    At full sell-out you earn{' '}
-                    <strong style={{ color: 'var(--green)', fontSize: 16 }}>£{earnings.toFixed(2)}</strong>
-                  </p>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--grey)' }}>
-                    88% of {totalTickets} tickets × {ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice} = £{((resolvedTicketPricePence / 100) * parseInt(totalTickets, 10)).toFixed(2)} revenue
-                  </p>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
-                    Draw needs {Math.ceil(parseInt(totalTickets, 10) * reservePct / 100).toLocaleString()} tickets sold ({reservePct}% reserve) or it cancels and buyers are refunded
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 13, color: 'var(--grey)' }}>88% platform share</span>
+                    <span style={{ fontSize: 13, color: 'var(--text)' }}>£{grossEarnings!.toFixed(2)}</span>
+                  </div>
+                  {legitFeeDeduction > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, color: 'var(--grey)' }}>LegitApp authentication</span>
+                      <span style={{ fontSize: 13, color: 'var(--gold)' }}>−£{legitFeeDeduction.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>You receive (full sell-out)</span>
+                    <strong style={{ color: 'var(--green)', fontSize: 16 }}>£{netEarnings.toFixed(2)}</strong>
+                  </div>
+                  <p style={{ margin: '8px 0 0', fontSize: 11, color: 'var(--gold)', fontWeight: 600 }}>
+                    Needs {Math.ceil(parseInt(totalTickets, 10) * reservePct / 100).toLocaleString()} tickets sold ({reservePct}% reserve) or cancels
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 4: Review */}
-          {step === 4 && (
+          {/* Step 5: Review */}
+          {step === 5 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>Review your listing</p>
               <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -369,6 +567,7 @@ export default function ListItemPage() {
                   { label: 'Condition', value: condition || '—' },
                   { label: 'Category', value: category || '—' },
                   { label: 'Style', value: style || '—' },
+                  { label: 'Authentication', value: verificationRequested && legitInfo ? `LegitApp (£${(legitInfo.feePence / 100).toFixed(2)}, from payout)` : 'None' },
                   { label: 'Retail value', value: retailValue ? `£${retailValue}` : '—' },
                   { label: 'Ticket price', value: ticketPrice || '—' },
                   { label: 'Total tickets', value: totalTickets || '—' },
@@ -376,7 +575,7 @@ export default function ListItemPage() {
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 13, color: 'var(--grey)' }}>{row.label}</span>
-                    <span style={{ fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{row.value}</span>
+                    <span style={{ fontSize: 13, color: row.label === 'Authentication' && verificationRequested ? 'var(--gold)' : 'var(--text)', fontWeight: 600 }}>{row.value}</span>
                   </div>
                 ))}
               </div>
@@ -392,6 +591,7 @@ export default function ListItemPage() {
                   </button>
                   <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
                     I confirm the item is as described. I understand that misrepresentation may result in liquidated damages and removal from the platform.
+                    {verificationRequested && legitInfo && ` I agree that £${(legitInfo.feePence / 100).toFixed(2)} will be deducted from my payout for LegitApp authentication.`}
                   </p>
                 </div>
               </div>
@@ -412,12 +612,20 @@ export default function ListItemPage() {
                     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ title, description: desc, category, style, condition, type, ticketPrice: ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice, totalTickets, retailValue, reservePct, imageUrls: photoUrls.filter(Boolean) }),
+                      body: JSON.stringify({
+                        title, description: desc, category, style, condition, type,
+                        ticketPrice: ticketPrice === 'Custom' ? `${customPrice}p` : ticketPrice,
+                        totalTickets, retailValue, reservePct,
+                        imageUrls: photoUrls.filter(Boolean),
+                        verificationRequested,
+                      }),
                     });
                     if (!res.ok) {
-                      const body = await res.json().catch(() => ({}));
-                      throw new Error(body.error ?? `Error ${res.status}`);
+                      const b = await res.json().catch(() => ({}));
+                      throw new Error(b.error ?? `Error ${res.status}`);
                     }
+                    const data = await res.json();
+                    setPendingVerification(data.pendingVerification ?? false);
                     setSubmitted(true);
                   } catch (err: unknown) {
                     setSubmitError(err instanceof Error ? err.message : 'Submission failed');
@@ -436,7 +644,7 @@ export default function ListItemPage() {
           )}
 
           {/* Nav buttons */}
-          {step < 4 && (
+          {step < 5 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
               {stepError && (
                 <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--red)', borderRadius: 8, padding: '10px 14px' }}>
@@ -445,36 +653,20 @@ export default function ListItemPage() {
               )}
               <div style={{ display: 'flex', gap: 10 }}>
                 {step > 0 && (
-                  <button onClick={() => { setStep(s => s - 1); setStepError(''); }} style={{
+                  <button onClick={handleBack} style={{
                     flex: 1, padding: 14, borderRadius: 999, background: 'var(--card)',
                     border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 600, cursor: 'pointer',
                   }}>Back</button>
                 )}
                 <button
-                  onClick={() => {
-                    setStepError('');
-                    if (step === 0 && !type) { setStepError('Please select a draw type to continue.'); return; }
-                    if (step === 1 && !photoUrls[0]) { setStepError('Please upload at least one photo — the hero image is required.'); return; }
-                    if (step === 2) {
-                      if (!title.trim()) { setStepError('Please enter a title for your listing.'); return; }
-                      if (!condition) { setStepError('Please select the condition of your item.'); return; }
-                      if (!category) { setStepError('Please select a category.'); return; }
-                    }
-                    if (step === 3) {
-                      if (!retailValue) { setStepError('Please enter the retail value.'); return; }
-                      if (!ticketPrice) { setStepError('Please select a ticket price.'); return; }
-                      if (ticketPrice === 'Custom' && (!customPrice || parseFloat(customPrice) <= 0)) { setStepError('Please enter your custom ticket price in pence (e.g. 15 for 15p).'); return; }
-                      if (!totalTickets) { setStepError('Please enter the total number of tickets.'); return; }
-                    }
-                    setStep(s => s + 1);
-                  }}
+                  onClick={handleNext}
                   style={{
                     flex: 2, padding: 14, borderRadius: 999,
                     background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
                     border: 'none', color: 'var(--white)', fontWeight: 700, cursor: 'pointer', fontSize: 15,
                   }}
                 >
-                  {step === 3 ? 'Review listing' : 'Next'}
+                  {step === 4 ? 'Review listing' : 'Next'}
                 </button>
               </div>
             </div>

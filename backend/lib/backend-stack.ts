@@ -492,6 +492,29 @@ export class BackendStack extends cdk.Stack {
       alarm.addAlarmAction(new cwactions.SnsAction(alertTopic));
     });
 
+    // LegitApp authentication webhook — public endpoint, HMAC-verified inside Lambda
+    const legitWebhookFn = new nodejs.NodejsFunction(this, 'LegitWebhook', {
+      ...commonProps,
+      timeout: cdk.Duration.seconds(15),
+      environment: {
+        ...commonEnv,
+        USER_POOL_ID: userPool.userPoolId,
+        RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full',
+        LEGIT_WEBHOOK_SECRET: '', // set after first deploy: aws ssm put-parameter --name /bedrawn/legit/webhook-secret
+      },
+      entry: path.join(__dirname, 'lambda/legit-webhook.ts'),
+    });
+    table.grantReadWriteData(legitWebhookFn);
+    legitWebhookFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminGetUser'],
+      resources: [userPool.userPoolArn],
+    }));
+    legitWebhookFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/bedrawn/resend/api-key-full`],
+    }));
+    api.addRoutes({ path: '/webhooks/legit', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('LegitWebhookInt', legitWebhookFn) });
+
     // DynamoDB throttle alarm
     const throttleAlarm = new cloudwatch.Alarm(this, 'DdbThrottleAlarm', {
       metric: table.metricThrottledRequestsForOperations({
