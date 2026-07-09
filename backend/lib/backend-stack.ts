@@ -611,6 +611,29 @@ export class BackendStack extends cdk.Stack {
     }));
     api.addRoutes({ path: '/webhooks/legit', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('LegitWebhookInt', legitWebhookFn) });
 
+    // ── Admin metrics / cohort Lambda ─────────────────────────────────────────
+    // Handles all innovation-accounting routes — cohort CRUD, metrics computation,
+    // pivot decisions, buyer hashing, seller roll-up, and safety notes.
+    const adminCohortFn = new nodejs.NodejsFunction(this, 'AdminCohort', {
+      ...commonProps,
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
+      entry: path.join(__dirname, 'lambda/admin-cohort.ts'),
+      timeout: cdk.Duration.seconds(30),
+    });
+    table.grantReadWriteData(adminCohortFn);
+
+    const adminCohortInt = new HttpLambdaIntegration('AdminCohortInt', adminCohortFn);
+    api.addRoutes({ path: '/admin/cohorts',                    methods: [HttpMethod.GET, HttpMethod.POST],         integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/cohorts/{id}',               methods: [HttpMethod.GET],                          integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/cohorts/{id}/snapshot',      methods: [HttpMethod.POST],                         integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/cohorts/{id}/resolve',       methods: [HttpMethod.POST],                         integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/cohorts/{id}/buyers',        methods: [HttpMethod.POST],                         integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/metrics',                    methods: [HttpMethod.GET],                          integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/metrics/decision',           methods: [HttpMethod.POST],                         integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/sellers',                    methods: [HttpMethod.GET],                          integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/safety',                     methods: [HttpMethod.GET],                          integration: adminCohortInt, authorizer });
+    api.addRoutes({ path: '/admin/safety/note',                methods: [HttpMethod.POST],                         integration: adminCohortInt, authorizer });
+
     // DynamoDB throttle alarm
     const throttleAlarm = new cloudwatch.Alarm(this, 'DdbThrottleAlarm', {
       metric: table.metricThrottledRequestsForOperations({
