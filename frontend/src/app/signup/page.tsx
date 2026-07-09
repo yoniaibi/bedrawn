@@ -8,11 +8,24 @@ import { signUp } from 'aws-amplify/auth';
 
 const HANDLE_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
+function isEighteenPlus(d: number, m: number, y: number): boolean {
+  const dob = new Date(y, m - 1, d);
+  if (isNaN(dob.getTime()) || y < 1900) return false;
+  const t = new Date();
+  let age = t.getFullYear() - dob.getFullYear();
+  const md = t.getMonth() - dob.getMonth();
+  if (md < 0 || (md === 0 && t.getDate() < dob.getDate())) age--;
+  return age >= 18;
+}
+
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [dobD, setDobD] = useState('');
+  const [dobM, setDobM] = useState('');
+  const [dobY, setDobY] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -25,7 +38,18 @@ export default function SignupPage() {
     else if (!HANDLE_RE.test(handle)) e.handle = '3–20 characters, letters, numbers or underscores only';
     if (!email.includes('@')) e.email = 'Enter a valid email address';
     if (password.length < 8) e.password = 'Password must be at least 8 characters';
-    if (!agreed) e.agreed = 'You must accept the Terms of Service';
+    if (!dobD.trim() || !dobM.trim() || !dobY.trim()) {
+      e.dob = 'Date of birth is required';
+    } else {
+      const d = parseInt(dobD, 10), m = parseInt(dobM, 10), y = parseInt(dobY, 10);
+      const dob = new Date(y, m - 1, d);
+      const validDate = !isNaN(dob.getTime()) && y >= 1900
+        && dob.getFullYear() === y && dob.getMonth() === m - 1 && dob.getDate() === d
+        && dob.getTime() <= Date.now();
+      if (!validDate) e.dob = 'Enter a valid date of birth';
+      else if (!isEighteenPlus(d, m, y)) e.dob = 'bedrawn is only available to players aged 18 or over.';
+    }
+    if (!agreed) e.agreed = 'You must agree to the Terms & Conditions and Privacy Policy';
     return e;
   };
 
@@ -38,7 +62,7 @@ export default function SignupPage() {
       await signUp({
         username: email,
         password,
-        options: { userAttributes: { email, name } },
+        options: { userAttributes: { email, name, 'custom:dob': `${dobY}-${dobM.padStart(2, '0')}-${dobD.padStart(2, '0')}` } },
       });
       sessionStorage.setItem('drawn_pending_email', email);
       sessionStorage.setItem('drawn_pending_handle', handle);
@@ -89,6 +113,36 @@ export default function SignupPage() {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 8 characters" />
             {errors.password && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.password}</p>}
           </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 6 }}>Date of birth</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                value={dobD}
+                onChange={e => setDobD(e.target.value.replace(/\D/g, ''))}
+                placeholder="DD"
+                maxLength={2}
+                inputMode="numeric"
+                style={{ width: 60, textAlign: 'center', padding: '0 8px' }}
+              />
+              <input
+                value={dobM}
+                onChange={e => setDobM(e.target.value.replace(/\D/g, ''))}
+                placeholder="MM"
+                maxLength={2}
+                inputMode="numeric"
+                style={{ width: 60, textAlign: 'center', padding: '0 8px' }}
+              />
+              <input
+                value={dobY}
+                onChange={e => setDobY(e.target.value.replace(/\D/g, ''))}
+                placeholder="YYYY"
+                maxLength={4}
+                inputMode="numeric"
+                style={{ width: 88, textAlign: 'center', padding: '0 8px' }}
+              />
+            </div>
+            {errors.dob && <p style={{ color: 'var(--red)', fontSize: 12, margin: '4px 0 0' }}>{errors.dob}</p>}
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
             <button
@@ -104,8 +158,8 @@ export default function SignupPage() {
               {agreed && <span style={{ color: 'white', fontSize: 12, fontWeight: 700 }}>✓</span>}
             </button>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)', lineHeight: 1.4 }}>
-              I agree to bedrawn&apos;s{' '}
-              <Link href="/legal/terms" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Terms of Service</Link>
+              I agree to the{' '}
+              <Link href="/legal/terms" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Terms &amp; Conditions</Link>
               {' '}and{' '}
               <Link href="/legal/privacy" style={{ color: 'var(--purple)', textDecoration: 'none' }}>Privacy Policy</Link>
             </p>

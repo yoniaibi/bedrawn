@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(brew install *)"
+      "Bash(brew install *)",
+      "Bash(aws amplify list-jobs *)",
+      "Bash(aws amplify get-job *)",
+      "Bash(curl -s \"https://aws-amplify-prod-eu-west-1-artifacts.s3.eu-west-1.amazonaws.com/d3p78pfvqkawaz/main/0000000053/BUILD/log.txt?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEM3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCWV1LXdlc3QtMSJIMEYCIQDMN7MiPc%2Fie3I4onRM94%2BAbwgdyxeLgFqBEmK6RrWnMQIhAPwzMw4xosCDCMpTMq4J0N%2F4PVPkNyjFVQSKw8m9qBWuKuAECJb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEQAxoMNTY1MDM2OTI2NjQxIgzmQQRTV%2FER0V%2BUkx8qtAQ9Cut2UzptJLm2cH5oQuex8Yr4lBzbYLp08qx%2FVt2t31phIw4poe0JV19RI9gGjWQ1G0bMlCU%2BGgcGSy%2FT01zM3LV9jJdfr59MSYikKfhWVagVlAQB9saeWHpM7y9q07%2B16BpwRi4QQPagwm4idqBLzYi7W8qwou%2BBVx320ny6cVMnmP4VvLRzswtNA6g%2Bno%2FtgUCNeo9WHDvF97VZCDm82GPe38xezsYIJcFKQDy%2BlDKYb5PC9zmERUNPKRNfLJ0F%2BN8Rww5iwi2jHQHZzbds%2Fbo1bepiAGzJKB2c%2Fl3Av80z6wqS%2BrZMTEJETu1IblO9LQllfFpaz1RrPNtoVOybr0UmvEG3%2Fm3J87fRmpwB3Kyhg%2FeRCHsa1omBbyccP%2B2M1Jfz1O8KXf5cMF7VKkJIXDdjNmu0cr8uXefLdJ7E1kBtPQn4Xv%2B%2FxE7zR9YZ%2FovZdfnCA9cmliZSdxnyvgUvtXMK8saBrP%2F7NeDbztXd0dlvQ9YtR2LxNH0RXlTmXd3uA2cdvUAy5DhnzNALt7eQ84u1X8uaQi2qRiconfivtCVgtDPuQLbmltvFU%2F%2BQMZeGCnCFwtirt8S8mNdZbVWwjtuyAKV%2B%2Bg3BzvP%2FKiQ23n%2FcYSmeM4UOf69R7kk9Texuv4sq%2FrBulqj7kDtowIg9e%2F9Vne%2BhdnM0PALAM2KyvJzZjpZymM%2ByPSj8lG7AFKAtXRK3OY1zhT2JI9GyxSe8CY7GbhLplLFDJQPUcvEX71LKo%2FUwgtG80gY6ogGC4NLz9X9ppFZFdtIepgmCjMtiRHfirpYjSfJv6Gbt8qsEIV07Q0RlpQmrSkF4%2BtBCrKGtbqpRYDh7vRJ5hdzJb3CsfMv0XB%2BOOEhE0C4Xgq4Tkw5CinLI0eBobr3gipGJYdaiCXK9coEfTtuYNFmm3bC6g2D92%2BD5dt9e1SXZUrj0cXIjoL37f6BqzD2oU5ejAhylkGWkpIMfs%2BAq8OV83GE%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260709T075158Z&X-Amz-SignedHeaders=host&X-Amz-Expires=3600&X-Amz-Credential=ASIAYHDWTI2Y3IM6N3CR%2F20260709%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Signature=df608bd008710e97fa1fb19e8e61b3c0e4a32ca9bc6718084ea6b8bf75e65c2a\")",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(aws amplify get-domain-association *)",
+      "Bash(aws amplify list-domain-associations *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

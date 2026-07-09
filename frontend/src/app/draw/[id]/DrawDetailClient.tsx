@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
 import ProgressBar from '@/components/ProgressBar';
 import LiveDot from '@/components/LiveDot';
+import { SellerBadgeRow } from '@/components/SellerBadge';
+import { badgesForDraw } from '@/config/sellerBadges';
 import { ChevronLeftIcon, HeartFilledIcon, ShareIcon, TrophyIcon, ClockIcon } from '@/components/icons';
+import { POSTAL_ADDRESS } from '@/config/businessConfig';
 import type { Draw } from '@/lib/mockData';
 
 import '@/lib/amplify';
@@ -28,6 +31,25 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+
+  // Free postal entry section (A2 — no purchase necessary)
+  const [postalExpanded, setPostalExpanded] = useState(false);
+  const postalRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // First-visit: auto-expand the postal entry section once
+    try {
+      if (!localStorage.getItem('bedrawn_seen_postal')) {
+        setPostalExpanded(true);
+        localStorage.setItem('bedrawn_seen_postal', '1');
+      }
+    } catch {}
+  }, []);
+
+  const scrollToPostal = () => {
+    setPostalExpanded(true);
+    postalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   // Purchase modal state
   const [showModal, setShowModal] = useState(false);
@@ -168,6 +190,10 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
   const price = draw.ticketPrice >= 100 ? `£${(draw.ticketPrice / 100).toFixed(2)}` : `${draw.ticketPrice}p`;
   const reservePct = draw.reserveTickets ? Math.round((draw.reserveTickets / draw.totalTickets) * 100) : null;
   const reserveHit = reservePct !== null && pct >= reservePct;
+  const ticketsNeeded = draw.reserveTickets ? Math.max(0, draw.reserveTickets - draw.soldTickets) : 0;
+  const closesAtLabel = draw.closingDate
+    ? new Date(draw.closingDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+    : 'the closing date';
 
   return (
     <AppShell>
@@ -235,6 +261,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                   {draw.sellerName || `@${draw.seller}`}
                 </span>
                 {draw.isVerified && <span style={{ color: 'var(--accent-lilac)', fontSize: 12 }}>✓</span>}
+                <SellerBadgeRow badges={badgesForDraw(draw)} />
               </Link>
             ) : (
               <>
@@ -248,6 +275,23 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
             <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>→</span>
             <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)' }}>£{draw.retailValue.toLocaleString()} retail</span>
           </div>
+
+          {/* Free entry ghost button — above the fold, before the purchase CTA */}
+          {draw.status === 'open' && (
+            <button
+              onClick={scrollToPostal}
+              style={{
+                display: 'block', width: '100%', marginBottom: 16,
+                padding: '11px 16px', borderRadius: 10,
+                background: 'transparent',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-secondary)',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Free entry — no purchase needed
+            </button>
+          )}
 
           {/* Progress bar with reserve marker */}
           <div style={{ position: 'relative', marginBottom: reservePct !== null ? 6 : 0 }}>
@@ -273,6 +317,32 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
             </div>
           )}
 
+          {/* Threshold countdown (C1) */}
+          {draw.status === 'open' && !reserveHit && ticketsNeeded > 0 && (
+            <p style={{ margin: '0 0 6px', fontSize: 13, color: ticketsNeeded <= 100 ? 'var(--accent-pink)' : 'var(--text-secondary)', fontWeight: 600 }}>
+              {ticketsNeeded <= 100 ? (
+                <span
+                  className="serif"
+                  style={{
+                    display: 'inline-block',
+                    color: 'var(--accent-pink)',
+                    animation: 'threshold-pulse 2.2s ease-in-out infinite',
+                  }}
+                >
+                  {ticketsNeeded.toLocaleString()}
+                </span>
+              ) : (
+                <span>{ticketsNeeded.toLocaleString()}</span>
+              )}
+              {' '}more tickets needed
+            </p>
+          )}
+          {draw.status === 'open' && (
+            <p style={{ margin: '0 0 6px', fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.5 }}>
+              If the threshold isn&apos;t met by 9pm on {closesAtLabel}, the draw rolls to the next draw night and your tickets stay valid.
+            </p>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, marginBottom: 16 }}>
             <span style={{ fontSize: 12, color: 'var(--grey)' }}>{pct}% of {draw.totalTickets.toLocaleString()} tickets sold</span>
             <span style={{ fontSize: 12, color: remaining < 500 ? 'var(--red)' : 'var(--grey)' }}>{remaining.toLocaleString()} remaining</span>
@@ -293,26 +363,58 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
             {draw.tags.map(tag => <span key={tag} style={{ background: 'var(--card2)', border: '1px solid var(--border)', color: 'var(--grey)', fontSize: 12, padding: '4px 10px', borderRadius: 999 }}>{tag}</span>)}
           </div>
 
-          {/* Free postal entry info */}
+          {/* Free postal entry — no purchase necessary (A2) */}
           {draw.status === 'open' && (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Free postal entry</p>
-                <Link href={`/draw/${draw.id}/postal`} style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap', marginLeft: 12 }}>
-                  Print form →
-                </Link>
-              </div>
-              <p style={{ margin: '0 0 6px', fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
-                No purchase necessary. One postal entry = equal odds to a paid ticket.
-              </p>
-              {draw.postalDeadline && (
-                <p style={{ margin: 0, fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
-                  Postal deadline: {new Date(draw.postalDeadline + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {draw.earlyClose && <span style={{ color: 'var(--grey)', fontWeight: 400 }}> (early close)</span>}
-                </p>
+            <div ref={postalRef} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 8, overflow: 'hidden' }}>
+              <button
+                onClick={() => setPostalExpanded(v => !v)}
+                aria-expanded={postalExpanded}
+                style={{
+                  width: '100%', padding: '14px 16px', background: 'none', border: 'none',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>No purchase necessary</span>
+                <span style={{ fontSize: 14, color: 'var(--text-tertiary)', transform: postalExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 150ms ease-out' }}>›</span>
+              </button>
+              {postalExpanded && (
+                <div style={{ padding: '0 16px 16px' }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
+                    You can enter this draw for free by post, with <strong>identical odds</strong> to a paid ticket.
+                    Send an unenclosed first- or second-class letter with your full name, email address,
+                    postal address and the draw ID <strong>{draw.id}</strong> to:
+                  </p>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text)', fontWeight: 600, whiteSpace: 'pre-line', background: 'var(--bg-elevated)', borderRadius: 8, padding: '10px 14px' }}>
+                    {POSTAL_ADDRESS}
+                  </p>
+                  <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--grey)', lineHeight: 1.6 }}>
+                    Your entry must arrive before this draw closes
+                    {draw.closingDate ? ` on ${new Date(draw.closingDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}.
+                    One postal entry per person per draw. Postal entries are added alongside paid tickets and have identical odds of winning.
+                  </p>
+                  {draw.postalDeadline && (
+                    <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--gold)', fontWeight: 600 }}>
+                      Postal deadline: {new Date(draw.postalDeadline + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {draw.earlyClose && <span style={{ color: 'var(--grey)', fontWeight: 400 }}> (early close)</span>}
+                    </p>
+                  )}
+                  <Link href={`/draw/${draw.id}/postal`} style={{ fontSize: 12, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>
+                    Print entry form →
+                  </Link>
+                </div>
               )}
             </div>
           )}
+
+          {/* 18+ notice (A4) */}
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', textAlign: 'center', margin: '8px 0 0' }}>bedrawn is an 18+ service. Play responsibly.</p>
+
+          {/* Past results link (C2) */}
+          <p style={{ textAlign: 'center', margin: '10px 0 0' }}>
+            <Link href="/draws-history" style={{ fontSize: 13, color: 'var(--purple)', textDecoration: 'none', fontWeight: 600 }}>
+              See past results →
+            </Link>
+          </p>
 
         </div>
 
