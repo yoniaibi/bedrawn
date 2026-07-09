@@ -1,13 +1,71 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, TransactWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { randomInt } from 'crypto';
 import { sendWinnerEmail, sendSellerResolvedEmail, sendCancelledEmail } from './resend-client';
+import type { DrawSummary, BrandId } from '../analytics/types';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const cognito = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
 const TABLE = process.env.TABLE_NAME!;
+const ANALYTICS_TABLE = process.env.ANALYTICS_TABLE_NAME;
 const USER_POOL_ID = process.env.USER_POOL_ID!;
+
+async function writeDrawSummary(
+  draw: Record<string, unknown>,
+  entries: { userId: string; ticketCount: number }[],
+  outcome: 'complete' | 'cancelled',
+  closedAt: string,
+  winnerEntry?: { userId: string; ticketCount: number },
+): Promise<void> {
+  if (!ANALYTICS_TABLE || !draw.brandId || !draw.itemSlug) return;
+  const brandId = draw.brandId as BrandId;
+  const itemSlug = draw.itemSlug as string;
+  const closedYM = closedAt.substring(0, 7);
+  const soldTickets = entries.reduce((s, e) => s + e.ticketCount, 0);
+  const totalRevenuePence = soldTickets * (draw.ticketPricePence as number);
+  const effectiveSalePricePence = winnerEntry
+    ? winnerEntry.ticketCount * (draw.ticketPricePence as number)
+    : 0;
+
+  const summary: DrawSummary = {
+    PK: `DRAW#${draw.id as string}`,
+    SK: 'SUMMARY',
+    drawId: draw.id as string,
+    brandId,
+    itemSlug,
+    modelName: draw.title as string,
+    modelVariant: '',
+    condition: draw.condition as string ?? 'unknown',
+    retailValueGBP: ((draw.retailValuePence as number) ?? 0) / 100,
+    ticketPricePence: draw.ticketPricePence as number,
+    reserveTickets: draw.minTickets as number ?? 0,
+    totalTickets: draw.totalTickets as number ?? 0,
+    authStatus: (draw.auth as any)?.status,
+    authTier: (draw.auth as any)?.tier,
+    sellerTier: draw.sellerTier as string | null | undefined,
+    outcome,
+    totalTicketsSold: soldTickets,
+    totalRevenuePence,
+    effectiveSalePricePence,
+    createdAt: draw.createdAt as string ?? closedAt,
+    closedAt,
+    uniqueBuyerCount: entries.length,
+    saveCount: 0, // filled in by generate-brand-snapshots
+    winnerTicketCount: winnerEntry?.ticketCount,
+    winnerOdds: winnerEntry && soldTickets > 0
+      ? Math.round(winnerEntry.ticketCount / soldTickets * 10000) / 100
+      : undefined,
+    brandId_closedAt: `BRAND#${brandId}#${closedYM}`,
+    itemSlug_closedAt: `ITEM#${itemSlug}#${closedAt.substring(0, 10)}`,
+  };
+
+  try {
+    await db.send(new PutCommand({ TableName: ANALYTICS_TABLE, Item: summary }));
+  } catch (err) {
+    console.error('[analytics] writeDrawSummary failed', draw.id, err);
+  }
+}
 
 async function getUserEmail(userId: string): Promise<string | null> {
   try {
@@ -211,6 +269,7 @@ export const handler = async (): Promise<void> => {
           throw err;
         }
       }
+      await writeDrawSummary(draw, entries, 'cancelled', now);
       continue;
     }
 
@@ -286,6 +345,10 @@ export const handler = async (): Promise<void> => {
       }
       throw err;
     }
+
+    // Analytics: draw completed — write summary for aggregation
+    const winnerEntry = entries.find(e => e.userId === winnerId);
+    await writeDrawSummary(draw, entries, 'complete', now, winnerEntry);
   }
 
   console.log('Draw resolution complete');

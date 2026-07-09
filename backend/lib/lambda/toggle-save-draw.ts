@@ -2,6 +2,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, DeleteCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { cors } from './stripe-client';
+import { recordEvent } from '../analytics/client';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env.TABLE_NAME!;
@@ -17,6 +18,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   if (event.requestContext.http.method === 'DELETE') {
     await db.send(new DeleteCommand({ TableName: TABLE, Key: key }));
+    recordEvent(drawId, 'draw_unsaved', {});
     return { statusCode: 200, headers: cors, body: JSON.stringify({ saved: false }) };
   }
 
@@ -31,5 +33,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     TableName: TABLE,
     Item: { ...key, drawId, savedAt: new Date().toISOString() },
   }));
+  recordEvent(drawId, 'draw_saved', {});
   return { statusCode: 200, headers: cors, body: JSON.stringify({ saved: true }) };
 };

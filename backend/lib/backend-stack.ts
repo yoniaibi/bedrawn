@@ -124,9 +124,51 @@ export class BackendStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // ─── Analytics table — separate from operational data ─────────────────────
+    // Stores raw events, DrawSummary per completed/cancelled draw,
+    // CatalogueItem per bag model, and BrandAggregate snapshots.
+    const analyticsTable = new dynamodb.Table(this, 'BedrawnAnalyticsTable', {
+      tableName: 'bedrawn-analytics',
+      partitionKey: { name: 'PK', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // GSI-brand-draw: query all draw summaries for a brand, sorted by close date
+    // PK: brandId_closedAt (e.g. "BRAND#chanel#2026-07")  SK: SK
+    analyticsTable.addGlobalSecondaryIndex({
+      indexName: 'GSI-brand-draw',
+      partitionKey: { name: 'brandId_closedAt', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // GSI-item-draw: query all draw summaries for a specific bag model
+    analyticsTable.addGlobalSecondaryIndex({
+      indexName: 'GSI-item-draw',
+      partitionKey: { name: 'itemSlug_closedAt', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // GSI-brandId-item: query all catalogue items for a brand
+    analyticsTable.addGlobalSecondaryIndex({
+      indexName: 'GSI-brandId-item',
+      partitionKey: { name: 'brandId_itemSlug', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'SK', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // DEV_SEED: gives new users a free £50 balance and bypasses Stripe KYC for sellers.
     // Remove before go-live — just delete the DEV_SEED key and redeploy.
-    const commonEnv = { TABLE_NAME: table.tableName, BUCKET_NAME: bucket.bucketName, BUCKET_REGION: this.region, DEV_SEED: 'true' };
+    const commonEnv = {
+      TABLE_NAME: table.tableName,
+      BUCKET_NAME: bucket.bucketName,
+      BUCKET_REGION: this.region,
+      DEV_SEED: 'true',
+      ANALYTICS_TABLE_NAME: analyticsTable.tableName,
+    };
     const commonProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: commonEnv };
     const stripeEnv = { ...commonEnv, STRIPE_WEBHOOK_SECRET: '' }; // webhook secret added after first deploy
     const stripeProps = { runtime: lambda.Runtime.NODEJS_20_X, environment: stripeEnv };
@@ -501,6 +543,47 @@ export class BackendStack extends cdk.Stack {
         alarmDescription: `${fn.node.id} threw errors`,
       });
       alarm.addAlarmAction(new cwactions.SnsAction(alertTopic));
+    });
+
+    // ─── Analytics Lambdas ────────────────────────────────────────────────────
+
+    // Grant analytics write to all Lambdas that emit events
+    analyticsTable.grantWriteData(postDrawFn);
+    analyticsTable.grantWriteData(enterDrawFn);
+    analyticsTable.grantWriteData(toggleSaveDrawFn);
+    analyticsTable.grantReadWriteData(resolveDrawsFn);
+
+    // Nightly snapshot generator — runs 30 min after 9pm resolve window
+    const generateSnapshotsFn = new nodejs.NodejsFunction(this, 'GenerateBrandSnapshots', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/generate-brand-snapshots.ts'),
+      timeout: cdk.Duration.minutes(5),
+    });
+    analyticsTable.grantReadWriteData(generateSnapshotsFn);
+
+    // 30 min after nightly resolve: 21:30 GMT (Nov–Mar) and 20:30 BST (Apr–Oct)
+    new events.Rule(this, 'SnapshotsGMT', {
+      schedule: events.Schedule.expression('cron(30 21 * 1-3,11,12 ? *)'),
+      description: 'Regenerate brand analytics snapshots after nightly draw resolution (GMT)',
+    }).addTarget(new targets.LambdaFunction(generateSnapshotsFn));
+
+    new events.Rule(this, 'SnapshotsBST', {
+      schedule: events.Schedule.expression('cron(30 20 * 4-10 ? *)'),
+      description: 'Regenerate brand analytics snapshots after nightly draw resolution (BST)',
+    }).addTarget(new targets.LambdaFunction(generateSnapshotsFn));
+
+    // Brand report API — admin-only read endpoint for brand partnership data
+    const getBrandReportFn = new nodejs.NodejsFunction(this, 'GetBrandReport', {
+      ...commonProps,
+      environment: { ...commonEnv, ADMIN_EMAILS: adminEmails },
+      entry: path.join(__dirname, 'lambda/get-brand-report.ts'),
+    });
+    analyticsTable.grantReadData(getBrandReportFn);
+    api.addRoutes({
+      path: '/analytics/brands/{brandId}',
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration('GetBrandReportInt', getBrandReportFn),
+      authorizer,
     });
 
     // LegitApp authentication webhook — public endpoint, HMAC-verified inside Lambda

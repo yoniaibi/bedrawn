@@ -3,6 +3,8 @@ import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand, UpdateCommand
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { cors } from './stripe-client';
 import { randomUUID } from 'crypto';
+import { recordEvent } from '../analytics/client';
+import type { BrandId } from '../analytics/types';
 
 // Returns tonight's date (YYYY-MM-DD UK) if before 9pm, otherwise tomorrow's
 function getNextClosingDate(): string {
@@ -168,6 +170,19 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
     throw err;
   }
+
+  // Analytics: ticket_purchased — most important demand signal
+  recordEvent(drawId, 'ticket_purchased', {
+    ticketCount,
+    ticketPricePence: draw.ticketPricePence as number,
+    totalCostPence: costPence,
+    cumulativeSoldTickets: (draw.soldTickets as number) + ticketCount,
+    totalTickets: draw.totalTickets as number,
+    pctSold: Math.round(((draw.soldTickets as number) + ticketCount) / (draw.totalTickets as number) * 100),
+  }, {
+    brandId: draw.brandId as BrandId | undefined,
+    itemSlug: draw.itemSlug as string | undefined,
+  });
 
   // Post-purchase: check for close triggers
   if (draw.endsAt) {

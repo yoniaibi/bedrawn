@@ -3,6 +3,8 @@ import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 import { cors } from './stripe-client';
+import { recordEvent, upsertCatalogueItem } from '../analytics/client';
+import { toItemSlug, type BrandId } from '../analytics/types';
 
 // LegitApp cheapest tier per category (prices in GBP pence, sourced from legitapp.com/pricing)
 const LEGIT_FEE_MAP: Record<string, { feePence: number; legitCategory: string; turnaround: string }> = {
@@ -128,6 +130,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     imageUrls = [],
     verificationRequested = false,
     drawDurationDays = 30, // seller-chosen: 14 / 21 / 30 / 60
+    brandId,           // BrandId | undefined — from ListItemScreen brand step
+    sellerTier,        // SellerTier | undefined
   } = body;
 
   if (!title || !ticketPrice || !totalTickets || !retailValue) {
@@ -162,6 +166,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   const hasImages = Array.isArray(imageUrls) && (imageUrls as string[]).length > 0;
   const needsVerification = !!verificationRequested && !!legitInfo && hasImages;
 
+  const brandIdStr = typeof brandId === 'string' ? brandId : undefined;
+  const itemSlug = brandIdStr ? toItemSlug(brandIdStr, String(title)) : undefined;
+
   const draw: Record<string, unknown> = {
     PK: `DRAW#${drawId}`,
     SK: 'META',
@@ -172,6 +179,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     style: String(style),
     condition: String(condition),
     type: String(type),
+    brandId: brandIdStr,
+    itemSlug,
+    sellerTier: sellerTier ?? null,
     ticketPricePence,
     totalTickets: totalTicketsNum,
     // Seller-chosen reserve: cancel if fewer than reservePct% of tickets sold by closing time
@@ -208,6 +218,29 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     } catch (err: any) {
       console.warn('[legit] submission failed for draw', drawId, err?.message);
       // Draw is already in pending_verification; it will require manual admin activation.
+    }
+  }
+
+  // Analytics: fire draw_created event and upsert catalogue item
+  if (brandIdStr) {
+    recordEvent(drawId, 'draw_created', {
+      brandId: brandIdStr,
+      itemSlug,
+      ticketPricePence,
+      totalTickets: totalTicketsNum,
+      retailValueGBP: retailValuePence / 100,
+      condition: String(condition),
+      authStatus: needsVerification ? 'pending' : undefined,
+    }, { brandId: brandIdStr as BrandId, itemSlug });
+
+    if (itemSlug) {
+      upsertCatalogueItem({
+        itemSlug,
+        brandId: brandIdStr as BrandId,
+        modelName: String(title).slice(0, 100),
+        retailValueGBP: retailValuePence / 100,
+        listedAt: now,
+      });
     }
   }
 
