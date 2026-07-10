@@ -1,266 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import AppShell from '@/components/AppShell';
-import LiveDot from '@/components/LiveDot';
-import ProgressBar from '@/components/ProgressBar';
-import { fetchAuthSession } from 'aws-amplify/auth';
 import '@/lib/amplify';
 
-const today = new Date();
-const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-const todayDate = today.getDate();
-const monthName = today.toLocaleString('default', { month: 'long' });
-const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-const daysLeft = Math.ceil((lastDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-interface GrandDrawState {
-  config: { prize: string; value: number; emoji: string; imageUrl: string; totalEntries: number };
-  userEntries: number;
-  claimedToday: boolean;
-  streak: number;
-  loginDays: number[];
-}
+// Grand Draw coming soon — full implementation gated behind FEATURES.GRAND_DRAW.
+// When re-enabled: one free entry per daily app open, streak display-only, NO spend linkage.
 
 export default function GrandDrawPage() {
-  const [state, setState] = useState<GrandDrawState | null>(null);
-  const [claiming, setClaiming] = useState(false);
-  const [claimError, setClaimError] = useState('');
+  const [notifyOn, setNotifyOn] = useState(() => {
+    try { return localStorage.getItem('gd_notify_optin') === '1'; } catch { return false; }
+  });
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const session = await fetchAuthSession();
-        const token = session.tokens?.idToken?.toString();
-        const url = process.env.NEXT_PUBLIC_API_URL;
-        const res = await fetch(`${url}/grand-draw`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (res.ok) setState(await res.json());
-      } catch {}
-    })();
-  }, []);
-
-  const handleClaim = async () => {
-    if (claiming || state?.claimedToday) return;
-    setClaiming(true);
-    setClaimError('');
-    try {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.idToken?.toString();
-      if (!token) { setClaimError('Sign in to claim your daily ticket'); setClaiming(false); return; }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/grand-draw/claim`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setState(prev => prev ? {
-          ...prev,
-          claimedToday: true,
-          userEntries: prev.userEntries + 1,
-          streak: prev.streak + 1,
-          loginDays: [...prev.loginDays, todayDate],
-          config: { ...prev.config, totalEntries: prev.config.totalEntries + 1 },
-        } : prev);
-      } else {
-        if (res.status === 409) {
-          setState(prev => prev ? { ...prev, claimedToday: true } : prev);
-        } else {
-          setClaimError(data.error ?? 'Something went wrong');
-        }
-      }
-    } catch {
-      setClaimError('Network error — please try again');
-    }
-    setClaiming(false);
+  const toggle = () => {
+    const next = !notifyOn;
+    setNotifyOn(next);
+    try { next ? localStorage.setItem('gd_notify_optin', '1') : localStorage.removeItem('gd_notify_optin'); } catch {}
   };
-
-  const config = state?.config;
-  const userEntries = state?.userEntries ?? 0;
-  const claimedToday = state?.claimedToday ?? false;
-  const streak = state?.streak ?? 0;
-  const loginDays = state?.loginDays ?? [];
-  const totalEntries = config?.totalEntries ?? 0;
-  const odds = userEntries > 0 && totalEntries > 0 ? Math.round(totalEntries / userEntries) : totalEntries || '—';
-  const entriesPct = Math.min(100, (userEntries / 30) * 100);
 
   return (
     <AppShell>
-      <div style={{ maxWidth: 720, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p className="serif" style={{ fontSize: 24, color: 'var(--gold)', margin: 0 }}>bedrawn</p>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--white)' }}>{monthName}</p>
-        </div>
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '64px 24px', textAlign: 'center' }}>
+        <div style={{ fontSize: 56, marginBottom: 20 }}>🎁</div>
+        <h1 className="serif" style={{ margin: '0 0 12px', fontSize: 32, fontStyle: 'italic', color: 'var(--accent-gold)', fontWeight: 700 }}>The Grand Draw</h1>
+        <p style={{ margin: '0 0 32px', fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          A monthly draw for a headline prize — free entries just for showing up. Coming soon.
+        </p>
 
-        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Prize card */}
-          <div style={{
-            borderRadius: 16, overflow: 'hidden',
-            background: 'linear-gradient(135deg, #2D1B4E, #1a0a2e)',
-            border: '1px solid var(--purple)', padding: 24,
-            textAlign: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
-              <span style={{
-                background: 'rgba(139,92,246,0.3)', border: '1px solid var(--purple)',
-                color: 'var(--purple)', fontSize: 11, fontWeight: 700,
-                padding: '3px 10px', borderRadius: 999,
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}>
-                <LiveDot size={6} /> GRAND DRAW
-              </span>
-            </div>
-            {config?.imageUrl ? (
-              <div style={{ width: '100%', height: 160, borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={config.imageUrl} alt={config.prize} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-            ) : (
-              <p style={{ fontSize: 48, margin: '0 0 8px' }}>{config?.emoji ?? '🏆'}</p>
-            )}
-            <p className="serif" style={{ fontSize: 28, color: 'var(--text)', margin: '0 0 4px' }}>
-              {config?.prize ?? 'Loading…'}
-            </p>
-            <p style={{ fontSize: 13, color: 'var(--grey)', margin: '0 0 16px' }}>This month&apos;s Grand Draw prize</p>
-            {config && (
-              <span style={{
-                background: 'rgba(245,158,11,0.2)', border: '1px solid var(--gold)',
-                color: 'var(--gold)', fontSize: 13, fontWeight: 700,
-                padding: '6px 16px', borderRadius: 999,
-              }}>Worth £{config.value.toLocaleString()} | Fund growing daily</span>
-            )}
-          </div>
+        <button
+          onClick={toggle}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10,
+            padding: '12px 24px', borderRadius: 999,
+            background: notifyOn ? 'rgba(245,158,11,0.12)' : 'var(--bg-elevated)',
+            border: `2px solid ${notifyOn ? 'var(--accent-gold)' : 'var(--border-default)'}`,
+            color: notifyOn ? 'var(--accent-gold)' : 'var(--text-secondary)',
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            transition: 'all 200ms ease-out',
+          }}
+        >
+          <span style={{ fontSize: 16 }}>{notifyOn ? '🔔' : '🔕'}</span>
+          {notifyOn ? "You'll be notified at launch" : 'Notify me when it launches'}
+        </button>
 
-          {/* Countdown */}
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 14, padding: '20px', textAlign: 'center',
-          }}>
-            <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>
-              Draw resolves in
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 8 }}>
-              {[
-                { label: 'Days', value: daysLeft },
-                { label: 'Hours', value: Math.max(0, 21 - new Date().getHours()) },
-                { label: 'Mins', value: new Date().getMinutes() },
-              ].map(unit => (
-                <div key={unit.label} style={{ textAlign: 'center' }}>
-                  <p className="serif" style={{ fontSize: 40, color: 'var(--white)', margin: 0, fontWeight: 700 }}>
-                    {String(unit.value).padStart(2, '0')}
-                  </p>
-                  <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>{unit.label}</p>
-                </div>
-              ))}
-            </div>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--accent-coral)' }}>Last day of {monthName} · 9pm</p>
-          </div>
-
-          {/* Entries card */}
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 14, padding: '20px',
-          }}>
-            <p style={{ margin: '0 0 4px', fontSize: 12, color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: 1 }}>Your entries this month</p>
-            <p className="serif" style={{ fontSize: 48, color: 'var(--gold)', margin: '0 0 4px', fontWeight: 700 }}>{userEntries}</p>
-            <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--grey)' }}>
-              {userEntries > 0 ? `Your odds: 1 in ${odds}` : 'Claim your first ticket below'}
-            </p>
-            <ProgressBar percent={entriesPct} height={6} />
-            <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--muted)' }}>{totalEntries} total entries in pool</p>
-          </div>
-
-          {/* Claim button */}
-          <button
-            onClick={handleClaim}
-            disabled={claimedToday || claiming}
-            style={{
-              width: '100%', padding: 16, borderRadius: 999, border: 'none',
-              background: claimedToday ? 'var(--muted)' : 'var(--green)',
-              color: 'var(--white)', fontSize: 16, fontWeight: 700,
-              cursor: claimedToday || claiming ? 'not-allowed' : 'pointer',
-              opacity: claimedToday ? 0.7 : 1,
-            }}
-          >
-            {claiming ? 'Claiming…' : claimedToday ? '✓ Ticket claimed for today' : '🎟 Claim today\'s ticket'}
-          </button>
-          {claimError && <p style={{ textAlign: 'center', color: 'var(--red)', fontSize: 13, margin: '-8px 0 0' }}>{claimError}</p>}
-
-          {/* Streak card */}
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 14, padding: '20px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 40, margin: 0 }}>🔥</p>
-                <p className="serif" style={{ fontSize: 32, color: 'var(--white)', margin: 0, fontWeight: 700 }}>{streak}</p>
-              </div>
-              <div>
-                <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Day streak</p>
-                <p style={{ margin: 0, fontSize: 13, color: 'var(--grey)' }}>
-                  {streak >= 7 ? '⭐ 7-day streak!' : `${userEntries} ticket${userEntries !== 1 ? 's' : ''} earned this month`}
-                </p>
-              </div>
-            </div>
-            {streak >= 7 && (
-              <div style={{
-                background: 'rgba(245,158,11,0.1)', border: '1px solid var(--gold)',
-                borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
-              }}>
-                <span>⭐</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gold)' }}>7-day streak achievement unlocked!</span>
-              </div>
-            )}
-          </div>
-
-          {/* Login calendar */}
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: 14, padding: '20px',
-          }}>
-            <p style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 700, color: 'var(--white)' }}>Login calendar · {monthName}</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
-                <div key={i} style={{ textAlign: 'center', fontSize: 10, color: 'var(--muted)', paddingBottom: 4 }}>{d}</div>
-              ))}
-              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
-                const logged = loginDays.includes(day);
-                const isToday = day === todayDate;
-                const future = day > todayDate;
-                return (
-                  <div key={day} style={{
-                    aspectRatio: '1', borderRadius: 4,
-                    background: logged ? 'var(--gold)' : future ? 'var(--card2)' : 'var(--border)',
-                    border: isToday ? '2px solid var(--accent-coral)' : 'none',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 10,
-                    color: logged ? '#000' : 'var(--muted)',
-                    fontWeight: logged ? 700 : 400,
-                  }}>
-                    {day}
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--gold)' }} />
-                <span style={{ fontSize: 10, color: 'var(--grey)' }}>Claimed</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 2, border: '2px solid var(--accent-coral)' }} />
-                <span style={{ fontSize: 10, color: 'var(--grey)' }}>Today</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 2, background: 'var(--border)' }} />
-                <span style={{ fontSize: 10, color: 'var(--grey)' }}>Missed</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {notifyOn && (
+          <p style={{ marginTop: 12, fontSize: 12, color: 'var(--text-tertiary)' }}>
+            We&apos;ll send you one email when the Grand Draw goes live. No spam, ever.
+          </p>
+        )}
       </div>
     </AppShell>
   );

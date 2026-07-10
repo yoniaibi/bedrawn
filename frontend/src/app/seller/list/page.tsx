@@ -57,12 +57,23 @@ const TYPES = [
 const CONDITIONS = ['New', 'Like New', 'Good', 'Fair'];
 const CATEGORIES = ['Bags', 'Trainers', 'Watches', 'Jewellery', 'Streetwear', 'Fashion', 'Tech', 'Other'];
 const STYLES = ['Womenswear', 'Menswear', 'Unisex'];
-const TICKET_PRICES = ['10p', '25p', '50p', '£1', 'Custom'];
+import { TICKET_PRICE_LADDER_PENCE, MIN_RETAIL_VALUE_PENCE, PLATFORM_FEE_PCT, PROCESSING_FIXED_PENCE, DRAW_NIGHTS, formatTicketPricePence } from '@/config/businessConfig';
 
-function parseTicketPricePence(price: string): number {
-  if (price === 'Custom') return 0;
-  if (price.startsWith('£')) return Math.round(parseFloat(price.slice(1)) * 100);
-  return parseInt(price.replace('p', ''), 10);
+/** Returns the next N valid close dates (Tue/Thu, ≥7 days out, ≤60 days out) */
+function getValidCloseDates(max = 12): Date[] {
+  const dates: Date[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(today);
+  d.setDate(d.getDate() + 7);
+  while (dates.length < max) {
+    const dow = d.getDay(); // 0=Sun 2=Tue 4=Thu
+    const diffDays = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (diffDays > 60) break;
+    if (dow === 2 || dow === 4) dates.push(new Date(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
 }
 
 export default function ListItemPage() {
@@ -83,6 +94,8 @@ export default function ListItemPage() {
   const [drawDurationDays, setDrawDurationDays] = useState(30);
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [agreed2, setAgreed2] = useState(false);
+  const [closeDate, setCloseDate] = useState<Date | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -152,9 +165,14 @@ export default function ListItemPage() {
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  const resolvedTicketPricePence = ticketPrice === 'Custom' ? parseFloat(customPrice || '0') : parseTicketPricePence(ticketPrice);
+  function parseLabelPence(label: string): number {
+    if (!label) return 0;
+    if (label.startsWith('£')) return Math.round(parseFloat(label.slice(1)) * 100);
+    return parseInt(label.replace('p', ''), 10) || 0;
+  }
+  const resolvedTicketPricePence = ticketPrice === 'Custom' ? parseFloat(customPrice || '0') : parseLabelPence(ticketPrice);
   const grossEarnings = retailValue && ticketPrice && totalTickets && resolvedTicketPricePence > 0
-    ? (resolvedTicketPricePence / 100) * parseInt(totalTickets, 10) * 0.88
+    ? (resolvedTicketPricePence / 100) * parseInt(totalTickets, 10) * (1 - PLATFORM_FEE_PCT)
     : null;
   const legitFeeDeduction = verificationRequested && legitInfo ? legitInfo.feePence / 100 : 0;
   const netEarnings = grossEarnings !== null ? grossEarnings - legitFeeDeduction : null;
@@ -173,9 +191,14 @@ export default function ListItemPage() {
     if (step === 3 && !photoUrls[0]) { setStepError('Please upload at least one photo — the hero image is required.'); return; }
     if (step === 4) {
       if (!retailValue) { setStepError('Please enter the retail value.'); return; }
+      if (parseFloat(retailValue) * 100 < MIN_RETAIL_VALUE_PENCE) {
+        setStepError(`Minimum retail value is £${MIN_RETAIL_VALUE_PENCE / 100}. bedrawn is for authenticated designer bags worth £200 or more.`);
+        return;
+      }
       if (!ticketPrice) { setStepError('Please select a ticket price.'); return; }
       if (ticketPrice === 'Custom' && (!customPrice || parseFloat(customPrice) <= 0)) { setStepError('Please enter your custom ticket price in pence (e.g. 15 for 15p).'); return; }
       if (!totalTickets) { setStepError('Please enter the total number of tickets.'); return; }
+      if (!closeDate) { setStepError('Please select a close date for your draw.'); return; }
     }
     setStep(s => s + 1);
   }
@@ -206,7 +229,7 @@ export default function ListItemPage() {
             This protects buyers and ensures you can receive payouts.
           </p>
           <Link href="/seller/dashboard" style={{ textDecoration: 'none' }}>
-            <button style={{ padding: '13px 28px', borderRadius: 999, background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)', border: 'none', color: 'var(--white)', fontSize: 15, fontWeight: 700 }}>
+            <button style={{ padding: '13px 28px', borderRadius: 999, background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)', border: 'none', color: 'var(--white)', fontSize: 15, fontWeight: 700 }}>
               Complete verification →
             </button>
           </Link>
@@ -493,14 +516,23 @@ export default function ListItemPage() {
               <div>
                 <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 8 }}>Ticket price</label>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {TICKET_PRICES.map(p => (
-                    <button key={p} onClick={() => setTicketPrice(p)} style={{
-                      padding: '8px 16px', borderRadius: 999, cursor: 'pointer', fontSize: 13,
-                      background: ticketPrice === p ? 'rgba(124,58,237,0.08)' : 'var(--card)',
-                      border: `1px solid ${ticketPrice === p ? 'var(--purple)' : 'var(--border)'}`,
-                      color: ticketPrice === p ? 'var(--purple)' : 'var(--grey)',
-                    }}>{p}</button>
-                  ))}
+                  {TICKET_PRICE_LADDER_PENCE.map(p => {
+                    const label = formatTicketPricePence(p);
+                    return (
+                      <button key={p} onClick={() => setTicketPrice(label)} style={{
+                        padding: '8px 16px', borderRadius: 999, cursor: 'pointer', fontSize: 13,
+                        background: ticketPrice === label ? 'rgba(124,58,237,0.08)' : 'var(--card)',
+                        border: `1px solid ${ticketPrice === label ? 'var(--purple)' : 'var(--border)'}`,
+                        color: ticketPrice === label ? 'var(--purple)' : 'var(--grey)',
+                      }}>{label}</button>
+                    );
+                  })}
+                  <button onClick={() => setTicketPrice('Custom')} style={{
+                    padding: '8px 16px', borderRadius: 999, cursor: 'pointer', fontSize: 13,
+                    background: ticketPrice === 'Custom' ? 'rgba(124,58,237,0.08)' : 'var(--card)',
+                    border: `1px solid ${ticketPrice === 'Custom' ? 'var(--purple)' : 'var(--border)'}`,
+                    color: ticketPrice === 'Custom' ? 'var(--purple)' : 'var(--grey)',
+                  }}>Custom</button>
                 </div>
                 {ticketPrice === 'Custom' && (
                   <div style={{ marginTop: 10 }}>
@@ -515,25 +547,30 @@ export default function ListItemPage() {
               </div>
               <div>
                 <div>
-                <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Draw duration</label>
+                <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Close date</label>
                 <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
-                  Minimum 7 days. If tickets sell out early (after 7 days), the draw closes automatically with 4 days&apos; notice for postal entries.
+                  Draws close on Tuesday or Thursday evenings. Choose a date at least 7 days out.
                 </p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {[14, 21, 30, 60].map(d => (
-                    <button key={d} onClick={() => setDrawDurationDays(d)} style={{
-                      flex: '1 1 80px', padding: '10px 4px', borderRadius: 10, cursor: 'pointer', textAlign: 'center', fontSize: 12,
-                      background: drawDurationDays === d ? 'rgba(124,58,237,0.08)' : 'var(--card)',
-                      border: `1.5px solid ${drawDurationDays === d ? 'var(--purple)' : 'var(--border)'}`,
-                      color: drawDurationDays === d ? 'var(--purple)' : 'var(--grey)',
-                    }}>
-                      <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: 13 }}>{d} days</p>
-                      <p style={{ margin: '0 0 1px', fontSize: 10 }}>Closes {addDays(d)}</p>
-                      <p style={{ margin: 0, fontSize: 9, color: drawDurationDays === d ? 'var(--purple)' : 'var(--muted)' }}>
-                        Postal by {addDays(d - 4)}
-                      </p>
-                    </button>
-                  ))}
+                  {getValidCloseDates(10).map(d => {
+                    const label = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+                    const iso = d.toISOString().split('T')[0];
+                    const sel = closeDate?.toISOString().split('T')[0] === iso;
+                    const diffDays = Math.round((d.getTime() - Date.now()) / 86400000);
+                    return (
+                      <button key={iso} onClick={() => { setCloseDate(d); setDrawDurationDays(diffDays); }} style={{
+                        flex: '1 1 110px', padding: '10px 6px', borderRadius: 10, cursor: 'pointer', textAlign: 'center', fontSize: 12,
+                        background: sel ? 'rgba(124,58,237,0.08)' : 'var(--card)',
+                        border: `1.5px solid ${sel ? 'var(--purple)' : 'var(--border)'}`,
+                        color: sel ? 'var(--purple)' : 'var(--grey)',
+                      }}>
+                        <p style={{ margin: '0 0 2px', fontWeight: 700, fontSize: 12 }}>{label}</p>
+                        <p style={{ margin: 0, fontSize: 10, color: sel ? 'var(--purple)' : 'var(--muted)' }}>
+                          Postal by {new Date(d.getTime() - 4 * 86400000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <label style={{ fontSize: 12, color: 'var(--grey)', display: 'block', marginBottom: 4 }}>Reserve — minimum tickets to proceed</label>
@@ -563,7 +600,7 @@ export default function ListItemPage() {
               {netEarnings !== null && (
                 <div style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid var(--green)', borderRadius: 12, padding: '14px 16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 13, color: 'var(--grey)' }}>88% platform share</span>
+                    <span style={{ fontSize: 13, color: 'var(--grey)' }}>{Math.round((1 - PLATFORM_FEE_PCT) * 100)}% seller share</span>
                     <span style={{ fontSize: 13, color: 'var(--text)' }}>£{grossEarnings!.toFixed(2)}</span>
                   </div>
                   {legitFeeDeduction > 0 && (
@@ -607,20 +644,37 @@ export default function ListItemPage() {
                   </div>
                 ))}
               </div>
-              <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid var(--border)', borderRadius: 12, padding: 14 }}>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                  <button onClick={() => setAgreed(a => !a)} style={{
-                    width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 1,
-                    background: agreed ? 'var(--purple)' : 'transparent',
-                    border: `2px solid ${agreed ? 'var(--purple)' : 'var(--border)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                  }}>
-                    {agreed && <span style={{ color: 'white', fontSize: 11 }}>✓</span>}
-                  </button>
-                  <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
-                    I confirm the item is as described. I understand that misrepresentation may result in liquidated damages and removal from the platform.
-                    {verificationRequested && legitInfo && ` I agree that £${(legitInfo.feePence / 100).toFixed(2)} will be deducted from my payout for LegitApp authentication.`}
-                  </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid var(--border)', borderRadius: 12, padding: 14 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <button onClick={() => setAgreed(a => !a)} style={{
+                      width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 1,
+                      background: agreed ? 'var(--purple)' : 'transparent',
+                      border: `2px solid ${agreed ? 'var(--purple)' : 'var(--border)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                    }}>
+                      {agreed && <span style={{ color: 'white', fontSize: 11 }}>✓</span>}
+                    </button>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
+                      I confirm the item is as described. I understand that misrepresentation may result in liquidated damages and removal from the platform.
+                      {verificationRequested && legitInfo && ` I agree that £${(legitInfo.feePence / 100).toFixed(2)} will be deducted from my payout for LegitApp authentication.`}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid var(--border)', borderRadius: 12, padding: 14 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <button onClick={() => setAgreed2(a => !a)} style={{
+                      width: 20, height: 20, borderRadius: 4, flexShrink: 0, marginTop: 1,
+                      background: agreed2 ? 'var(--purple)' : 'transparent',
+                      border: `2px solid ${agreed2 ? 'var(--purple)' : 'var(--border)'}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                    }}>
+                      {agreed2 && <span style={{ color: 'white', fontSize: 11 }}>✓</span>}
+                    </button>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--grey)', lineHeight: 1.5 }}>
+                      I have read and agree to Section 7 (authentication and liquidated damages) of the Seller Terms, including that bedrawn may withhold payment pending resolution of any dispute about item authenticity or condition.
+                    </p>
+                  </div>
                 </div>
               </div>
               {submitError && (
@@ -630,7 +684,7 @@ export default function ListItemPage() {
               )}
               <button
                 onClick={async () => {
-                  if (!agreed || submitting) return;
+                  if (!agreed || !agreed2 || submitting) return;
                   setSubmitting(true);
                   setSubmitError('');
                   try {
@@ -662,11 +716,11 @@ export default function ListItemPage() {
                     setSubmitting(false);
                   }
                 }}
-                disabled={!agreed || submitting}
+                disabled={!agreed || !agreed2 || submitting}
                 style={{
                   width: '100%', padding: 16, borderRadius: 999, border: 'none',
-                  background: agreed && !submitting ? 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)' : 'var(--muted)',
-                  color: 'var(--white)', fontSize: 16, fontWeight: 700, cursor: agreed && !submitting ? 'pointer' : 'not-allowed',
+                  background: agreed && agreed2 && !submitting ? 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)' : 'var(--muted)',
+                  color: 'var(--white)', fontSize: 16, fontWeight: 700, cursor: agreed && agreed2 && !submitting ? 'pointer' : 'not-allowed',
                 }}
               >{submitting ? 'Submitting…' : 'Submit listing'}</button>
             </div>
@@ -691,7 +745,7 @@ export default function ListItemPage() {
                   onClick={handleNext}
                   style={{
                     flex: 2, padding: 14, borderRadius: 999,
-                    background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+                    background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
                     border: 'none', color: 'var(--white)', fontWeight: 700, cursor: 'pointer', fontSize: 15,
                   }}
                 >

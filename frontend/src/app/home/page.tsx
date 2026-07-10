@@ -25,6 +25,7 @@ const BRAND_CHIPS = [
 
 export default function HomePage() {
   const [activeChip, setActiveChip] = useState('tonight');
+  const [trustFilter, setTrustFilter] = useState<'all' | 'trusted' | 'top'>('all');
   const [allDraws, setAllDraws] = useState<Draw[]>([]);
   const [drawsLoading, setDrawsLoading] = useState(true);
   const [drawsError, setDrawsError] = useState(false);
@@ -40,10 +41,13 @@ export default function HomePage() {
   }, []);
 
   const filtered = allDraws.filter(d => {
-    if (activeChip === 'tonight') return d.isClosingTonight;
-    if (activeChip === 'high_value') return d.retailValue >= 1000;
-    if (activeChip === 'just_listed') return true;
-    if (['chanel', 'lv', 'bottega', 'prada', 'celine'].includes(activeChip)) return (d as any).brandId === activeChip;
+    if (activeChip === 'tonight' && !d.isClosingTonight) return false;
+    if (activeChip === 'high_value' && d.retailValue < 1000) return false;
+    if (['chanel', 'lv', 'bottega', 'prada', 'celine'].includes(activeChip) && (d as any).brandId !== activeChip) return false;
+    // Trust filter
+    const sellerBadges: string[] = (d as any).sellerBadges ?? [];
+    if (trustFilter === 'trusted' && !sellerBadges.includes('TRUSTED_SELLER') && !sellerBadges.includes('TOP_SELLER')) return false;
+    if (trustFilter === 'top' && !sellerBadges.includes('TOP_SELLER')) return false;
     return true;
   });
 
@@ -202,6 +206,20 @@ export default function HomePage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* ── Seller trust filter ── */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {([['all', 'All sellers'], ['trusted', 'Trusted+'], ['top', 'Top only']] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setTrustFilter(id as typeof trustFilter)}
+              className={`chip${trustFilter === id ? ' active' : ''}`}
+              style={{ fontFamily: 'inherit' }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* ── Drawing Tonight row ── */}

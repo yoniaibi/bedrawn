@@ -4,6 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Draw } from '@/lib/mockData';
+import { SellerBadgeRow } from './SellerBadge';
+import { badgesForDraw } from '@/config/sellerBadges';
 
 interface DrawCardProps {
   draw: Draw;
@@ -36,7 +38,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
     thresholdLine = <p style={{ margin: '0 0 5px', fontSize: 10, color: '#059669', fontWeight: 600 }}>✓ Draw confirmed</p>;
   } else {
     thresholdLine = (
-      <p style={{ margin: '0 0 5px', fontSize: 10, color: urgentThreshold ? '#FF2356' : '#A8A29E', fontWeight: urgentThreshold ? 700 : 400 }}>
+      <p style={{ margin: '0 0 5px', fontSize: 10, color: urgentThreshold ? '#EC4899' : '#A8A29E', fontWeight: urgentThreshold ? 700 : 400 }}>
         {ticketsNeeded.toLocaleString()} more tickets needed to confirm
       </p>
     );
@@ -184,13 +186,20 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
           }}>
             <div style={{
               height: '100%', width: `${pct}%`,
-              background: scarce ? '#DC2626' : '#FF2356',
+              background: scarce ? '#DC2626' : '#EC4899',
               borderRadius: 99,
               transition: 'width 500ms ease-out',
             }} />
           </div>
           {/* Threshold countdown */}
           {thresholdLine}
+
+          {/* Seller badges */}
+          {badgesForDraw(draw as any).length > 0 && (
+            <div style={{ marginBottom: 5 }}>
+              <SellerBadgeRow badges={badgesForDraw(draw as any)} compact />
+            </div>
+          )}
 
           {/* Meta row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -235,7 +244,7 @@ export default function DrawCard({ draw, fullWidth = false }: DrawCardProps) {
             {draw.closingDate ? (
               <span style={{
                 fontSize: 11, flexShrink: 0,
-                color: draw.isClosingTonight ? '#FF2356' : '#A8A29E',
+                color: draw.isClosingTonight ? '#EC4899' : '#A8A29E',
                 fontWeight: draw.isClosingTonight ? 600 : 400,
               }}>
                 {draw.isClosingTonight ? 'Tonight 9pm' : `Closes ${new Date(draw.closingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}

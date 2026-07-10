@@ -16,13 +16,13 @@
   --text-inverse:   #FFFFFF;
 
   /* Accents */
-  --accent-coral:  #FF2356;   /* PRIMARY — all CTAs, active states, enter draw */
-  --accent-pink:   #FF2356;   /* alias for coral */
+  --accent-coral:  #EC4899;   /* PRIMARY — all CTAs, active states, enter draw */
+  --accent-pink:   #EC4899;   /* primary pink (replaces coral) */
   --accent-gold:   #F59E0B;   /* winners ONLY */
   --accent-amber:  #FCD34D;   /* secondary gold */
   --accent-rose:   #FB7185;   /* closing tonight / live urgency */
-  --accent-lilac:  #8B5CF6;   /* verified / trust badges only */
-  --accent-violet: #7C3AED;   /* minimal use */
+  --accent-lilac:  #7C3AED;   /* verified / trust badges, interactive links */
+  --accent-violet: #6D28D9;   /* primary non-purchase buttons */
   --accent-green:  #059669;
   --accent-red:    #DC2626;
 

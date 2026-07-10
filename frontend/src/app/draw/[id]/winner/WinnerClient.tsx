@@ -26,6 +26,10 @@ export default function WinnerClient({ id }: { id: string }) {
   const [confirming, setConfirming] = useState(false);
   const [payoutDone, setPayoutDone] = useState(false);
   const [payoutError, setPayoutError] = useState('');
+  const [shareDone, setShareDone] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_API_URL;
@@ -45,6 +49,38 @@ export default function WinnerClient({ id }: { id: string }) {
       })
       .catch(() => {});
   }, []); // empty deps — reads real URL at mount
+
+  const handleShare = async () => {
+    if (sharing || shareDone) return;
+    const shareUrl = `${window.location.origin}/draw/${id}`;
+    const caption = `I just won a ${draw?.title} worth £${draw?.retailValue.toLocaleString()} on bedrawn! 🎉 Enter from 10p a ticket:`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `I won on bedrawn!`, text: caption, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(`${caption} ${shareUrl}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      }
+    } catch {}
+
+    // Claim reward
+    setSharing(true);
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) return;
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/winner-share`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setShareDone(true);
+    } catch {
+      setShareError('Could not claim reward — try again');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const handleConfirmDelivery = async () => {
     setConfirming(true);
@@ -238,9 +274,39 @@ export default function WinnerClient({ id }: { id: string }) {
               </div>
             )}
 
+            {/* Share module — winner only */}
+            {currentUserId && draw.winnerHandle && (
+              <div style={{ marginBottom: 20 }}>
+                {shareDone ? (
+                  <div style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid var(--green)', borderRadius: 12, padding: '14px 20px', marginBottom: 12 }}>
+                    <p style={{ margin: 0, color: 'var(--green)', fontWeight: 700, fontSize: 14 }}>🎉 £10 added to your wallet — thanks for sharing!</p>
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: 12 }}>
+                    <button
+                      onClick={handleShare}
+                      disabled={sharing}
+                      style={{
+                        width: '100%', padding: '14px 24px', borderRadius: 999,
+                        background: sharing ? 'var(--muted)' : 'linear-gradient(135deg, #7C3AED, #9333EA)',
+                        border: 'none', color: '#fff', fontWeight: 700, fontSize: 15,
+                        cursor: sharing ? 'not-allowed' : 'pointer', marginBottom: 6,
+                      }}
+                    >
+                      {copied ? '✓ Copied!' : sharing ? 'Sharing…' : 'Share your win — earn £10 🎁'}
+                    </button>
+                    <p style={{ margin: 0, fontSize: 11, color: 'var(--muted)' }}>
+                      Share on social or copy a link. One-time £10 wallet credit when you share your win.
+                    </p>
+                    {shareError && <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--red)' }}>{shareError}</p>}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Link href="/home" style={{
               display: 'inline-block', padding: '12px 32px', borderRadius: 999,
-              background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+              background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
               color: 'var(--white)', fontWeight: 700, fontSize: 14,
               textDecoration: 'none',
             }}>

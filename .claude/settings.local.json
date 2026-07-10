@@ -11,7 +11,8 @@
       "Bash(git push *)",
       "Bash(aws amplify get-domain-association *)",
       "Bash(aws amplify list-domain-associations *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(ln -s /Users/jonathan.aibi/bedrawn/frontend/node_modules /Users/jonathan.aibi/BeDrawn/.claude/worktrees/agent-ac193a6a00cadab02/frontend/node_modules)"
     ]
   }
 }

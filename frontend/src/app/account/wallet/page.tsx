@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
+import HarmBanner from '@/components/HarmBanner';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PK!);
 
@@ -85,7 +86,7 @@ function CheckoutForm({ amountPence, onSuccess, onCancel }: {
         disabled={!stripe || loading}
         style={{
           width: '100%', padding: 16, borderRadius: 999, border: 'none',
-          background: !stripe || loading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+          background: !stripe || loading ? 'var(--muted)' : 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
           color: 'var(--white)', fontSize: 16, fontWeight: 700,
           cursor: !stripe || loading ? 'not-allowed' : 'pointer',
         }}
@@ -188,6 +189,13 @@ export default function WalletPage() {
             </p>
             <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>Balance updates after payment confirms</p>
           </div>
+
+          <HarmBanner />
+
+          {/* 18+ notice */}
+          <p style={{ margin: '-8px 0 0', fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>
+            18+ only · Play responsibly · <a href="/safer-play" style={{ color: 'var(--muted)' }}>Safer Play</a>
+          </p>
 
           {/* Success confirmation */}
           {success !== null && (

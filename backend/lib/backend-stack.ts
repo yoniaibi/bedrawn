@@ -72,6 +72,9 @@ export class BackendStack extends cdk.Stack {
         customEmailSender: cognitoEmailSenderFn,
       },
       customSenderKmsKey: cognitoEmailKey,
+      customAttributes: {
+        dob: new cognito.StringAttribute({ minLen: 8, maxLen: 10, mutable: false }),
+      },
     });
 
     const userPoolClient = new cognito.UserPoolClient(this, 'BedrawnUserPoolClient', {
@@ -517,6 +520,22 @@ export class BackendStack extends cdk.Stack {
       resources: [userPool.userPoolArn],
     }));
     api.addRoutes({ path: '/me', methods: [HttpMethod.DELETE], integration: new HttpLambdaIntegration('DeleteAccountInt', deleteAccountFn), authorizer });
+
+    // Safer Play — spend limits, suspension, monthly spend
+    const saferPlayFn = new nodejs.NodejsFunction(this, 'SaferPlay', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/safer-play.ts'),
+    });
+    table.grantReadWriteData(saferPlayFn);
+    api.addRoutes({ path: '/user/safer-play', methods: [HttpMethod.GET, HttpMethod.PUT], integration: new HttpLambdaIntegration('SaferPlayInt', saferPlayFn), authorizer });
+
+    // Winner share reward — credits £10 wallet when winner shares their win
+    const winnerShareFn = new nodejs.NodejsFunction(this, 'WinnerShare', {
+      ...commonProps,
+      entry: path.join(__dirname, 'lambda/winner-share.ts'),
+    });
+    table.grantReadWriteData(winnerShareFn);
+    api.addRoutes({ path: '/draws/{id}/winner-share', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('WinnerShareInt', winnerShareFn), authorizer });
 
     // ── Rate limiting: patch throttle settings onto the auto-created $default stage ──
     // HttpApi creates $default automatically; we override its DefaultRouteSettings.

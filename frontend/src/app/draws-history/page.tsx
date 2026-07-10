@@ -3,41 +3,68 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
-import { draws } from '@/lib/mockData';
 
-// Use draws with a resolved/complete status, or pick the first few for demo
-const completedDraws = (() => {
-  const resolved = draws.filter(d => d.status === 'resolved' || d.status === 'complete');
-  if (resolved.length > 0) return resolved;
-  // Fallback: treat first 4 draws as completed for demo purposes
-  return draws.slice(0, 4).map(d => ({
-    ...d,
-    winnerHandle: d.winnerHandle ?? 'lucky_winner',
-    resolvedAt: d.resolvedAt ?? d.closingDate ?? 'Recently',
-  }));
-})();
+interface ResolvedDraw {
+  id: string;
+  title: string;
+  imageUrl: string;
+  retailValue: number;
+  totalTickets: number;
+  soldTickets: number;
+  winnerHandle?: string;
+  resolvedAt?: string;
+  randomOrgCert?: string;
+  legitAppCert?: string;
+}
+
+/** Masks a handle: @sarah_k → @s***h_k */
+function maskHandle(h: string): string {
+  const raw = h.startsWith('@') ? h.slice(1) : h;
+  if (raw.length <= 3) return `@${raw[0]}***`;
+  return `@${raw[0]}${'*'.repeat(Math.max(0, raw.length - 2))}${raw[raw.length - 1]}`;
+}
 
 export default function DrawsHistoryPage() {
-  const [items, setItems] = useState(completedDraws);
+  const [draws, setDraws] = useState<ResolvedDraw[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) { setLoading(false); return; }
+    fetch(`${url}/draws?status=resolved`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.draws) setDraws(d.draws); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <AppShell>
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px 64px' }}>
 
-        {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 800, color: 'var(--text)' }}>
+          <h1 style={{ margin: '0 0 6px', fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
             Past Draws
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: 'var(--grey)' }}>
-            Completed draws from bedrawn — every winner verified on-chain
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
+            Every winner independently verified — draw ID, certificate, and randomness proof included.
           </p>
         </div>
 
-        {/* Grid */}
-        {items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--grey)' }}>
-            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>No completed draws yet</p>
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20 }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-img" />
+                <div className="skeleton-line" />
+                <div className="skeleton-line-short" />
+              </div>
+            ))}
+          </div>
+        ) : draws.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>No completed draws yet</p>
             <p style={{ fontSize: 13, margin: 0 }}>Check back after tonight&apos;s draw at 9pm</p>
           </div>
         ) : (
@@ -47,15 +74,16 @@ export default function DrawsHistoryPage() {
             gap: 20,
             marginBottom: 48,
           }}>
-            {items.map(draw => (
+            {draws.map(draw => (
               <div key={draw.id} style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: '#fff',
+                border: '1px solid rgba(0,0,0,0.07)',
                 borderRadius: 14,
                 overflow: 'hidden',
               }}>
                 {/* Image */}
                 <div style={{ aspectRatio: '4/3', overflow: 'hidden', position: 'relative' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={draw.imageUrl}
                     alt={draw.title}
@@ -65,7 +93,6 @@ export default function DrawsHistoryPage() {
                     position: 'absolute', inset: 0,
                     background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.65) 100%)',
                   }} />
-                  {/* Verified pill overlay */}
                   <span style={{
                     position: 'absolute', bottom: 10, left: 10,
                     background: 'rgba(5,150,105,0.22)',
@@ -76,38 +103,78 @@ export default function DrawsHistoryPage() {
                     letterSpacing: '0.08em',
                     backdropFilter: 'blur(8px)',
                   }}>
-                    Verified draw ✓
+                    Verified ✓
                   </span>
                 </div>
 
                 {/* Card body */}
                 <div style={{ padding: '14px 16px' }}>
-                  <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: 14, color: 'var(--text)', lineHeight: 1.3 }}>
+                  <p style={{ margin: '0 0 6px', fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                     {draw.title}
                   </p>
 
-                  <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#F59E0B' }}>
-                    Won by @{(draw as any).winnerHandle ?? 'lucky_winner'}
+                  {draw.winnerHandle && (
+                    <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--accent-gold)' }}>
+                      Won by {maskHandle(draw.winnerHandle)}
+                    </p>
+                  )}
+
+                  <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--text-secondary)' }}>
+                    £{draw.retailValue.toLocaleString()} · {draw.soldTickets.toLocaleString()} tickets
                   </p>
 
-                  <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--grey)' }}>
-                    £{draw.retailValue.toLocaleString()} · {draw.totalTickets.toLocaleString()} tickets
+                  <p style={{ margin: '0 0 10px', fontSize: 11, color: 'var(--text-tertiary)' }}>
+                    {draw.resolvedAt
+                      ? new Date(draw.resolvedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : ''}
                   </p>
 
-                  <p style={{ margin: 0, fontSize: 11, color: 'var(--grey)' }}>
-                    {(draw as any).resolvedAt
-                      ? new Date((draw as any).resolvedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                      : draw.closingDate
-                      ? new Date(draw.closingDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                      : 'Recently'}
-                  </p>
+                  {/* Verify panel toggle */}
+                  <button
+                    onClick={() => setExpandedId(expandedId === draw.id ? null : draw.id)}
+                    style={{
+                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                      fontSize: 11, color: 'var(--accent-lilac)', fontWeight: 600,
+                    }}
+                  >
+                    {expandedId === draw.id ? 'Hide verification ↑' : 'Verify this draw ↓'}
+                  </button>
+
+                  {expandedId === draw.id && (
+                    <div style={{
+                      marginTop: 10, padding: '10px 12px',
+                      background: 'rgba(124,58,237,0.05)',
+                      border: '1px solid rgba(124,58,237,0.15)',
+                      borderRadius: 8,
+                    }}>
+                      <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>Verification</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <p style={{ margin: 0, fontSize: 10, color: 'var(--text-secondary)' }}>
+                          Draw ID: <code style={{ fontFamily: 'monospace', fontSize: 10 }}>{draw.id}</code>
+                        </p>
+                        {draw.randomOrgCert ? (
+                          <a href={draw.randomOrgCert} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: 'var(--accent-lilac)' }}>
+                            RANDOM.ORG certificate →
+                          </a>
+                        ) : (
+                          <p style={{ margin: 0, fontSize: 10, color: 'var(--text-tertiary)' }}>RANDOM.ORG cert: pending</p>
+                        )}
+                        {draw.legitAppCert ? (
+                          <a href={draw.legitAppCert} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: 'var(--accent-lilac)' }}>
+                            LegitApp authentication cert →
+                          </a>
+                        ) : (
+                          <p style={{ margin: 0, fontSize: 10, color: 'var(--text-tertiary)' }}>Authentication cert: n/a</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Back to home */}
         <div style={{ textAlign: 'center' }}>
           <Link href="/home" style={{
             color: 'var(--accent-coral)',

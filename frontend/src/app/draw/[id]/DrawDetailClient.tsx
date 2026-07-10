@@ -51,6 +51,32 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
     postalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  // Capture ?ref= param for attribution and poll every 30s for live data
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const ref = new URLSearchParams(window.location.search).get('ref');
+      if (ref) sessionStorage.setItem('bedrawn_ref', ref);
+    }
+    // Check auth state for D2 public CTA
+    fetchAuthSession().then(s => {
+      if (s.tokens?.idToken) setIsAuthed(true);
+    }).catch(() => {});
+
+    const id = getRealId(idProp);
+    const url = process.env.NEXT_PUBLIC_API_URL;
+    if (!url) return;
+    const poll = setInterval(() => {
+      fetch(`${url}/draws/${id}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.draw) setDraw(d.draw as Draw); })
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(poll);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Purchase modal state
   const [showModal, setShowModal] = useState(false);
   const [qty, setQty] = useState(1);
@@ -218,7 +244,7 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 60%, rgba(13,11,20,0.6))' }} />
           {draw.isClosingTonight ? (
             <div style={{ position: 'absolute', top: 12, left: 12 }}>
-              <span style={{ background: 'rgba(255,35,86,0.15)', border: '1px solid rgba(255,35,86,0.35)', color: '#FF2356', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(8px)' }}>
+              <span style={{ background: 'rgba(255,35,86,0.15)', border: '1px solid rgba(255,35,86,0.35)', color: '#EC4899', fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 5, letterSpacing: '0.08em', textTransform: 'uppercase', backdropFilter: 'blur(8px)' }}>
                 <LiveDot size={5} /> Drawing Tonight 9pm
               </span>
             </div>
@@ -456,9 +482,22 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
                   <ClockIcon size={13} color="var(--accent-rose)" /> Drawing tonight at 9pm
                 </p>
               )}
-              <button className="btn-purchase" onClick={openModal}>
-                Enter draw · {price}
-              </button>
+              {isAuthed ? (
+                <button className="btn-purchase" onClick={openModal}>
+                  Enter draw · {price}
+                </button>
+              ) : (
+                <a
+                  href="https://apps.apple.com/app/bedrawn/id0000000000"
+                  style={{
+                    display: 'block', width: '100%', padding: '16px', borderRadius: 999, textAlign: 'center',
+                    background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
+                    color: '#fff', fontWeight: 700, fontSize: 15, textDecoration: 'none',
+                  }}
+                >
+                  Get the app to enter →
+                </a>
+              )}
             </div>
           )}
         </div>
