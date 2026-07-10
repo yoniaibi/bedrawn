@@ -145,7 +145,7 @@ function VerifyEmailContent() {
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
               background: loading || fullCode.length !== 6
                 ? 'var(--muted)'
-                : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+                : 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
               cursor: loading || fullCode.length !== 6 ? 'not-allowed' : 'pointer',
               marginBottom: 16,

@@ -220,7 +220,7 @@ export default function LandingPage() {
               borderRadius: 999, padding: '5px 14px', marginBottom: 24,
             }}>
               <LiveDot size={6} />
-              <span style={{ color: '#FF2356', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LAUNCHING SOON · 9PM NIGHTLY</span>
+              <span style={{ color: '#EC4899', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em' }}>LAUNCHING SOON · 9PM NIGHTLY</span>
             </div>
 
             <h1 style={{ margin: '0 0 4px', color: '#FFFFFF', fontSize: 68, fontWeight: 800, lineHeight: 1, letterSpacing: -2 }}>
@@ -240,7 +240,7 @@ export default function LandingPage() {
               borderRadius: 999, padding: '8px 18px', marginBottom: 28,
             }}>
               <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13 }}>First draw closes in</span>
-              <CountdownTimer style={{ color: '#FF2356', fontWeight: 800, fontSize: 14 }} />
+              <CountdownTimer style={{ color: '#EC4899', fontWeight: 800, fontSize: 14 }} />
             </div>
 
             <div id="waitlist" style={{ marginBottom: 22, maxWidth: 480 }}>

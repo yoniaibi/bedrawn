@@ -521,14 +521,6 @@ export class BackendStack extends cdk.Stack {
     }));
     api.addRoutes({ path: '/me', methods: [HttpMethod.DELETE], integration: new HttpLambdaIntegration('DeleteAccountInt', deleteAccountFn), authorizer });
 
-    // Safer Play — spend limits, suspension, monthly spend
-    const saferPlayFn = new nodejs.NodejsFunction(this, 'SaferPlay', {
-      ...commonProps,
-      entry: path.join(__dirname, 'lambda/safer-play.ts'),
-    });
-    table.grantReadWriteData(saferPlayFn);
-    api.addRoutes({ path: '/user/safer-play', methods: [HttpMethod.GET, HttpMethod.PUT], integration: new HttpLambdaIntegration('SaferPlayInt', saferPlayFn), authorizer });
-
     // Winner share reward — credits £10 wallet when winner shares their win
     const winnerShareFn = new nodejs.NodejsFunction(this, 'WinnerShare', {
       ...commonProps,

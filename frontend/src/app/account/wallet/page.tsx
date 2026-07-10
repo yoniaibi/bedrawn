@@ -7,7 +7,6 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import AppShell from '@/components/AppShell';
-import HarmBanner from '@/components/HarmBanner';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PK!);
 
@@ -189,13 +188,6 @@ export default function WalletPage() {
             </p>
             <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--muted)' }}>Balance updates after payment confirms</p>
           </div>
-
-          <HarmBanner />
-
-          {/* 18+ notice */}
-          <p style={{ margin: '-8px 0 0', fontSize: 11, color: 'var(--muted)', textAlign: 'center' }}>
-            18+ only · Play responsibly · <a href="/safer-play" style={{ color: 'var(--muted)' }}>Safer Play</a>
-          </p>
 
           {/* Success confirmation */}
           {success !== null && (

@@ -162,7 +162,7 @@ export default function PurchaseClient({ id }: { id: string }) {
             disabled={!sufficient || loading || balancePence === null}
             style={{
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
-              background: !sufficient || loading || balancePence === null ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+              background: !sufficient || loading || balancePence === null ? 'var(--muted)' : 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
               cursor: !sufficient || loading || balancePence === null ? 'not-allowed' : 'pointer',
             }}

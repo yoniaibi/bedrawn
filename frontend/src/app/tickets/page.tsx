@@ -97,7 +97,7 @@ export default function TicketsPage() {
             <Link href="/home" style={{ textDecoration: 'none' }}>
               <button style={{
                 padding: '12px 28px', borderRadius: 999,
-                background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+                background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
                 border: 'none', color: 'var(--white)', fontSize: 14, fontWeight: 700,
               }}>Browse tonight&apos;s draws →</button>
             </Link>

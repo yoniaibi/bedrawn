@@ -23,7 +23,7 @@ export default function Logo({ width = 160, bg = '#FFFFFF' }: LogoProps) {
       <rect width="400" height="140" fill={bg} />
       <g clipPath="url(#ticket-clip)">
         {/* Ticket body */}
-        <rect x="20" y="10" width="360" height="120" fill="#FF2356" />
+        <rect x="20" y="10" width="360" height="120" fill="#EC4899" />
         {/* Stub */}
         <rect x="302" y="10" width="78" height="120" fill="#CC1A47" />
         {/* Top notches */}

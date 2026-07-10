@@ -91,7 +91,7 @@ export default function InterestsPage() {
           disabled={saving}
           style={{
             width: '100%', padding: 16, borderRadius: 999,
-            background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+            background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
             border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700,
             marginBottom: 12, cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.7 : 1,

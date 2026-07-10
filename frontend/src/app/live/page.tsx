@@ -11,13 +11,13 @@ import type { WheelEntry } from '@/components/PrizeWheel';
 import type { Draw } from '@/lib/mockData';
 
 // ─── Demo participants ────────────────────────────────────────────────────────
-const DEMO_COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#FF2356', '#06B6D4', '#F97316'];
+const DEMO_COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EC4899', '#06B6D4', '#F97316'];
 const DEMO_BASE: WheelEntry[] = [
   { handle: '@sarah_j',    tickets: 3,  color: '#8B5CF6' },
   { handle: '@marcus_t',   tickets: 7,  color: '#3B82F6' },
   { handle: '@collector',  tickets: 12, color: '#10B981' },
   { handle: '@luxe_fan',   tickets: 2,  color: '#F59E0B' },
-  { handle: '@fashionista',tickets: 4,  color: '#FF2356' },
+  { handle: '@fashionista',tickets: 4,  color: '#EC4899' },
   { handle: '@streetwear', tickets: 2,  color: '#06B6D4' },
   { handle: '@watchman99', tickets: 5,  color: '#F97316' },
 ];
@@ -27,7 +27,7 @@ const CHAT_INIT = [
   { id: '2', handle: '@marcus_t',   color: '#3B82F6', text: 'That bag is INSANE value' },
   { id: '3', handle: '@collector',  color: '#10B981', text: 'Got my 12 tickets in 👌' },
   { id: '4', handle: '@luxe_fan',   color: '#F59E0B', text: 'First time entering, nervous!' },
-  { id: '5', handle: '@fashionista',color: '#FF2356', text: 'GOOD LUCK EVERYONE 🎉' },
+  { id: '5', handle: '@fashionista',color: '#EC4899', text: 'GOOD LUCK EVERYONE 🎉' },
   { id: '6', handle: '@streetwear', color: '#06B6D4', text: 'Still got 45 mins to buy 🏃' },
   { id: '7', handle: '@watchman99', color: '#F97316', text: 'The wheel spin is so satisfying' },
 ];
@@ -67,7 +67,7 @@ export default function LivePage() {
   // ── Build entries with YOU ──────────────────────────────────────────────────
   const entries: WheelEntry[] = [
     ...DEMO_BASE,
-    ...(yourTickets > 0 ? [{ handle: 'YOU', tickets: yourTickets, color: '#FF2356', isYou: true }] : []),
+    ...(yourTickets > 0 ? [{ handle: 'YOU', tickets: yourTickets, color: '#EC4899', isYou: true }] : []),
   ];
   const total = entries.reduce((s, e) => s + e.tickets, 0);
   const yourShare = yourTickets > 0 ? (yourTickets / total) * 100 : 0;
@@ -106,7 +106,7 @@ export default function LivePage() {
     if (!chatInput.trim()) return;
     setMessages(prev => [...prev, {
       id: String(Date.now()), handle: '@you',
-      color: '#FF2356', text: chatInput.trim(),
+      color: '#EC4899', text: chatInput.trim(),
     }]);
     setChatInput('');
   };
@@ -136,7 +136,7 @@ export default function LivePage() {
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>247 watching</span>
             <span style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: '#FF2356', display: 'inline-block',
+              background: '#EC4899', display: 'inline-block',
               animation: 'livepulse 1.5s ease-in-out infinite',
             }} />
           </div>
@@ -218,7 +218,7 @@ export default function LivePage() {
                 padding: '12px 40px', borderRadius: 999,
                 background: spinning
                   ? 'rgba(255,255,255,0.08)'
-                  : 'linear-gradient(135deg, #FF2356, #8B5CF6)',
+                  : 'linear-gradient(135deg, #EC4899, #8B5CF6)',
                 border: '1.5px solid rgba(255,255,255,0.15)',
                 color: '#FFFFFF', fontSize: 14, fontWeight: 700,
                 cursor: spinning ? 'not-allowed' : 'pointer',
@@ -261,7 +261,7 @@ export default function LivePage() {
                 onChange={e => setYourTickets(Number(e.target.value))}
                 style={{
                   flex: 1,
-                  accentColor: '#FF2356',
+                  accentColor: '#EC4899',
                   height: 4,
                   cursor: 'pointer',
                 }}
@@ -272,7 +272,7 @@ export default function LivePage() {
                 border: '1px solid rgba(255,35,86,0.40)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <span style={{ fontSize: 14, fontWeight: 800, color: '#FF2356' }}>{yourTickets}</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#EC4899' }}>{yourTickets}</span>
               </div>
             </div>
 
@@ -293,7 +293,7 @@ export default function LivePage() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.50)', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>Slice</p>
-                  <p style={{ margin: '2px 0 0', fontSize: 22, fontWeight: 800, color: '#FF2356' }}>
+                  <p style={{ margin: '2px 0 0', fontSize: 22, fontWeight: 800, color: '#EC4899' }}>
                     {yourShare.toFixed(1)}%
                   </p>
                 </div>
@@ -302,7 +302,7 @@ export default function LivePage() {
 
             {/* Participant bars */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {[...DEMO_BASE, ...(yourTickets > 0 ? [{ handle: 'YOU', tickets: yourTickets, color: '#FF2356', isYou: true }] : [])]
+              {[...DEMO_BASE, ...(yourTickets > 0 ? [{ handle: 'YOU', tickets: yourTickets, color: '#EC4899', isYou: true }] : [])]
                 .sort((a, b) => b.tickets - a.tickets)
                 .map((entry, i) => {
                   const share = (entry.tickets / total) * 100;
@@ -310,7 +310,7 @@ export default function LivePage() {
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{
                         width: 84, fontSize: 11, fontWeight: entry.isYou ? 700 : 400,
-                        color: entry.isYou ? '#FF2356' : 'rgba(255,255,255,0.55)',
+                        color: entry.isYou ? '#EC4899' : 'rgba(255,255,255,0.55)',
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         flexShrink: 0,
                       }}>
@@ -320,7 +320,7 @@ export default function LivePage() {
                         <div style={{
                           height: '100%', width: `${share}%`,
                           background: entry.isYou
-                            ? 'linear-gradient(90deg, #FF2356, #FF6B35)'
+                            ? 'linear-gradient(90deg, #EC4899, #FF6B35)'
                             : entry.color,
                           borderRadius: 99,
                           transition: 'width 300ms ease-out',
@@ -391,7 +391,7 @@ export default function LivePage() {
             borderBottom: '1px solid rgba(0,0,0,0.05)',
             display: 'flex', alignItems: 'center', gap: 8,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#FF2356', flexShrink: 0, animation: 'livepulse 1.5s ease-in-out infinite' }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EC4899', flexShrink: 0, animation: 'livepulse 1.5s ease-in-out infinite' }} />
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Live chat</p>
             <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-tertiary)' }}>247 watching</span>
           </div>

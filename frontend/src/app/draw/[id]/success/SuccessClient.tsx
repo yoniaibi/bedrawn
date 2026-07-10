@@ -28,7 +28,7 @@ function SuccessContent({ id }: { id: string }) {
   }, []); // empty deps — reads real URL at mount
 
   useEffect(() => {
-    const colors = ['#8B5CF6', '#FF2356', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'];
+    const colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444'];
     setParticles(Array.from({ length: 20 }, (_, i) => ({
       id: i, x: Math.random() * 100, color: colors[i % colors.length],
       delay: Math.random() * 0.5, duration: 1.5 + Math.random() * 1,
@@ -79,7 +79,7 @@ function SuccessContent({ id }: { id: string }) {
             <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--grey)' }}>Tonight at 9pm</p>
           </div>
           <Link href="/live" style={{ textDecoration: 'none', width: '100%' }}>
-            <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
+            <button style={{ width: '100%', padding: 16, borderRadius: 999, background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)', border: 'none', color: 'var(--white)', fontSize: 16, fontWeight: 700 }}>
               Watch live at 9pm →
             </button>
           </Link>

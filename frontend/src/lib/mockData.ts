@@ -366,11 +366,11 @@ export const draws: Draw[] = [
 
 export const chatMessages = [
   { id: '1', handle: '@sarah_j',      color: '#8B5CF6', message: 'First time entering a Chanel draw 🙏', time: '8:50pm' },
-  { id: '2', handle: '@collector99',  color: '#FF2356', message: 'Good luck everyone! Last month\'s winner here 🏆', time: '8:51pm' },
+  { id: '2', handle: '@collector99',  color: '#EC4899', message: 'Good luck everyone! Last month\'s winner here 🏆', time: '8:51pm' },
   { id: '3', handle: '@hypekid',      color: '#F59E0B', message: 'Bought 20 tickets on the Chanel WOC, fingers crossed', time: '8:52pm' },
   { id: '4', handle: '@luxelover',    color: '#10B981', message: 'The Capucines is going to be insane tonight', time: '8:53pm' },
   { id: '5', handle: '@marcus_t',     color: '#3B82F6', message: 'Already in 3 draws tonight 👀', time: '8:54pm' },
-  { id: '6', handle: '@priya_k',      color: '#FF2356', message: 'This is my 4th week in a row, obsessed', time: '8:55pm' },
+  { id: '6', handle: '@priya_k',      color: '#EC4899', message: 'This is my 4th week in a row, obsessed', time: '8:55pm' },
   { id: '7', handle: '@bagqueen',     color: '#F59E0B', message: 'LV or Celine tonight — can\'t decide 😩', time: '8:56pm' },
   { id: '8', handle: '@fashionista',  color: '#8B5CF6', message: 'That Bottega Pouch is MINE tonight', time: '8:57pm' },
   { id: '9', handle: '@prada_fan',    color: '#10B981', message: 'Good luck everyone 🤞🤞', time: '8:58pm' },

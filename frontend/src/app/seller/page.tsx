@@ -81,7 +81,7 @@ export default function BecomeSellerPage() {
               <div key={step} style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                  background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+                  background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 12, fontWeight: 700, color: 'var(--white)',
                 }}>{step}</div>
@@ -104,7 +104,7 @@ export default function BecomeSellerPage() {
             disabled={loading}
             style={{
               width: '100%', padding: 16, borderRadius: 999, border: 'none',
-              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+              background: loading ? 'var(--muted)' : 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
               color: 'var(--white)', fontSize: 16, fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
             }}

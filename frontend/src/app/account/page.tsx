@@ -126,7 +126,7 @@ export default function AccountPage() {
           </div>
           <Link href="/account/wallet" style={{
             textDecoration: 'none',
-            background: 'linear-gradient(135deg, #FF2356 0%, #FF4E6A 100%)',
+            background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
             borderRadius: 18, padding: '12px 20px',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             boxShadow: '0 4px 16px rgba(255,35,86,0.28)',
