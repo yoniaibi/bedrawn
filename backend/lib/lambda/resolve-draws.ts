@@ -1,8 +1,16 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, QueryCommand, UpdateCommand, TransactWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, QueryCommand, GetCommand, UpdateCommand, TransactWriteCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { randomInt } from 'crypto';
-import { sendWinnerEmail, sendSellerResolvedEmail, sendCancelledEmail } from './resend-client';
+import { getStripe } from './stripe-client';
+import {
+  sendWinnerEmail,
+  sendSellerResolvedPendingAuthEmail,
+  sendCancelledEmail,
+  sendAutoReleasedSellerEmail,
+  sendAutoReleasedWinnerEmail,
+} from './resend-client';
+import { LEGIT_FEE_MAP } from './post-draw';
 import type { DrawSummary, BrandId } from '../analytics/types';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -65,6 +73,37 @@ async function writeDrawSummary(
   } catch (err) {
     console.error('[analytics] writeDrawSummary failed', draw.id, err);
   }
+}
+
+const PLATFORM_FEE_RATE = 0.12; // 12% — must match confirm-payout.ts
+
+/**
+ * Submit the resolved draw's photos to LegitApp for post-resolution authentication.
+ * If LEGIT_API_KEY is not set (dev mode) the draw stays in pending_auth and an
+ * admin must manually advance it.
+ */
+async function submitToLegitApp(drawId: string, legitCategory: string, imageUrls: string[]): Promise<void> {
+  const apiKey = process.env.LEGIT_API_KEY;
+  const webhookUrl = process.env.LEGIT_WEBHOOK_URL;
+  if (!apiKey) {
+    console.warn('[legit] No API key configured — draw', drawId, 'stays in pending_auth and needs manual advancement');
+    return;
+  }
+  const res = await fetch('https://api.legitapp.com/v1/submissions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ external_id: drawId, category: legitCategory, images: imageUrls, webhook_url: webhookUrl }),
+  });
+  if (!res.ok) throw new Error(`LegitApp ${res.status}: ${await res.text()}`);
+  const data: any = await res.json();
+  const submissionId: string = data.id ?? data.submission_id ?? '';
+  await db.send(new UpdateCommand({
+    TableName: TABLE,
+    Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+    UpdateExpression: 'SET legitSubmissionId = :id, updatedAt = :now',
+    ExpressionAttributeValues: { ':id': submissionId, ':now': new Date().toISOString() },
+  }));
+  console.log('[legit] submitted draw', drawId, 'submission', submissionId);
 }
 
 async function getUserEmail(userId: string): Promise<string | null> {
@@ -285,11 +324,11 @@ export const handler = async (): Promise<void> => {
         Update: {
           TableName: TABLE,
           Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-          UpdateExpression: 'SET #st = :resolved, winnerId = :winner, resolvedAt = :d',
+          UpdateExpression: 'SET #st = :pendingAuth, winnerId = :winner, resolvedAt = :d',
           ConditionExpression: '#st = :resolving',
           ExpressionAttributeNames: { '#st': 'status' },
           ExpressionAttributeValues: {
-            ':resolved': 'resolved',
+            ':pendingAuth': 'pending_auth',
             ':resolving': 'resolving',
             ':winner': winnerId,
             ':d': now,
@@ -319,6 +358,17 @@ export const handler = async (): Promise<void> => {
 
     try {
       await db.send(new TransactWriteCommand({ TransactItems: transactItems }));
+
+      // Draw is now pending_auth — submit photos to LegitApp for post-resolution authentication
+      const legitCategory = LEGIT_FEE_MAP[draw.category as string]?.legitCategory ?? 'handbag';
+      const imageUrls = (draw.imageUrls as string[] | undefined) ?? [];
+      try {
+        await submitToLegitApp(drawId, legitCategory, imageUrls);
+      } catch (legitErr: any) {
+        console.warn('[legit] submission failed for draw', drawId, legitErr?.message);
+        // Draw stays in pending_auth; an admin will need to manually advance it.
+      }
+
       if (isPostalWinner) {
         console.log(`POSTAL WINNER for draw ${drawId} — admin must retrieve winner profile USER#${winnerId}/PROFILE and contact manually`);
       } else {
@@ -328,10 +378,10 @@ export const handler = async (): Promise<void> => {
           await sendWinnerEmail(winnerEmail, drawTitle, drawId).catch(err =>
             console.error(`Failed to send winner email to ${winnerId}:`, err));
         }
-        // Send seller resolved email
+        // Send seller resolved email — winner picked, authentication in progress
         const sellerEmail = draw.sellerId ? await getUserEmail(draw.sellerId as string) : null;
         if (sellerEmail) {
-          await sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, ticketPricePence, (draw.verificationFeePence as number | undefined) ?? 0).catch(err =>
+          await sendSellerResolvedPendingAuthEmail(sellerEmail, drawTitle, soldTickets, ticketPricePence).catch(err =>
             console.error(`Failed to send seller email to ${draw.sellerId}:`, err));
         }
       }
@@ -352,4 +402,114 @@ export const handler = async (): Promise<void> => {
   }
 
   console.log('Draw resolution complete');
+
+  // ── 7-day auto-release: pay out in_transit draws whose dispute window has closed ──
+  // Winner never confirmed delivery and never disputed, so the item is assumed delivered.
+  const releasable: Record<string, any>[] = [];
+  let releaseKey: Record<string, any> | undefined;
+  do {
+    const page = await db.send(new ScanCommand({
+      TableName: TABLE,
+      FilterExpression: 'SK = :meta AND #st = :inTransit AND autoReleaseAt <= :today AND (attribute_not_exists(payoutStatus) OR payoutStatus <> :paid)',
+      ExpressionAttributeNames: { '#st': 'status' },
+      ExpressionAttributeValues: { ':meta': 'META', ':inTransit': 'in_transit', ':today': today, ':paid': 'paid' },
+      ExclusiveStartKey: releaseKey,
+    }));
+    releasable.push(...(page.Items ?? []));
+    releaseKey = page.LastEvaluatedKey;
+  } while (releaseKey);
+
+  console.log(`Found ${releasable.length} draw(s) to auto-release`);
+
+  for (const draw of releasable) {
+    const drawId = (draw.PK as string).replace('DRAW#', '');
+    const drawTitle = draw.title as string;
+    try {
+      // Same payout logic as confirm-payout.ts — Stripe transfer to the seller's connected account
+      const sellerRecord = await db.send(new GetCommand({
+        TableName: TABLE,
+        Key: { PK: `USER#${draw.sellerId}`, SK: 'STRIPE_ACCOUNT' },
+      }));
+      if (!sellerRecord.Item?.stripeAccountId) {
+        console.error(`[auto-release] draw ${drawId}: seller ${draw.sellerId} has no Stripe account — skipping`);
+        continue;
+      }
+
+      const totalRevenuePence: number = (draw.totalRevenuePence as number) ?? 0;
+      if (!totalRevenuePence || isNaN(totalRevenuePence)) {
+        console.error(`[auto-release] draw ${drawId}: no ticket revenue recorded — skipping`);
+        continue;
+      }
+      const sellerPayoutPence = Math.floor(totalRevenuePence * (1 - PLATFORM_FEE_RATE));
+      const platformFeePence = totalRevenuePence - sellerPayoutPence;
+
+      const stripe = await getStripe();
+      // Same idempotency key as confirm-payout — retries or a concurrent confirm can never double-pay
+      const transfer = await stripe.transfers.create(
+        {
+          amount: sellerPayoutPence,
+          currency: 'gbp',
+          destination: sellerRecord.Item.stripeAccountId,
+          metadata: {
+            drawId,
+            sellerId: draw.sellerId,
+            winnerId: draw.winnerId,
+            platformFeeGBP: (platformFeePence / 100).toFixed(2),
+            autoReleased: 'true',
+          },
+          description: `Bedrawn draw #${drawId} seller payout (auto-released)`,
+        },
+        { idempotencyKey: `payout-${drawId}` },
+      );
+
+      try {
+        await db.send(new UpdateCommand({
+          TableName: TABLE,
+          Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+          UpdateExpression: 'SET #st = :complete, payoutStatus = :paid, stripeTransferId = :t, paidAt = :d, sellerPayoutPence = :p, platformFeePence = :f, autoReleased = :ar',
+          ConditionExpression: '#st = :inTransit',
+          ExpressionAttributeNames: { '#st': 'status' },
+          ExpressionAttributeValues: {
+            ':complete': 'complete',
+            ':inTransit': 'in_transit',
+            ':paid': 'paid',
+            ':t': transfer.id,
+            ':d': new Date().toISOString(),
+            ':p': sellerPayoutPence,
+            ':f': platformFeePence,
+            ':ar': true,
+          },
+        }));
+      } catch (err: any) {
+        if (err.name === 'ConditionalCheckFailedException') {
+          console.log(`[auto-release] draw ${drawId} left in_transit concurrently (confirmed or disputed) — skipping`);
+          continue;
+        }
+        throw err;
+      }
+
+      console.log(`[auto-release] draw ${drawId} complete — paid £${(sellerPayoutPence / 100).toFixed(2)} to seller ${draw.sellerId}`);
+
+      // Notify seller and winner
+      const netPounds = (sellerPayoutPence / 100).toFixed(2);
+      const sellerEmail = draw.sellerId ? await getUserEmail(draw.sellerId as string) : null;
+      if (sellerEmail) {
+        await sendAutoReleasedSellerEmail(sellerEmail, drawTitle, netPounds).catch(err =>
+          console.error(`[auto-release] failed to send seller email for draw ${drawId}:`, err));
+      }
+      const winnerId = draw.winnerId as string | undefined;
+      if (winnerId && !winnerId.startsWith('POSTAL_')) {
+        const winnerEmail = await getUserEmail(winnerId);
+        if (winnerEmail) {
+          await sendAutoReleasedWinnerEmail(winnerEmail, drawTitle).catch(err =>
+            console.error(`[auto-release] failed to send winner email for draw ${drawId}:`, err));
+        }
+      }
+    } catch (err: any) {
+      // One failing draw must not block the rest of the auto-release batch
+      console.error(`[auto-release] draw ${drawId} failed:`, err?.message ?? err);
+    }
+  }
+
+  console.log('Auto-release sweep complete');
 };

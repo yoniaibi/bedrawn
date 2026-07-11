@@ -40,9 +40,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     userTickets = (entryResult.Item as any)?.ticketCount ?? 0;
   }
 
-  // Fetch winner's handle if draw is resolved
+  // Fetch winner's handle once a winner exists ('resolved' kept for legacy items)
+  const POST_RESOLUTION_STATUSES = ['resolved', 'pending_auth', 'pending_shipment', 'in_transit', 'complete', 'disputed'];
+  const hasWinner = POST_RESOLUTION_STATUSES.includes(item.status) && !!item.winnerId;
   let winnerHandle: string | undefined;
-  if (item.status === 'resolved' && item.winnerId) {
+  if (hasWinner) {
     const winnerProfile = await db.send(new GetCommand({
       TableName: TABLE,
       Key: { PK: `USER#${item.winnerId}`, SK: 'PROFILE' },
@@ -80,8 +82,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     certificateUrl: item.certificateUrl,
     verificationProvider: item.verificationProvider,
     // winnerHandle is safe to expose; winnerId (Cognito sub) is never sent
-    winnerHandle: item.status === 'resolved' ? winnerHandle : undefined,
+    winnerHandle: hasWinner ? winnerHandle : undefined,
     resolvedAt: item.resolvedAt,
+    tracking: item.tracking ?? null,           // { carrier, trackingNumber, shippedAt }
+    autoReleaseAt: item.autoReleaseAt ?? null, // YYYY-MM-DD
+    disputeReason: item.disputeReason ?? null,
     userTickets,
   };
 

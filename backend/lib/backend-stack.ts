@@ -529,6 +529,45 @@ export class BackendStack extends cdk.Stack {
     table.grantReadWriteData(winnerShareFn);
     api.addRoutes({ path: '/draws/{id}/winner-share', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('WinnerShareInt', winnerShareFn), authorizer });
 
+    const resendParamPolicy = new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/bedrawn/resend/api-key-full`],
+    });
+
+    // Seller uploads tracking after authentication passes — starts the 7-day auto-release clock
+    const submitTrackingFn = new nodejs.NodejsFunction(this, 'SubmitTracking', {
+      ...commonProps,
+      timeout: cdk.Duration.seconds(15),
+      environment: {
+        ...commonEnv,
+        RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full',
+        USER_POOL_ID: userPool.userPoolId,
+      },
+      entry: path.join(__dirname, 'lambda/submit-tracking.ts'),
+    });
+    table.grantReadWriteData(submitTrackingFn);
+    submitTrackingFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['cognito-idp:AdminGetUser'],
+      resources: [userPool.userPoolArn],
+    }));
+    submitTrackingFn.addToRolePolicy(resendParamPolicy);
+    api.addRoutes({ path: '/draws/{id}/tracking', methods: [HttpMethod.PUT], integration: new HttpLambdaIntegration('SubmitTrackingInt', submitTrackingFn), authorizer });
+
+    // Winner raises a dispute within the 7-day in_transit window — puts payout on hold
+    const raiseDisputeFn = new nodejs.NodejsFunction(this, 'RaiseDispute', {
+      ...commonProps,
+      timeout: cdk.Duration.seconds(15),
+      environment: {
+        ...commonEnv,
+        ADMIN_EMAILS: adminEmails,
+        RESEND_API_KEY_PARAM: '/bedrawn/resend/api-key-full',
+      },
+      entry: path.join(__dirname, 'lambda/raise-dispute.ts'),
+    });
+    table.grantReadWriteData(raiseDisputeFn);
+    raiseDisputeFn.addToRolePolicy(resendParamPolicy);
+    api.addRoutes({ path: '/draws/{id}/dispute', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('RaiseDisputeInt', raiseDisputeFn), authorizer });
+
     // ── Rate limiting: patch throttle settings onto the auto-created $default stage ──
     // HttpApi creates $default automatically; we override its DefaultRouteSettings.
     const cfnDefaultStage = api.defaultStage?.node.defaultChild as cdk.CfnResource;
@@ -621,6 +660,20 @@ export class BackendStack extends cdk.Stack {
       resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/bedrawn/resend/api-key-full`],
     }));
     api.addRoutes({ path: '/webhooks/legit', methods: [HttpMethod.POST], integration: new HttpLambdaIntegration('LegitWebhookInt', legitWebhookFn) });
+
+    // LegitApp submission credentials — post-resolution authentication is triggered by
+    // admin-resolve-draw and the nightly resolve-draws cron. Empty LEGIT_API_KEY = dev
+    // mode: draws stay in pending_auth and an admin must manually advance them.
+    // Override via: cdk deploy --context legitApiKey=<key>
+    const legitApiKey: string = this.node.tryGetContext('legitApiKey') ?? '';
+    const legitWebhookUrl = `${api.apiEndpoint}/webhooks/legit`;
+    [adminResolveDrawFn, resolveDrawsFn].forEach(fn => {
+      fn.addEnvironment('LEGIT_API_KEY', legitApiKey);
+      fn.addEnvironment('LEGIT_WEBHOOK_URL', legitWebhookUrl);
+    });
+
+    // Nightly cron now auto-releases in_transit payouts via Stripe transfers
+    resolveDrawsFn.addToRolePolicy(stripeSecretPolicy);
 
     // ── Admin metrics / cohort Lambda ─────────────────────────────────────────
     // Handles all innovation-accounting routes — cohort CRUD, metrics computation,

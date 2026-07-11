@@ -4,13 +4,43 @@ import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/cli
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { cors } from './stripe-client';
 import { randomInt } from 'crypto';
-import { sendWinnerEmail, sendSellerResolvedEmail } from './resend-client';
+import { sendWinnerEmail, sendSellerResolvedPendingAuthEmail } from './resend-client';
+import { LEGIT_FEE_MAP } from './post-draw';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const cognito = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
 const TABLE = process.env.TABLE_NAME!;
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map(e => e.trim()).filter(Boolean);
 const USER_POOL_ID = process.env.USER_POOL_ID!;
+
+/**
+ * Submit the resolved draw's photos to LegitApp for post-resolution authentication.
+ * If LEGIT_API_KEY is not set (dev mode) the draw stays in pending_auth and an
+ * admin must manually advance it.
+ */
+async function submitToLegitApp(drawId: string, legitCategory: string, imageUrls: string[]): Promise<void> {
+  const apiKey = process.env.LEGIT_API_KEY;
+  const webhookUrl = process.env.LEGIT_WEBHOOK_URL;
+  if (!apiKey) {
+    console.warn('[legit] No API key configured — draw', drawId, 'stays in pending_auth and needs manual advancement');
+    return;
+  }
+  const res = await fetch('https://api.legitapp.com/v1/submissions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ external_id: drawId, category: legitCategory, images: imageUrls, webhook_url: webhookUrl }),
+  });
+  if (!res.ok) throw new Error(`LegitApp ${res.status}: ${await res.text()}`);
+  const data: any = await res.json();
+  const submissionId: string = data.id ?? data.submission_id ?? '';
+  await db.send(new UpdateCommand({
+    TableName: TABLE,
+    Key: { PK: `DRAW#${drawId}`, SK: 'META' },
+    UpdateExpression: 'SET legitSubmissionId = :id, updatedAt = :now',
+    ExpressionAttributeValues: { ':id': submissionId, ':now': new Date().toISOString() },
+  }));
+  console.log('[legit] submitted draw', drawId, 'submission', submissionId);
+}
 
 async function getUserEmail(userId: string): Promise<string | null> {
   try {
@@ -185,11 +215,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       Update: {
         TableName: TABLE,
         Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-        UpdateExpression: 'SET #st = :resolved, winnerId = :winner, resolvedAt = :d',
+        UpdateExpression: 'SET #st = :pendingAuth, winnerId = :winner, resolvedAt = :d',
         ConditionExpression: '#st = :open',
         ExpressionAttributeNames: { '#st': 'status' },
         ExpressionAttributeValues: {
-          ':resolved': 'resolved',
+          ':pendingAuth': 'pending_auth',
           ':open': 'open',
           ':winner': winnerId,
           ':d': now,
@@ -229,6 +259,16 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     throw err;
   }
 
+  // Draw is now pending_auth — submit photos to LegitApp for post-resolution authentication
+  const legitCategory = LEGIT_FEE_MAP[draw.category as string]?.legitCategory ?? 'handbag';
+  const imageUrls = (draw.imageUrls as string[] | undefined) ?? [];
+  try {
+    await submitToLegitApp(drawId, legitCategory, imageUrls);
+  } catch (err: any) {
+    console.warn('[legit] submission failed for draw', drawId, err?.message);
+    // Draw stays in pending_auth; an admin will need to manually advance it.
+  }
+
   // Send winner + seller emails — must be awaited before return or Lambda freezes mid-send
   if (!isPostalWinner) {
     console.log('[email] looking up emails for winner:', winnerId, 'seller:', draw.sellerId);
@@ -239,7 +279,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     console.log('[email] winnerEmail:', winnerEmail, 'sellerEmail:', sellerEmail);
     const emailResults = await Promise.allSettled([
       winnerEmail ? sendWinnerEmail(winnerEmail, drawTitle, drawId) : Promise.resolve(),
-      sellerEmail ? sendSellerResolvedEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number, (draw.verificationFeePence as number | undefined) ?? 0) : Promise.resolve(),
+      sellerEmail ? sendSellerResolvedPendingAuthEmail(sellerEmail, drawTitle, soldTickets, draw.ticketPricePence as number) : Promise.resolve(),
     ]);
     emailResults.forEach((r, i) => {
       const label = i === 0 ? 'winner' : 'seller';
@@ -253,6 +293,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     headers: cors,
     body: JSON.stringify({
       result: 'resolved',
+      status: 'pending_auth',
       drawTitle,
       soldTickets,
       entries: entries.length,

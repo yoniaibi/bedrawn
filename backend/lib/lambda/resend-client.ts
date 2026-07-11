@@ -128,6 +128,114 @@ export async function sendVerificationRejectedEmail(to: string, drawTitle: strin
   });
 }
 
+// ─── Post-draw verification + shipping emails (warm cream aesthetic) ─────────
+// bg #FAF8F5 · text #1A1410 · accent #EC4899
+
+function creamShell(heading: string, inner: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:560px;margin:0 auto;background:#FAF8F5;color:#1A1410;border-radius:12px;overflow:hidden;border:1px solid #EDE7DE">
+      <div style="background:#EC4899;padding:28px 40px">
+        <h1 style="margin:0;font-size:24px;color:#fff">${heading}</h1>
+      </div>
+      <div style="padding:32px 40px">
+        ${inner}
+      </div>
+      <div style="padding:16px 40px;border-top:1px solid #EDE7DE">
+        <p style="font-size:12px;color:#8A8178;margin:0">bedrawn · <a href="https://www.bedrawn.app" style="color:#EC4899">bedrawn.app</a></p>
+      </div>
+    </div>
+  `;
+}
+
+const creamButton = (href: string, label: string) =>
+  `<a href="${href}" style="display:inline-block;margin-top:24px;padding:14px 28px;background:#EC4899;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px">${label}</a>`;
+
+export async function sendVerificationPassedEmail(to: string, drawTitle: string, winnerId: string, winnerHandle: string): Promise<void> {
+  const resend = await getResend();
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'Your item is verified — ship it now',
+    html: creamShell('Verified — time to ship', `
+      <p style="font-size:16px;line-height:1.6"><strong>${drawTitle}</strong> passed authentication. The winner is <strong>@${winnerHandle}</strong>.</p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B">Please ship the item with <strong>tracked postage</strong> and upload the tracking number in your account. Your payout releases 7 days after tracking is uploaded, or as soon as the winner confirms delivery.</p>
+      ${creamButton('https://www.bedrawn.app/account/draws', 'Upload tracking →')}
+    `),
+  });
+}
+
+export async function sendSellerResolvedPendingAuthEmail(to: string, drawTitle: string, soldTickets: number, ticketPricePence: number): Promise<void> {
+  const resend = await getResend();
+  const grossPounds = ((soldTickets * ticketPricePence) / 100).toFixed(2);
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'Your draw resolved — verification in progress',
+    html: creamShell('Draw resolved', `
+      <p style="font-size:16px;line-height:1.6">Your draw for <strong>${drawTitle}</strong> has closed and a winner has been picked — ${soldTickets} tickets sold (£${grossPounds} gross).</p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B">We're authenticating the item now. This usually takes up to 24 hours — you'll get an email telling you when to ship.</p>
+      ${creamButton('https://www.bedrawn.app/account/draws', 'View your draws →')}
+    `),
+  });
+}
+
+export async function sendWinnerTrackingEmail(to: string, drawTitle: string, carrier: string, trackingNumber: string): Promise<void> {
+  const resend = await getResend();
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'Your item is on its way!',
+    html: creamShell('On its way', `
+      <p style="font-size:16px;line-height:1.6">The seller has shipped <strong>${drawTitle}</strong>.</p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B">Carrier: <strong>${carrier}</strong><br/>Tracking: <strong>${trackingNumber}</strong></p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B">Once it arrives, confirm delivery in your account — otherwise it auto-releases in 7 days.</p>
+      ${creamButton('https://www.bedrawn.app/account/draws', 'Confirm delivery →')}
+    `),
+  });
+}
+
+export async function sendDisputeReceivedEmail(to: string, drawTitle: string, drawId: string, reason: string): Promise<void> {
+  const resend = await getResend();
+  await resend.emails.send({
+    from: FROM_SUPPORT,
+    to,
+    subject: `Dispute raised — ${drawTitle}`,
+    html: creamShell('Dispute raised', `
+      <p style="font-size:16px;line-height:1.6">The winner of <strong>${drawTitle}</strong> raised a dispute:</p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B;border-left:3px solid #EC4899;padding-left:12px">${reason}</p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B">The payout is on hold until the dispute is resolved.</p>
+      ${creamButton(`https://www.bedrawn.app/admin/draws/${drawId}`, 'Review dispute →')}
+    `),
+  });
+}
+
+export async function sendAutoReleasedSellerEmail(to: string, drawTitle: string, netPounds: string): Promise<void> {
+  const resend = await getResend();
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Payout released — ${drawTitle}`,
+    html: creamShell('Payout released', `
+      <p style="font-size:16px;line-height:1.6">The 7-day delivery window for <strong>${drawTitle}</strong> closed with no dispute, so your payout of <strong>£${netPounds}</strong> has been auto-released to your Stripe account.</p>
+      ${creamButton('https://www.bedrawn.app/account/draws', 'View your draws →')}
+    `),
+  });
+}
+
+export async function sendAutoReleasedWinnerEmail(to: string, drawTitle: string): Promise<void> {
+  const resend = await getResend();
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: `Delivery window closed — ${drawTitle}`,
+    html: creamShell('Delivery window closed', `
+      <p style="font-size:16px;line-height:1.6">Your 7-day window for <strong>${drawTitle}</strong> has closed, so we've assumed the item was delivered and released the seller's payout.</p>
+      <p style="font-size:15px;line-height:1.6;color:#5C544B">If something's wrong, contact support and we'll look into it.</p>
+      ${creamButton('https://www.bedrawn.app/account/draws', 'View your draws →')}
+    `),
+  });
+}
+
 export async function sendCancelledEmail(to: string, drawTitle: string, refundPounds: string): Promise<void> {
   const resend = await getResend();
   await resend.emails.send({
