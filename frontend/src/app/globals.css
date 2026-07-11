@@ -871,3 +871,132 @@ button { cursor: pointer; font-family: inherit; }
   50%       { box-shadow: 0 0 60px rgba(139,92,246,0.40), 0 0 100px rgba(255,35,86,0.18); }
 }
 .wheel-glow { animation: wheel-glow-pulse 3s ease-in-out infinite; }
+
+/* ─── Landing page — light luxury ─── */
+
+.landing-light {
+  min-height: 100vh;
+  background: #FAF8F5;
+  color: #1A1410;
+  overflow-x: hidden;
+}
+
+.landing-light ::selection {
+  background: rgba(236,72,153,0.20);
+  color: #1A1410;
+}
+
+/* Gradient orbs — soft background glows (dark "win moment" section only) */
+.orb-pink,
+.orb-purple {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+.orb-pink   { background: radial-gradient(circle, rgba(236,72,153,0.30) 0%, transparent 70%); }
+.orb-purple { background: radial-gradient(circle, rgba(124,58,237,0.30) 0%, transparent 70%); }
+
+/* Split hero */
+.landing-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+}
+@media (max-width: 900px) {
+  .landing-hero-grid { grid-template-columns: 1fr; }
+  .landing-hero-grid .hero-image-pane { height: 46vh; min-height: 340px; }
+}
+
+/* Winner ticker — seamless infinite marquee on coral */
+.ticker-strip-coral {
+  position: relative;
+  overflow: hidden;
+  background: #EC4899;
+  color: #FFFFFF;
+}
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: ticker-scroll 48s linear infinite;
+}
+.ticker-strip-coral:hover .ticker-track { animation-play-state: paused; }
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Draw showcase grid */
+.landing-showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 640px)  { .landing-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .landing-showcase-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* White card with hover shadow lift — light landing */
+.draw-card-light {
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.07);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  transition:
+    transform 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
+}
+.draw-card-light:hover {
+  transform: translateY(-5px);
+  border-color: rgba(236,72,153,0.22);
+  box-shadow: 0 14px 44px rgba(26,20,16,0.13);
+}
+.draw-card-light:hover .card-image-img { transform: scale(1.05); }
+
+/* Gold flash — winner reveal glow */
+@keyframes gold-flash {
+  0%   { opacity: 0; }
+  22%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.gold-flash-overlay { animation: gold-flash 0.7s ease-out both; }
+
+/* Spinning name flick during live draw demo */
+@keyframes name-flick {
+  from { opacity: 0.15; transform: translateY(8px) scale(0.96); filter: blur(3px); }
+  to   { opacity: 1;    transform: translateY(0)   scale(1);    filter: blur(0); }
+}
+.win-demo-name { animation: name-flick 90ms ease-out both; }
+
+/* Contained confetti for cards / small stages */
+@keyframes confetti-drop {
+  0%   { transform: translateY(-16px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(320px) rotate(540deg); opacity: 0; }
+}
+
+/* Scroll-triggered reveals */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: none;
+}
+
+/* Comparison table rows */
+.compare-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 90px 90px 90px;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .compare-grid-row { grid-template-columns: 1fr 52px 52px 52px 60px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .ticker-track { animation: none; }
+}

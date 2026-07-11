@@ -62,7 +62,7 @@ test.describe('Wallet page — top-up flow', () => {
     await page.locator('text=£5').first().click();
     await page.waitForTimeout(2500);
     expect(payload).not.toBeNull();
-    expect((payload as Record<string, unknown>).amountPence).toBe(500);
+    expect((payload as unknown as Record<string, unknown>).amountPence).toBe(500);
   });
 
   test('clicking £50 sends correct amountPence to API', async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe('Wallet page — top-up flow', () => {
     await page.locator('text=£50').first().click();
     await page.waitForTimeout(2500);
     expect(payload).not.toBeNull();
-    expect((payload as Record<string, unknown>).amountPence).toBe(5000);
+    expect((payload as unknown as Record<string, unknown>).amountPence).toBe(5000);
   });
 
   test('failed top-up API shows error', async ({ page }) => {

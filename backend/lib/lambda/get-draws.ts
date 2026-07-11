@@ -38,12 +38,15 @@ function toDrawShape(item: Record<string, any>) {
     tags: item.tags ?? [],
     status: item.status,
     closingDate: item.closingDate,
+    winnerHandle: item.winnerHandle ?? null,
+    resolvedAt: item.resolvedAt ?? null,
   };
 }
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
     const q = event.queryStringParameters?.q?.toLowerCase().trim() ?? '';
+    const statusFilter = event.queryStringParameters?.status ?? 'open';
 
     let items: Record<string, any>[] = [];
 
@@ -51,9 +54,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       const result = await db.send(new QueryCommand({
         TableName: TABLE,
         IndexName: GSI,
-        KeyConditionExpression: '#s = :open',
+        KeyConditionExpression: '#s = :status',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':open': 'open' },
+        ExpressionAttributeValues: { ':status': statusFilter },
         ScanIndexForward: true,
         Limit: 200,
       }));
@@ -61,9 +64,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     } catch {
       const result = await db.send(new ScanCommand({
         TableName: TABLE,
-        FilterExpression: 'begins_with(PK, :prefix) AND SK = :meta AND #s = :open',
+        FilterExpression: 'begins_with(PK, :prefix) AND SK = :meta AND #s = :status',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':prefix': 'DRAW#', ':meta': 'META', ':open': 'open' },
+        ExpressionAttributeValues: { ':prefix': 'DRAW#', ':meta': 'META', ':status': statusFilter },
       }));
       items = (result.Items ?? []) as Record<string, any>[];
     }
