@@ -52,6 +52,115 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
   };
 
   const [isAuthed, setIsAuthed] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Shipping form state (seller uploads tracking)
+  const [carrier, setCarrier] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingSubmitting, setTrackingSubmitting] = useState(false);
+  const [trackingError, setTrackingError] = useState('');
+  const [trackingSuccess, setTrackingSuccess] = useState(false);
+
+  // Dispute state (winner raises dispute)
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeSubmitting, setDisputeSubmitting] = useState(false);
+  const [disputeError, setDisputeError] = useState('');
+  const [disputeSuccess, setDisputeSuccess] = useState(false);
+
+  // Confirm delivery state (winner confirms receipt)
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false);
+  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
+
+  const handleSubmitTracking = async () => {
+    if (!carrier.trim() || !trackingNumber.trim()) {
+      setTrackingError('Please enter both carrier and tracking number');
+      return;
+    }
+    setTrackingSubmitting(true);
+    setTrackingError('');
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) return;
+      const id = getRealId(idProp);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/tracking`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ carrier: carrier.trim(), trackingNumber: trackingNumber.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTrackingError(data.error ?? 'Failed to submit tracking');
+      } else {
+        setTrackingSuccess(true);
+        // Refresh draw data
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => { if (d?.draw) setDraw(d.draw as Draw); })
+          .catch(() => {});
+      }
+    } catch {
+      setTrackingError('Network error — please try again');
+    } finally {
+      setTrackingSubmitting(false);
+    }
+  };
+
+  const handleRaiseDispute = async () => {
+    if (!disputeReason.trim()) {
+      setDisputeError('Please describe the issue');
+      return;
+    }
+    setDisputeSubmitting(true);
+    setDisputeError('');
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) return;
+      const id = getRealId(idProp);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/dispute`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: disputeReason.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDisputeError(data.error ?? 'Failed to raise dispute');
+      } else {
+        setDisputeSuccess(true);
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => { if (d?.draw) setDraw(d.draw as Draw); })
+          .catch(() => {});
+      }
+    } catch {
+      setDisputeError('Network error — please try again');
+    } finally {
+      setDisputeSubmitting(false);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    setConfirmingDelivery(true);
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      if (!token) return;
+      const id = getRealId(idProp);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}/payout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setDeliveryConfirmed(true);
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/draws/${id}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(d => { if (d?.draw) setDraw(d.draw as Draw); })
+          .catch(() => {});
+      }
+    } catch {}
+    setConfirmingDelivery(false);
+  };
 
   // Capture ?ref= param for attribution and poll every 30s for live data
   useEffect(() => {
@@ -59,9 +168,13 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
       const ref = new URLSearchParams(window.location.search).get('ref');
       if (ref) sessionStorage.setItem('bedrawn_ref', ref);
     }
-    // Check auth state for D2 public CTA
+    // Check auth state and capture userId
     fetchAuthSession().then(s => {
-      if (s.tokens?.idToken) setIsAuthed(true);
+      if (s.tokens?.idToken) {
+        setIsAuthed(true);
+        const claims = s.tokens.idToken.payload;
+        setUserId((claims.sub as string) ?? null);
+      }
     }).catch(() => {});
 
     const id = getRealId(idProp);
@@ -444,12 +557,143 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
 
         </div>
 
-        {/* Winner banner — shown when draw is resolved */}
-        {draw.status === 'resolved' && (
+        {/* Post-draw state panels */}
+        {draw.status === 'pending_auth' && (
+          <div style={{ margin: '0 16px 20px', background: 'rgba(245,158,11,0.07)', border: '1.5px solid rgba(245,158,11,0.30)', borderRadius: 16, padding: '20px' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: '#92400E' }}>Authentication in progress</p>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>A winner has been selected. We're authenticating the item with LegitApp — this takes up to 24 hours. Both the seller and winner will be emailed when it's done.</p>
+          </div>
+        )}
+
+        {draw.status === 'auth_failed' && (
+          <div style={{ margin: '0 16px 20px', background: 'rgba(220,38,38,0.06)', border: '1.5px solid rgba(220,38,38,0.25)', borderRadius: 16, padding: '20px' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: '#991B1B' }}>Authentication failed</p>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>LegitApp could not authenticate this item. All ticket purchases have been refunded to buyers' wallets.</p>
+          </div>
+        )}
+
+        {draw.status === 'pending_shipment' && (
+          <div style={{ margin: '0 16px 20px', borderRadius: 16, overflow: 'hidden', border: '1.5px solid rgba(139,92,246,0.25)' }}>
+            <div style={{ background: 'rgba(139,92,246,0.07)', padding: '16px 20px', borderBottom: '1px solid rgba(139,92,246,0.15)' }}>
+              <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: '#5B21B6' }}>✓ Item authenticated</p>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
+                {draw.winnerHandle ? `Winner: @${draw.winnerHandle}` : 'Winner has been notified'}
+              </p>
+            </div>
+            {userId === (draw as any).sellerId ? (
+              <div style={{ background: 'var(--card)', padding: '20px' }}>
+                <p style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Ship the item with tracked postage</p>
+                {trackingSuccess ? (
+                  <p style={{ margin: 0, fontSize: 14, color: '#059669', fontWeight: 600 }}>✓ Tracking submitted — your payout releases in 7 days or when the winner confirms delivery.</p>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
+                      <input
+                        type="text"
+                        placeholder="Carrier (e.g. Royal Mail, DPD)"
+                        value={carrier}
+                        onChange={e => setCarrier(e.target.value)}
+                        style={{ padding: '11px 14px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 14, fontFamily: 'inherit', background: 'var(--bg)' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Tracking number"
+                        value={trackingNumber}
+                        onChange={e => setTrackingNumber(e.target.value)}
+                        style={{ padding: '11px 14px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 14, fontFamily: 'inherit', background: 'var(--bg)' }}
+                      />
+                    </div>
+                    {trackingError && <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--red)' }}>{trackingError}</p>}
+                    <button
+                      onClick={handleSubmitTracking}
+                      disabled={trackingSubmitting}
+                      style={{ width: '100%', padding: '13px', borderRadius: 999, background: 'var(--accent-coral)', border: 'none', color: '#fff', fontWeight: 700, fontSize: 15, cursor: trackingSubmitting ? 'not-allowed' : 'pointer', opacity: trackingSubmitting ? 0.7 : 1 }}
+                    >
+                      {trackingSubmitting ? 'Submitting…' : 'Submit tracking'}
+                    </button>
+                    <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>Payout (88% of ticket revenue) releases 7 days after tracking is uploaded or when the winner confirms delivery.</p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div style={{ background: 'var(--card)', padding: '16px 20px' }}>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>The seller is preparing to ship. You'll receive an email with tracking details once it's on its way.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {draw.status === 'in_transit' && (
+          <div style={{ margin: '0 16px 20px', borderRadius: 16, overflow: 'hidden', border: '1.5px solid rgba(5,150,105,0.25)' }}>
+            <div style={{ background: 'rgba(5,150,105,0.07)', padding: '16px 20px', borderBottom: '1px solid rgba(5,150,105,0.15)' }}>
+              <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 700, color: '#065F46' }}>📦 Item on its way</p>
+              {draw.tracking && (
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {draw.tracking.carrier} · {draw.tracking.trackingNumber}
+                </p>
+              )}
+            </div>
+            <div style={{ background: 'var(--card)', padding: '16px 20px' }}>
+              {draw.autoReleaseAt && (
+                <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--muted)' }}>
+                  Payout auto-releases on {new Date(draw.autoReleaseAt + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} if no dispute is raised.
+                </p>
+              )}
+              {deliveryConfirmed ? (
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#059669' }}>✓ Delivery confirmed — seller has been paid.</p>
+              ) : disputeSuccess ? (
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#7C3AED' }}>Dispute received — we'll review within 24 hours.</p>
+              ) : (
+                <>
+                  <button
+                    onClick={handleConfirmDelivery}
+                    disabled={confirmingDelivery}
+                    style={{ width: '100%', padding: '13px', borderRadius: 999, background: '#059669', border: 'none', color: '#fff', fontWeight: 700, fontSize: 15, cursor: confirmingDelivery ? 'not-allowed' : 'pointer', opacity: confirmingDelivery ? 0.7 : 1, marginBottom: 10 }}
+                  >
+                    {confirmingDelivery ? 'Confirming…' : 'Confirm delivery'}
+                  </button>
+                  {!disputeSuccess && (
+                    <details style={{ borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                      <summary style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>▸</span> Item not received or not as described?
+                      </summary>
+                      <div style={{ paddingTop: 12 }}>
+                        <textarea
+                          rows={3}
+                          placeholder="Describe the issue (e.g. item not received, wrong item, significantly different from description)"
+                          value={disputeReason}
+                          onChange={e => setDisputeReason(e.target.value)}
+                          style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid var(--border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', resize: 'vertical', boxSizing: 'border-box', marginBottom: 10 }}
+                        />
+                        {disputeError && <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--red)' }}>{disputeError}</p>}
+                        <button
+                          onClick={handleRaiseDispute}
+                          disabled={disputeSubmitting}
+                          style={{ width: '100%', padding: '12px', borderRadius: 999, background: 'rgba(220,38,38,0.08)', border: '1.5px solid rgba(220,38,38,0.25)', color: '#DC2626', fontWeight: 700, fontSize: 14, cursor: disputeSubmitting ? 'not-allowed' : 'pointer' }}
+                        >
+                          {disputeSubmitting ? 'Raising dispute…' : 'Raise a dispute'}
+                        </button>
+                      </div>
+                    </details>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {draw.status === 'disputed' && (
+          <div style={{ margin: '0 16px 20px', background: 'rgba(124,58,237,0.06)', border: '1.5px solid rgba(124,58,237,0.25)', borderRadius: 16, padding: '20px' }}>
+            <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: '#5B21B6' }}>Dispute under review</p>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>Our team will review this within 24 hours and contact both parties by email.</p>
+          </div>
+        )}
+
+        {(draw.status === 'complete' || draw.status === 'resolved') && (
           <div style={{
             margin: '0 16px 20px',
-            background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(124,58,237,0.06))',
-            border: '1.5px solid var(--gold)', borderRadius: 16, padding: '20px 20px',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(124,58,237,0.05))',
+            border: '1.5px solid rgba(245,158,11,0.35)', borderRadius: 16, padding: '20px',
             textAlign: 'center',
           }}>
             <p style={{ margin: '0 0 4px', fontSize: 24 }}>🎉</p>
@@ -469,12 +713,23 @@ export default function DrawDetailClient({ id: idProp }: { id: string }) {
 
         {/* Sticky CTA */}
         <div className="sticky-cta-bar" style={{ bottom: 58 }}>
-          {draw.status === 'resolved' ? (
+          {(draw.status === 'complete' || draw.status === 'resolved') ? (
             <Link href={`/draw/${draw.id}/winner`} style={{ textDecoration: 'none', flex: 1 }}>
               <button style={{ width: '100%', height: 52, borderRadius: 999, background: 'var(--gold)', border: 'none', color: '#000', fontSize: 16, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}>
                 <TrophyIcon size={16} color="currentColor" /> See who won
               </button>
             </Link>
+          ) : draw.status === 'pending_auth' || draw.status === 'auth_failed' || draw.status === 'pending_shipment' || draw.status === 'in_transit' || draw.status === 'disputed' || draw.status === 'cancelled' ? (
+            <div style={{ flex: 1, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 999, background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+                {draw.status === 'pending_auth' ? 'Authenticating item…' :
+                 draw.status === 'auth_failed' ? 'Authentication failed' :
+                 draw.status === 'pending_shipment' ? 'Awaiting shipment' :
+                 draw.status === 'in_transit' ? 'Item on its way' :
+                 draw.status === 'disputed' ? 'Dispute in review' :
+                 'Draw cancelled'}
+              </span>
+            </div>
           ) : (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {draw.isClosingTonight && (

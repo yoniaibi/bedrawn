@@ -23,9 +23,12 @@ export interface Draw {
   endsAt?: string;
   postalDeadline?: string;
   earlyClose?: boolean;
-  status?: 'open' | 'pending_verification' | 'rejected' | 'resolved' | 'cancelled' | 'pending_auth' | 'auth_failed' | 'sold_out_pending' | 'drawing' | 'complete';
+  status?: 'open' | 'pending_verification' | 'rejected' | 'resolved' | 'cancelled' | 'pending_auth' | 'auth_failed' | 'pending_shipment' | 'in_transit' | 'disputed' | 'complete' | 'sold_out_pending' | 'drawing';
   winnerHandle?: string;
   resolvedAt?: string;
+  tracking?: { carrier: string; trackingNumber: string; shippedAt: string } | null;
+  autoReleaseAt?: string | null;
+  disputeReason?: string | null;
   reserveTickets?: number;
   certificateUrl?: string;
   verificationProvider?: string;
