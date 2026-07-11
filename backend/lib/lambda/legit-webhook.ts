@@ -1,10 +1,10 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, QueryCommand, UpdateCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { cors } from './stripe-client';
-import { sendVerificationRejectedEmail } from './resend-client';
+import { sendVerificationRejectedEmail, sendVerificationPassedEmail } from './resend-client';
 
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const cognito = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION ?? 'eu-west-1' });
@@ -21,6 +21,85 @@ async function getSellerEmail(userId: string): Promise<string | null> {
     return res.UserAttributes?.find(a => a.Name === 'email')?.Value ?? null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Refund a single entrant atomically — same transaction shape as resolve-draws.ts:
+ * dedup marker + wallet credit + TX record + notification. The dedup marker means
+ * webhook retries/replays can never double-credit a buyer.
+ */
+async function refundEntrant(
+  drawId: string,
+  drawTitle: string,
+  userId: string,
+  ticketCount: number,
+  ticketPricePence: number,
+): Promise<boolean> {
+  const refundPence = ticketCount * ticketPricePence;
+  const now = new Date().toISOString();
+  try {
+    await db.send(new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `DEDUP#REFUND#${drawId}`,
+              SK: `USER#${userId}`,
+              refundedAt: now,
+              ttl: Math.floor(Date.now() / 1000) + 90 * 24 * 3600,
+            },
+            ConditionExpression: 'attribute_not_exists(PK)',
+          },
+        },
+        {
+          Update: {
+            TableName: TABLE,
+            Key: { PK: `USER#${userId}`, SK: 'WALLET' },
+            UpdateExpression: 'ADD balancePence :refund',
+            ExpressionAttributeValues: { ':refund': refundPence },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `TX#${now}-REFUND-${drawId}`,
+              type: 'refund',
+              description: `Refund: ${drawTitle} (item failed authentication)`,
+              amountPence: refundPence,
+              drawId,
+              createdAt: now,
+            },
+          },
+        },
+        {
+          Put: {
+            TableName: TABLE,
+            Item: {
+              PK: `USER#${userId}`,
+              SK: `NOTIF#${now}-REFUND-${drawId}`,
+              type: 'draw_cancelled',
+              title: 'Draw cancelled — refund issued',
+              body: `The draw "${drawTitle}" was cancelled because the item could not be authenticated. £${(refundPence / 100).toFixed(2)} has been returned to your wallet.`,
+              drawId,
+              drawTitle,
+              read: false,
+              createdAt: now,
+            },
+          },
+        },
+      ],
+    }));
+    return true;
+  } catch (err: any) {
+    if (err.name === 'TransactionCanceledException') {
+      const reasons = err.CancellationReasons ?? [];
+      if (reasons[0]?.Code === 'ConditionalCheckFailed') return false;
+    }
+    throw err;
   }
 }
 
@@ -82,38 +161,57 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   const now = new Date().toISOString();
 
+  const drawTitle = (draw.title as string | undefined) ?? 'your listing';
+
   if (status === 'authentic') {
     try {
       await db.send(new UpdateCommand({
         TableName: TABLE,
         Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-        UpdateExpression: 'SET #s = :open, certificateUrl = :cert, updatedAt = :now',
-        // Only transition from pending_verification — prevents replays from reopening resolved/cancelled draws
+        UpdateExpression: 'SET #s = :shipment, certificateUrl = :cert, updatedAt = :now',
+        // Only transition from pending_auth — prevents replays from re-flipping shipped/complete draws
         ConditionExpression: '#s = :pending',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':open': 'open', ':cert': certificateUrl ?? '', ':now': now, ':pending': 'pending_verification' },
+        ExpressionAttributeValues: { ':shipment': 'pending_shipment', ':cert': certificateUrl ?? '', ':now': now, ':pending': 'pending_auth' },
       }));
-      console.log('[legit-webhook] draw', drawId, 'authenticated — set to open');
+      console.log('[legit-webhook] draw', drawId, 'authenticated — set to pending_shipment');
     } catch (err: any) {
       if (err.name === 'ConditionalCheckFailedException') {
         // Already transitioned (duplicate delivery or replay) — safe to ack
-        console.warn('[legit-webhook] draw', drawId, 'already transitioned from pending_verification — ignoring duplicate authentic webhook');
+        console.warn('[legit-webhook] draw', drawId, 'already transitioned from pending_auth — ignoring duplicate authentic webhook');
         return { statusCode: 200, headers: cors, body: JSON.stringify({ received: true, duplicate: true }) };
       }
       throw err;
     }
+
+    // Tell the seller to ship — include the winner's handle so they know who it's going to
+    const winnerId = (draw.winnerId as string | undefined) ?? '';
+    let winnerHandle = winnerId ? `user_${winnerId.slice(0, 6)}` : 'the winner';
+    if (winnerId) {
+      const winnerProfile = await db.send(new GetCommand({
+        TableName: TABLE,
+        Key: { PK: `USER#${winnerId}`, SK: 'PROFILE' },
+      }));
+      winnerHandle = (winnerProfile.Item?.handle as string | undefined) ?? winnerHandle;
+    }
+    const sellerEmail = draw.sellerId ? await getSellerEmail(draw.sellerId as string) : null;
+    if (sellerEmail) {
+      await sendVerificationPassedEmail(sellerEmail, drawTitle, winnerId, winnerHandle).catch(err => {
+        console.error('[legit-webhook] failed to send verification-passed email:', err?.message);
+      });
+    }
   } else {
-    // inauthentic or inconclusive — reject draw, waive fee so seller isn't charged
+    // inauthentic or inconclusive — auth failed after resolution, so every buyer must be refunded
     try {
       await db.send(new UpdateCommand({
         TableName: TABLE,
         Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-        UpdateExpression: 'SET #s = :rejected, verificationFeePence = :zero, updatedAt = :now',
+        UpdateExpression: 'SET #s = :failed, updatedAt = :now',
         ConditionExpression: '#s = :pending',
         ExpressionAttributeNames: { '#s': 'status' },
-        ExpressionAttributeValues: { ':rejected': 'rejected', ':zero': 0, ':now': now, ':pending': 'pending_verification' },
+        ExpressionAttributeValues: { ':failed': 'auth_failed', ':now': now, ':pending': 'pending_auth' },
       }));
-      console.log('[legit-webhook] draw', drawId, 'rejected (status:', status, ') — fee waived');
+      console.log('[legit-webhook] draw', drawId, 'auth failed (status:', status, ')');
     } catch (err: any) {
       if (err.name === 'ConditionalCheckFailedException') {
         console.warn('[legit-webhook] draw', drawId, 'already transitioned — ignoring duplicate rejection webhook');
@@ -122,7 +220,25 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       throw err;
     }
 
-    const drawTitle = (draw.title as string | undefined) ?? 'your listing';
+    // Refund every buyer — tickets were already sold when the draw resolved.
+    // Per-entry dedup markers make this loop safe to re-run on partial failure.
+    const ticketPricePence = (draw.ticketPricePence as number) ?? 0;
+    const entriesResult = await db.send(new QueryCommand({
+      TableName: TABLE,
+      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+      ExpressionAttributeValues: { ':pk': `DRAW#${drawId}`, ':prefix': 'ENTRY#' },
+    }));
+    const entries = (entriesResult.Items ?? []).map(item => ({
+      userId: item.userId as string,
+      ticketCount: item.ticketCount as number,
+    }));
+    let refunded = 0;
+    for (const e of entries) {
+      const applied = await refundEntrant(drawId, drawTitle, e.userId, e.ticketCount, ticketPricePence);
+      if (applied) refunded++;
+    }
+    console.log(`[legit-webhook] refunded ${refunded}/${entries.length} buyer(s) for draw ${drawId}`);
+
     const sellerEmail = draw.sellerId ? await getSellerEmail(draw.sellerId as string) : null;
     if (sellerEmail) {
       await sendVerificationRejectedEmail(sellerEmail, drawTitle).catch(err => {

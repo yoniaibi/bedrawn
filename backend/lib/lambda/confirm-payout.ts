@@ -25,6 +25,17 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   if (draw.payoutStatus === 'paid') return { statusCode: 200, headers: cors, body: JSON.stringify({ message: 'Already paid out' }) };
   if (!draw.winnerId) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'No winner yet' }) };
 
+  // Payout can only be confirmed once the seller has shipped (in_transit) and no dispute is open
+  if (draw.status !== 'in_transit') {
+    const reason =
+      draw.status === 'pending_auth' ? 'Item is still being authenticated' :
+      draw.status === 'pending_shipment' ? 'Seller has not uploaded tracking yet' :
+      draw.status === 'disputed' ? 'A dispute is open on this draw — payout is on hold' :
+      draw.status === 'complete' ? 'Draw is already complete' :
+      `Draw is not in transit (status: ${draw.status})`;
+    return { statusCode: 409, headers: cors, body: JSON.stringify({ error: reason }) };
+  }
+
   const isPostalWinner = (draw.winnerId as string).startsWith('POSTAL_');
   const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? '').split(',').map((e: string) => e.trim()).filter(Boolean);
   const callerEmail = (event.requestContext as any).authorizer?.jwt?.claims?.email as string | undefined;
@@ -83,10 +94,12 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     await db.send(new UpdateCommand({
       TableName: process.env.TABLE_NAME,
       Key: { PK: `DRAW#${drawId}`, SK: 'META' },
-      UpdateExpression: 'SET payoutStatus = :s, stripeTransferId = :t, paidAt = :d, sellerPayoutPence = :p, platformFeePence = :f',
+      UpdateExpression: 'SET payoutStatus = :s, #st = :complete, stripeTransferId = :t, paidAt = :d, sellerPayoutPence = :p, platformFeePence = :f',
       ConditionExpression: 'attribute_not_exists(payoutStatus) OR payoutStatus <> :s',
+      ExpressionAttributeNames: { '#st': 'status' },
       ExpressionAttributeValues: {
         ':s': 'paid',
+        ':complete': 'complete',
         ':t': transfer.id,
         ':d': new Date().toISOString(),
         ':p': sellerPayoutPence,
