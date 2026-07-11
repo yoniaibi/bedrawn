@@ -16,7 +16,7 @@ import { LiveDot } from '../../components/LiveDot';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Landing'>;
 
-const HERO_COLORS = ['#1a1a2e', '#8B0000', '#2C3E50', '#4A3728', '#CC0000', '#C49A3C'];
+const HERO_COLORS = ['#E8DDD3', '#DDD0C4', '#EDE5DC', '#E5DAD0', '#D4C5B8', '#F0E6D3'];
 const WINNER_DATA = [
   { handle: '@sarah_j', item: 'Chanel Flap Bag', paid: '50p', won: '£6,800' },
   { handle: '@sneaker_dan', item: 'Air Jordan 1 Chicago', paid: '10p', won: '£450' },

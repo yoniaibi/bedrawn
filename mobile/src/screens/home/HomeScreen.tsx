@@ -3,6 +3,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -37,8 +38,8 @@ const BRAND_CHIPS = [
 ];
 
 const IMAGE_COLORS = [
-  '#1a1a2e', '#16213e', '#0f3460', '#1e1e2e', '#2d1b69',
-  '#1a0a2e', '#0d1117', '#1a1a3e', '#2d0a0a', '#0a2d0a',
+  '#E8DDD3', '#D4C5B8', '#EDE5DC', '#C8B8A8', '#DDD0C4',
+  '#E0D5CC', '#C4B5A5', '#D8CCB8', '#E5DAD0', '#CFC2B5',
 ];
 
 interface ApiDraw {
@@ -78,6 +79,7 @@ function adaptDraw(d: ApiDraw, index: number): Draw {
     isVerified: d.isVerified ?? true,
     description: d.description ?? '',
     imageColor: IMAGE_COLORS[index % IMAGE_COLORS.length],
+    imageUrl: (d as any).imageUrl ?? undefined,
     closingDate: d.closingDate,
     reserveTickets: d.reserveTickets,
   };
@@ -178,6 +180,13 @@ export function HomeScreen() {
           <View style={styles.section}>
             <View style={styles.heroCard}>
               <View style={[styles.heroImage, { backgroundColor: heroDrawItem.imageColor }]}>
+                {heroDrawItem.imageUrl ? (
+                  <Image
+                    source={{ uri: heroDrawItem.imageUrl }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="cover"
+                  />
+                ) : null}
                 {heroDrawItem.isClosingTonight ? (
                   <View style={styles.closingPill}>
                     <LiveDot />
@@ -449,13 +458,15 @@ const styles = StyleSheet.create({
   heroSeller: { color: C.GREY, fontSize: 13, marginBottom: S.sm },
   heroRow: { flexDirection: 'row', marginBottom: S.sm },
   pricePill: {
-    backgroundColor: C.PURPLE_DARK,
+    backgroundColor: 'rgba(255,35,86,0.08)',
     borderRadius: 999,
     paddingHorizontal: S.md,
     paddingVertical: 4,
     alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255,35,86,0.22)',
   },
-  priceText: { color: C.WHITE, fontSize: 13, fontWeight: '700' },
+  priceText: { color: C.CORAL, fontSize: 13, fontWeight: '700' },
   heroPercent: { color: C.GREY, fontSize: 12, marginTop: S.xs, marginBottom: S.sm },
   enterBtn: {
     backgroundColor: C.PURPLE,

@@ -7,8 +7,6 @@ import DrawCard from '@/components/DrawCard';
 import ProgressBar from '@/components/ProgressBar';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
-import { isEnabled } from '@/config/featureFlags';
-import { LAUNCH_BRANDS } from '@/config/brands';
 
 import type { Draw } from '@/lib/mockData';
 
@@ -25,7 +23,6 @@ const BRAND_CHIPS = [
 
 export default function HomePage() {
   const [activeChip, setActiveChip] = useState('tonight');
-  const [trustFilter, setTrustFilter] = useState<'all' | 'trusted' | 'top'>('all');
   const [allDraws, setAllDraws] = useState<Draw[]>([]);
   const [drawsLoading, setDrawsLoading] = useState(true);
   const [drawsError, setDrawsError] = useState(false);
@@ -44,10 +41,6 @@ export default function HomePage() {
     if (activeChip === 'tonight' && !d.isClosingTonight) return false;
     if (activeChip === 'high_value' && d.retailValue < 1000) return false;
     if (['chanel', 'lv', 'bottega', 'prada', 'celine'].includes(activeChip) && (d as any).brandId !== activeChip) return false;
-    // Trust filter
-    const sellerBadges: string[] = (d as any).sellerBadges ?? [];
-    if (trustFilter === 'trusted' && !sellerBadges.includes('TRUSTED_SELLER') && !sellerBadges.includes('TOP_SELLER')) return false;
-    if (trustFilter === 'top' && !sellerBadges.includes('TOP_SELLER')) return false;
     return true;
   });
 
@@ -55,8 +48,6 @@ export default function HomePage() {
   const heroPct = hero ? Math.round((hero.soldTickets / hero.totalTickets) * 100) : 0;
   const heroPrice = hero ? (hero.ticketPrice >= 100 ? `£${(hero.ticketPrice / 100).toFixed(2)}` : `${hero.ticketPrice}p`) : '';
   const tonightCount = allDraws.filter(d => d.isClosingTonight).length;
-
-  const drawingTonight = allDraws.filter(d => d.isClosingTonight).slice(0, 8);
 
   if (drawsLoading) return (
     <AppShell>
@@ -208,56 +199,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ── Seller trust filter ── */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          {([['all', 'All sellers'], ['trusted', 'Trusted+'], ['top', 'Top only']] as const).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => setTrustFilter(id as typeof trustFilter)}
-              className={`chip${trustFilter === id ? ' active' : ''}`}
-              style={{ fontFamily: 'inherit' }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Drawing Tonight row ── */}
-        {drawingTonight.length > 0 && (
-        <section style={{ marginBottom: 32 }}>
-          <div className="section-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <LiveDot size={6} />
-              <h2 className="section-title" style={{ marginBottom: 0 }}>Drawing Tonight · 9pm</h2>
-            </div>
-            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{drawingTonight.length} draw{drawingTonight.length > 1 ? 's' : ''}</span>
-          </div>
-          <div className="scroll-strip" style={{ margin: '0 -16px' }}>
-            {drawingTonight.map(d => (
-              <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
-                <DrawCard draw={d} />
-              </div>
-            ))}
-          </div>
-        </section>
-        )}
-
-        {/* ── Designer Bags row ── */}
-        {!isEnabled('STYLE_CATEGORIES') && (
-        <section style={{ marginBottom: 32 }}>
-          <div className="section-header">
-            <h2 className="section-title" style={{ marginBottom: 0 }}>Designer Bags</h2>
-            <a href="/sell-your-bag" style={{ color: 'var(--accent-coral)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Sell yours →</a>
-          </div>
-          <div className="scroll-strip" style={{ margin: '0 -16px' }}>
-            {allDraws.filter(d => d.category === 'Bags').slice(0, 8).map(d => (
-              <div key={d.id} style={{ width: 168, flexShrink: 0 }}>
-                <DrawCard draw={d} />
-              </div>
-            ))}
-          </div>
-        </section>
-        )}
 
         {/* ── Main grid ── */}
         <section>
@@ -294,28 +235,6 @@ export default function HomePage() {
             </div>
           )}
         </section>
-
-        {/* App download banner */}
-        <div style={{
-          background: 'var(--bg-raised)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 16, padding: '20px 24px', marginTop: 40,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
-        }}>
-          <div>
-            <p style={{ margin: '0 0 2px', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>Get the bedrawn app</p>
-            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>Watch draws go live at 9pm and get instant win notifications</p>
-          </div>
-          <a href="#" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: '#000', color: '#fff',
-            borderRadius: 10, padding: '10px 20px',
-            textDecoration: 'none', fontSize: 13, fontWeight: 700,
-            whiteSpace: 'nowrap',
-          }}>
-            Download on App Store
-          </a>
-        </div>
 
         {/* Footer */}
         <div style={{ borderTop: '1px solid var(--border-subtle)', marginTop: 24, paddingTop: 20, textAlign: 'center' }}>

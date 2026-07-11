@@ -420,13 +420,15 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', gap: S.md, marginBottom: S.xl },
   ticketPricePill: {
     flex: 1,
-    backgroundColor: C.PURPLE_DARK,
+    backgroundColor: 'rgba(255,35,86,0.07)',
     borderRadius: 14,
     padding: S.lg,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,35,86,0.20)',
   },
-  ticketPriceLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11, marginBottom: 4 },
-  ticketPriceValue: { color: C.WHITE, fontSize: 24, fontWeight: '800' },
+  ticketPriceLabel: { color: C.GREY, fontSize: 11, marginBottom: 4 },
+  ticketPriceValue: { color: C.CORAL, fontSize: 24, fontWeight: '800' },
   retailPill: {
     flex: 1,
     backgroundColor: C.CARD,

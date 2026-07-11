@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Draw } from '../data/mockData';
 import { C } from '../theme/colors';
 import { S } from '../theme/spacing';
@@ -26,8 +26,15 @@ export function DrawCard({ draw, onPress, onSellerPress, fullWidth }: Props) {
       onPress={onPress}
       activeOpacity={0.85}
     >
-      {/* Image placeholder */}
+      {/* Image */}
       <View style={[styles.image, { backgroundColor: draw.imageColor }]}>
+        {draw.imageUrl ? (
+          <Image
+            source={{ uri: draw.imageUrl }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+          />
+        ) : null}
         {/* Bundle tag */}
         {draw.isBundle && (
           <View style={styles.bundleTag}>

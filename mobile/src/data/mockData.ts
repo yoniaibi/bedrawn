@@ -28,6 +28,7 @@ export type Draw = {
   isVerified: boolean;
   description: string;
   imageColor: string;
+  imageUrl?: string;
   closingDate?: string; // YYYY-MM-DD — only set once the reserve is hit (scheduled for next 9pm)
   reserveTickets?: number; // minimum tickets to confirm the draw
   minThreshold?: number;    // fraction 0-1 (e.g. 0.5 = 50% reserve). Alternative to reserveTickets.
@@ -59,7 +60,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Authentic Chanel Classic Flap in black caviar leather with gold hardware. Serial number verified, comes with dustbag, box, and authenticity card. Purchased from Chanel Paris in 2022.',
-    imageColor: '#1a1a2e',
+    imageColor: '#E8DDD3',
     reserveTickets: 250,
     brandId: 'chanel' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0001', checkedAt: '2026-06-01T10:00:00Z' },
@@ -83,7 +84,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Louis Vuitton Pochette Métis in Reverse Monogram canvas. 2021, very light wear. Gold-tone hardware, all tabs and zips perfect. Comes with dustbag and date code.',
-    imageColor: '#4A3728',
+    imageColor: '#DDD0C4',
     reserveTickets: 400,
     brandId: 'lv' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0002', checkedAt: '2026-06-02T11:00:00Z' },
@@ -107,7 +108,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Celine Nano Luggage tote in cashmere grey grained calfskin. The Phoebe Philo era original. Tri-fold flap, gold metal feet. 2018, light wear on base. Dustbag included.',
-    imageColor: '#B0A8B9',
+    imageColor: '#E5DAD0',
     reserveTickets: 350,
     brandId: 'celine' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0003', checkedAt: '2026-06-03T09:00:00Z' },
@@ -131,7 +132,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Chanel Boy Bag in small black lambskin with ruthenium hardware. 2019, serial verified. Lightly worn, all stitching and hardware perfect. Original dustbag, box, and authenticity card.',
-    imageColor: '#1a1a2e',
+    imageColor: '#E8DDD3',
     reserveTickets: 300,
     brandId: 'chanel' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0004', checkedAt: '2026-06-04T10:00:00Z' },
@@ -155,7 +156,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Louis Vuitton Neverfull MM in Damier Ebène canvas with red interior. Comes with pouch, dustbag, and date code 2019. Light wear consistent with age.',
-    imageColor: '#4A3728',
+    imageColor: '#DDD0C4',
     reserveTickets: 450,
     brandId: 'lv' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0005', checkedAt: '2026-06-05T14:30:00Z' },
@@ -179,7 +180,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Prada Saffiano Lux tote in nero (black) with double handles and detachable strap. Silver triangle logo, snap closure. 2021, barely used. Full set with dustbag and care card.',
-    imageColor: '#2D2D2D',
+    imageColor: '#D4C5B8',
     reserveTickets: 350,
     brandId: 'prada' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0006', checkedAt: '2026-06-06T14:00:00Z' },
@@ -203,7 +204,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Prada Re-Edition 2000 in Re-Nylon and Saffiano leather in Nior. Silver metal lettering, shoulder strap included. 2022, barely used. Original receipt and dustbag.',
-    imageColor: '#2D2D2D',
+    imageColor: '#D4C5B8',
     reserveTickets: 250,
     brandId: 'prada' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0007', checkedAt: '2026-06-07T09:00:00Z' },
@@ -227,7 +228,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Celine Classic Box Bag in smooth black calfskin with gold hardware. The Phoebe Philo era original — highly sought-after. Lightly used, comes with dustbag, card, and Celine receipt.',
-    imageColor: '#1A1A1A',
+    imageColor: '#CFC2B5',
     reserveTickets: 300,
     brandId: 'celine' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo_plus_physical' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0008', checkedAt: '2026-06-08T09:00:00Z' },
@@ -251,7 +252,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Bottega Veneta small Intrecciato woven leather clutch in tan. Gold zip. 2020, light use. Signature woven pattern, comes with dustbag.',
-    imageColor: '#C49A3C',
+    imageColor: '#F0E6D3',
     reserveTickets: 300,
     brandId: 'bottega' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0009', checkedAt: '2026-06-09T11:15:00Z' },
@@ -275,7 +276,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Bottega Veneta Cassette bag in cloud blue padded intrecciato. The Matthieu Blazy era classic. 2022, carried twice. Adjustable strap, full BV packaging.',
-    imageColor: '#A8C5DA',
+    imageColor: '#EAE0D5',
     reserveTickets: 420,
     brandId: 'bottega' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0010', checkedAt: '2026-06-10T11:00:00Z' },
@@ -299,7 +300,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Louis Vuitton Capucines MM in black Taurillon leather — the understated LV with no monogram. Gold hardware, flap closure. 2022, carried five times. Full set with box and dustbag.',
-    imageColor: '#1A1A1A',
+    imageColor: '#CFC2B5',
     reserveTickets: 300,
     brandId: 'lv' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo_plus_physical' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0011', checkedAt: '2026-06-11T10:00:00Z' },
@@ -323,7 +324,7 @@ export const draws: Draw[] = [
     isVerified: true,
     description:
       'Chanel Wallet on Chain (WOC) in black caviar leather with gold chain. The perfect evening bag. 2021, very lightly used. Authenticity card, dustbag, and box all included.',
-    imageColor: '#0D0D0D',
+    imageColor: '#C8B8A8',
     reserveTickets: 480,
     brandId: 'chanel' as const,
     auth: { provider: 'legit_app' as const, tier: 'photo' as const, status: 'passed' as const, certificateRef: 'LGA-2026-0012', checkedAt: '2026-06-12T10:00:00Z' },
@@ -459,7 +460,7 @@ export const orders: Order[] = [
   {
     id: 'o1',
     title: 'Louis Vuitton Pochette Métis — Reverse Monogram',
-    imageColor: '#4A3728',
+    imageColor: '#DDD0C4',
     status: 'won',
     ticketCount: 8,
     ticketPrice: 10,
@@ -470,7 +471,7 @@ export const orders: Order[] = [
   {
     id: 'o2',
     title: 'Chanel Classic Flap Bag — Medium',
-    imageColor: '#1a1a2e',
+    imageColor: '#E8DDD3',
     status: 'active',
     ticketCount: 12,
     ticketPrice: 10,
@@ -480,7 +481,7 @@ export const orders: Order[] = [
   {
     id: 'o3',
     title: 'Louis Vuitton Neverfull MM — Damier Ebène',
-    imageColor: '#4A3728',
+    imageColor: '#DDD0C4',
     status: 'delivered',
     ticketCount: 5,
     ticketPrice: 10,
