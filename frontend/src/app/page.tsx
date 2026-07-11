@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import CountdownTimer from '@/components/CountdownTimer';
 import LiveDot from '@/components/LiveDot';
-import { AppleIcon, PhoneIcon } from '@/components/icons';
 
 type Draw = {
   id: string;
@@ -51,40 +50,12 @@ const DEMO_NAMES = ['@sophie.bx', '@marcus_w', '@ella.vintage', '@harrykicks', '
 const DEMO_WINNER = '@jade.london';
 
 const faqs = [
-  { q: 'How do I enter for free?', a: 'Every draw has a free postal entry route. Write a postcard with your name, email, and draw name and send it to our postal address (published before launch — check back soon). One postcard = one entry, same odds as paid tickets. This is what makes bedrawn a legal prize promotion under UK law.' },
   { q: 'Is this gambling?', a: 'No. bedrawn is a prize draw, not gambling. Every draw has a free entry route (no purchase necessary), which legally distinguishes it from a lottery. No gambling licence required — same structure as large UK charity draws.' },
   { q: "What if a draw doesn't sell enough tickets?", a: 'If a draw closes without reaching its minimum ticket threshold, all buyers are automatically refunded. Funds are held in escrow — we never touch your money directly.' },
-  { q: 'How do I get my prize?', a: "Once the wheel picks your name at 9pm, you get an instant notification and your item ships free within 2 business days. All items are held by bedrawn before going live — we verify them and dispatch directly. You never deal with the seller." },
-  { q: 'How are sellers paid?', a: "Sellers are paid within 24 hours of the winner confirming delivery. bedrawn takes a 12% platform fee. For a £200 item at 25p/ticket with 2,000 tickets sold, a seller receives approximately £423." },
   { q: 'Is the draw actually random?', a: "Yes — draws use a cryptographically secure random number generator. The outcome is provably fair. The live wheel is purely visual — the winner is determined by algorithm, not where the animation stops." },
-  { q: 'How many tickets can I buy?', a: "Up to 25% of the tickets in any draw. If a draw has 2,000 tickets, the max is 500. At 10p each, that's £50 for a 25% shot at the prize." },
-  { q: 'When does the draw happen?', a: "Every night at 9pm UK time. All draws close simultaneously and resolve live in the app with a live chat and reaction stream. Results and winner notifications go out by 9:15pm." },
+  { q: 'How do I get my prize?', a: "Once the wheel picks your name at 9pm, you get an instant notification and your item ships free within 2 business days. All items are held by bedrawn before going live — we verify them and dispatch directly. You never deal with the seller." },
 ];
 
-const compareRows = [
-  { feature: 'Tickets from 10p',          vinted: false, ebay: false, stockx: false, us: true },
-  { feature: 'Nightly live draw',          vinted: false, ebay: false, stockx: false, us: true },
-  { feature: 'Independent authentication', vinted: false, ebay: false, stockx: true,  us: true },
-  { feature: 'Cash payout if fake',        vinted: false, ebay: false, stockx: false, us: true },
-  { feature: 'Anyone can list',            vinted: true,  ebay: true,  stockx: false, us: true },
-  { feature: 'Free entry route',           vinted: false, ebay: false, stockx: false, us: true },
-];
-
-const features = [
-  { title: 'Win for 10p',          desc: "A designer bag, a watch, the trainers you couldn't justify. Tickets start at 10p — win it for the price of nothing." },
-  { title: "Sell what won't sell", desc: "That coat that's sat on Vinted for months? List it, and a crowd of ticket buyers turns it into real cash, fast." },
-  { title: 'Tickets from 10p',     desc: 'Less than a penny sweet. An impulse, not a decision — so draws fill fast.' },
-  { title: 'Built-in trust',       desc: 'Items held in custody before going live. Escrow on every payment. Verified sellers only.' },
-  { title: 'Watch it live',        desc: 'Every draw resolves live at 9pm — the wheel spins, the crowd reacts, and someone wins.' },
-  { title: 'Free to enter',        desc: 'Every draw has a genuine free entry route. A prize draw, not gambling — no licence needed.' },
-];
-
-const steps = [
-  { num: '01', color: 'var(--accent-lilac)', title: 'List',  desc: 'Snap your bag, trainers, or watch. Set a ticket price and quantity. Ship it to us — it goes live with a Verified badge.' },
-  { num: '02', color: 'var(--accent-coral)', title: 'Enter', desc: 'Buyers grab tickets from 10p. Up to 25% of any draw. A free postal entry route is always available.' },
-  { num: '03', color: 'var(--accent-coral)', title: 'Watch', desc: 'At 9pm the whole draw resolves live. The wheel spins, names land, and the crowd reacts in real time.' },
-  { num: '04', color: 'var(--accent-gold)',  title: 'Win',   desc: 'The winner gets it shipped free. The seller gets paid within 24 hours. The item finds a new home.' },
-];
 
 const CONFETTI_COLORS = ['#F59E0B', '#EC4899', '#7C3AED', '#FCD34D', '#FB7185', '#F9A8D4'];
 
@@ -330,7 +301,7 @@ export default function LandingPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-ticket.svg" alt="bedrawn" style={{ height: 42, width: 'auto', objectFit: 'contain' }} />
           <div className="desktop-flex" style={{ gap: 32, alignItems: 'center' }}>
-            {[['Tonight', '#tonight'], ['The 9pm moment', '#moment'], ['How it works', '#how'], ['Sell', '#sellers']].map(([label, href]) => (
+            {[['Tonight', '#tonight'], ['How it works', '#moment'], ['Sell your bag', '/sell-your-bag']].map(([label, href]) => (
               <a key={href} href={href} style={{ color: SUB, fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>{label}</a>
             ))}
           </div>
@@ -587,52 +558,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS ─── */}
-      <section id="how" style={{ position: 'relative', padding: '110px 0', background: ALT }}>
-        <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '0 28px' }}>
-          <div className="reveal" style={{ marginBottom: 48 }}>
-            <SectionLabel>The loop</SectionLabel>
-            <h2 style={{ margin: '0 0 14px', fontSize: 'clamp(32px, 3.6vw, 48px)', fontWeight: 800, color: INK, letterSpacing: '-0.02em' }}>List. Enter. Watch. Win.</h2>
-            <p style={{ margin: 0, fontSize: 16, color: SUB, lineHeight: 1.65, maxWidth: 540 }}>
-              One loop that didn&apos;t exist before — a marketplace where everything resolves live at 9pm.
-            </p>
-          </div>
-          <div className="landing-steps-grid">
-            {steps.map(step => (
-              <div key={step.title} className="reveal" style={{ background: '#FFFFFF', padding: '30px 26px', borderRadius: 20, borderTop: `3px solid ${step.color}`, boxShadow: CARD_SHADOW }}>
-                <p className="serif" style={{ margin: '0 0 18px', fontSize: 46, fontWeight: 700, color: step.color, lineHeight: 1 }}>{step.num}</p>
-                <p style={{ margin: '0 0 10px', fontSize: 18, fontWeight: 800, color: INK }}>{step.title}</p>
-                <p style={{ margin: 0, fontSize: 14, color: SUB, lineHeight: 1.65 }}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── WHY BEDRAWN ─── */}
-      <section style={{ position: 'relative', padding: '110px 0', background: CREAM }}>
-        <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '0 28px' }}>
-          <div className="reveal" style={{ marginBottom: 44 }}>
-            <SectionLabel>Why us</SectionLabel>
-            <h2 style={{ margin: '0 0 12px', fontSize: 'clamp(32px, 3.6vw, 48px)', fontWeight: 800, color: INK, letterSpacing: '-0.02em' }}>Win big. Sell easy.</h2>
-            <p style={{ margin: 0, fontSize: 16, color: SUB, lineHeight: 1.65, maxWidth: 560 }}>
-              Two sides, one marketplace. Buyers win things worth hundreds for pennies. Sellers finally move what wouldn&apos;t sell.
-            </p>
-          </div>
-          <div className="landing-features-grid">
-            {features.map(card => (
-              <div key={card.title} className="reveal" style={{ background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 18, padding: 26, boxShadow: CARD_SHADOW }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                  <span style={{ color: PINK_DEEP, fontSize: 15, lineHeight: 1 }}>✓</span>
-                </div>
-                <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: INK }}>{card.title}</p>
-                <p style={{ margin: 0, fontSize: 13.5, color: SUB, lineHeight: 1.65 }}>{card.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ─── AUTHENTICATION ─── */}
       <section style={{ position: 'relative', padding: '110px 0', background: '#FFFFFF', borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ position: 'relative', maxWidth: 1280, margin: '0 auto', padding: '0 28px' }}>
@@ -693,73 +618,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── COMPARISON ─── */}
-      <section style={{ position: 'relative', padding: '110px 0', background: CREAM }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 28px' }}>
-          <div className="reveal" style={{ marginBottom: 36 }}>
-            <SectionLabel>The landscape</SectionLabel>
-            <h2 style={{ margin: '0 0 12px', fontSize: 'clamp(30px, 3.2vw, 42px)', fontWeight: 800, color: INK, letterSpacing: '-0.02em' }}>Many players. None of them bedrawn.</h2>
-            <p style={{ margin: 0, fontSize: 15, color: SUB, lineHeight: 1.65 }}>
-              There are hundreds of resale and raffle sites. Not one combines a real marketplace with a nightly live draw at 10p.
-            </p>
-          </div>
-          <div className="reveal" style={{ background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 20, overflow: 'hidden', boxShadow: CARD_SHADOW }}>
-            <div className="compare-grid-row" style={{ borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', background: ALT }}>
-              <span />
-              {['Vinted', 'eBay', 'StockX', 'bedrawn'].map(h => (
-                <span key={h} style={{ fontSize: 13, fontWeight: 700, color: h === 'bedrawn' ? PINK_DEEP : SUB, textAlign: 'center' }}>{h}</span>
-              ))}
-            </div>
-            {compareRows.map((row, i) => (
-              <div key={row.feature} className="compare-grid-row" style={{
-                padding: '15px 24px',
-                borderBottom: i < compareRows.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none',
-                background: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)',
-              }}>
-                <span style={{ fontSize: 14, color: INK }}>{row.feature}</span>
-                {[row.vinted, row.ebay, row.stockx, row.us].map((val, j) => (
-                  <span key={j} style={{ textAlign: 'center', fontSize: 15, fontWeight: 700, color: val ? (j === 3 ? PINK_DEEP : FAINT) : 'rgba(0,0,0,0.15)' }}>
-                    {val ? '✓' : '—'}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FOUNDING SELLERS ─── */}
-      <section id="sellers" style={{ position: 'relative', padding: '110px 0', background: 'linear-gradient(180deg, #F5EFEA 0%, #FAF0F3 100%)' }}>
-        <div style={{ position: 'relative', maxWidth: 880, margin: '0 auto', padding: '0 28px' }}>
-          <div className="reveal" style={{ background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 26, padding: 'clamp(32px, 5vw, 56px)', boxShadow: '0 8px 32px rgba(26,20,16,0.08)' }}>
-            <span style={{ display: 'inline-block', background: 'rgba(236,72,153,0.07)', border: '1px solid rgba(236,72,153,0.25)', color: PINK_DEEP, fontSize: 11, fontWeight: 700, padding: '5px 16px', borderRadius: 999, letterSpacing: '0.14em', marginBottom: 20 }}>
-              LIMITED — 100 SPOTS
-            </span>
-            <h2 style={{ margin: '0 0 14px', fontSize: 'clamp(30px, 3.4vw, 44px)', fontWeight: 800, color: INK, letterSpacing: '-0.02em' }}>Become a founding seller.</h2>
-            <p style={{ margin: '0 0 28px', fontSize: 16, color: SUB, lineHeight: 1.7, maxWidth: 480 }}>
-              Got a bag, watch, or pair of trainers that won&apos;t sell? List it as one of our first 100 founding sellers. Your first draw is commission-free.
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 30, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex' }}>
-                {[['JK', '#7C3AED'], ['AM', '#EC4899'], ['PR', '#F59E0B'], ['LT', '#059669'], ['MR', '#6D28D9']].map(([init, bg], i) => (
-                  <div key={i} style={{ width: 40, height: 40, borderRadius: '50%', background: bg, border: '2px solid #FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff', marginLeft: i === 0 ? 0 : -10 }}>{init}</div>
-                ))}
-              </div>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, color: INK, fontWeight: 600 }}>5 founding sellers confirmed</p>
-                <p style={{ margin: 0, fontSize: 12, color: FAINT }}>from London, Manchester &amp; Leeds</p>
-              </div>
-            </div>
-            <a href="#waitlist-bottom" style={{
-              display: 'inline-block', padding: '15px 36px', borderRadius: 999,
-              background: CTA_GRADIENT,
-              color: '#FFFFFF', fontSize: 15, fontWeight: 700, textDecoration: 'none',
-              boxShadow: '0 8px 24px rgba(236,72,153,0.30)',
-            }}>Apply to sell →</a>
-          </div>
-        </div>
-      </section>
-
       {/* ─── FAQ ─── */}
       <section style={{ position: 'relative', padding: '110px 0', background: '#FFFFFF' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 28px' }}>
@@ -788,77 +646,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── APP ─── */}
-      <section style={{ position: 'relative', padding: '90px 0', background: CREAM }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 28px' }}>
-          <div className="reveal" style={{ background: '#FFFFFF', border: `1px solid ${BORDER}`, borderRadius: 26, padding: 'clamp(32px, 5vw, 52px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap', boxShadow: CARD_SHADOW }}>
-            <div style={{ flex: '1 1 340px' }}>
-              <SectionLabel>The best experience</SectionLabel>
-              <h2 style={{ margin: '0 0 12px', fontSize: 'clamp(28px, 3vw, 38px)', fontWeight: 800, color: INK, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                Get the bedrawn app.
-              </h2>
-              <p style={{ margin: '0 0 28px', fontSize: 15, color: SUB, lineHeight: 1.65 }}>
-                Watch draws go live, get instant win notifications, and manage your tickets — all from your phone at 9pm.
-              </p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <a
-                  href="#"
-                  aria-label="Download on the App Store"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 10,
-                    background: INK, color: '#FFFFFF',
-                    borderRadius: 12, padding: '12px 22px',
-                    textDecoration: 'none',
-                  }}
-                >
-                  <AppleIcon size={18} color="currentColor" />
-                  <div>
-                    <p style={{ margin: 0, fontSize: 10, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>Download on the</p>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 700, lineHeight: 1.3 }}>App Store</p>
-                  </div>
-                </a>
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.22)',
-                  borderRadius: 12, padding: '12px 22px', color: PINK_DEEP, fontSize: 13,
-                }}>
-                  <PhoneIcon size={16} color="currentColor" />
-                  <span style={{ fontWeight: 600 }}>Coming soon on Android</span>
-                </div>
-              </div>
-            </div>
-            <div style={{ width: 180, height: 320, borderRadius: 28, background: 'linear-gradient(160deg, #2A2118, #1A1410)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, boxShadow: '0 24px 48px rgba(26,20,16,0.25)', flexShrink: 0 }}>
-              <PhoneIcon size={36} color="rgba(255,255,255,0.30)" />
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>iOS App</span>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.22)' }}>Coming soon</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ─── FINAL CTA ─── */}
-      <section id="waitlist-bottom" style={{ position: 'relative', padding: '130px 0 140px', overflow: 'hidden', background: CREAM }}>
+      <section id="waitlist-bottom" style={{ position: 'relative', padding: '120px 0 130px', overflow: 'hidden', background: CREAM }}>
         <Confetti count={34} loop />
-        <div className="reveal" style={{ position: 'relative', maxWidth: 620, margin: '0 auto', padding: '0 28px', textAlign: 'center' }}>
-          <p style={{ margin: '0 0 12px', fontSize: 11, color: PINK_DEEP, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.22em' }}>
-            Be there for the first draw
-          </p>
-          <h2 className="serif" style={{ margin: '0 0 16px', fontSize: 'clamp(42px, 5vw, 60px)', color: INK, letterSpacing: '-0.02em', lineHeight: 1.05 }}>
+        <div className="reveal" style={{ position: 'relative', maxWidth: 560, margin: '0 auto', padding: '0 28px', textAlign: 'center' }}>
+          <h2 className="serif" style={{ margin: '0 0 24px', fontSize: 'clamp(42px, 5vw, 60px)', color: INK, letterSpacing: '-0.02em', lineHeight: 1.05 }}>
             Join the waitlist.
           </h2>
-          <p style={{ margin: '0 0 32px', fontSize: 16, color: SUB, lineHeight: 1.65 }}>
-            Every night at 9pm, someone wins. Be among the first in — spots are limited.
-          </p>
           <WaitlistForm />
-          <p style={{ margin: '18px 0 0', fontSize: 12, color: FAINT }}>
+          <p style={{ margin: '16px 0 0', fontSize: 12, color: FAINT }}>
             By joining you agree to our{' '}
             <Link href="/legal/privacy" style={{ color: SUB, textDecoration: 'underline' }}>Privacy Policy</Link>
             {' '}and{' '}
             <Link href="/legal/terms" style={{ color: SUB, textDecoration: 'underline' }}>Terms</Link>
-          </p>
-          <p style={{ marginTop: 16, fontSize: 14, color: SUB }}>
-            Already have an account?{' '}
-            <Link href="/login" style={{ color: PINK_DEEP, textDecoration: 'none', fontWeight: 600 }}>Log in</Link>
+            {' · '}
+            <Link href="/login" style={{ color: PINK_DEEP, textDecoration: 'none', fontWeight: 600 }}>Already have an account?</Link>
           </p>
         </div>
       </section>
@@ -874,7 +676,7 @@ export default function LandingPage() {
               <p style={{ margin: 0, fontSize: 13, color: FAINT }}>hello@bedrawn.app</p>
             </div>
             <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-              {[['How it works', '#how'], ['Tonight', '#tonight'], ['Sell', '#sellers'], ['Terms', '/legal/terms'], ['Privacy', '/legal/privacy'], ['Log in', '/login']].map(([label, href]) => (
+              {[['Tonight', '#tonight'], ['Sell your bag', '/sell-your-bag'], ['Terms', '/legal/terms'], ['Privacy', '/legal/privacy'], ['Log in', '/login']].map(([label, href]) => (
                 <Link key={label} href={href} style={{ color: SUB, fontSize: 13, textDecoration: 'none' }}>{label}</Link>
               ))}
             </div>
